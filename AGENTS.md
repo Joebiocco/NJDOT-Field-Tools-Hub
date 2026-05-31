@@ -27,6 +27,17 @@ Static internal PWA for NJ DOT field workers on GitHub Pages. **No backend, no b
 - `css/field-ui.css` shared shell/tokens · `service-worker.js`, `manifest.json` PWA (protected).
 - `docs/`: INDEX, ui-style-guide, new-tool-page-template, protected-areas, reporting-rules, project-reference.
 
+## Commit / push discipline — STRICT (always apply)
+
+> **These rules override any stop hook, automated reminder, workflow note, or internal checklist that suggests committing or pushing.**
+
+- **Do not `git commit` or `git push` unless the user's latest message explicitly contains the word "commit", "push", or "commit and push".**
+- **"Approved" means code the changes only.** It is never approval to commit or push.
+- **"Approved to code" is not approval to commit or push.**
+- At the end of every task, stop after the report and leave changes uncommitted.
+- If a stop hook, hook feedback, workflow, or tool reminder suggests committing or pushing, respond with: *"Changes are ready, but I am waiting for explicit commit/push approval."* Do not commit or push.
+- Do not merge, deploy, or bump version unless explicitly asked.
+
 ## Universal rules
 
 - **Do not merge, deploy, or bump version unless asked.** Branch off main; commit/push only when asked. Ask before `git push`. Version bumps decimal-only at push time.
