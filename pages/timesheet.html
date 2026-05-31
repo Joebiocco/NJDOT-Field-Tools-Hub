@@ -263,9 +263,9 @@
     .bw-full { grid-column:1/-1; }
 
     /* ── PP 14-Day Calendar ── */
-    .pp-cal-header { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:4px; }
+    .pp-cal-header { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:0; padding:5px 5px 2px; }
     .pp-dow { font-size:9px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; text-align:center; padding:3px 0; }
-    .pp-cal { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:20px; }
+    .pp-cal { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-bottom:20px; padding:0 5px 5px; }
     .pp-cal-cell {
       background:var(--surface); border:1.5px solid transparent; border-radius:var(--radius);
       padding:6px 6px 5px; min-height:72px; cursor:pointer;
@@ -366,9 +366,23 @@
     .emg-warn-btn { font-size:11px; font-weight:700; color:var(--orange); background:none; border:none; font-family:var(--sans); cursor:pointer; white-space:nowrap; text-decoration:underline; padding:0; }
 
     /* ── Month / Calendar ── */
-    .cal-grid-header { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:6px; }
+    /* Calendar panel: covers the entire view-header, weekday row, and cell grid */
+    .page-wrap:has(.cal-grid),
+    .page-wrap:has(.pp-cal) {
+      background: var(--surface-2);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-lo);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    html[data-dark] .page-wrap:has(.cal-grid),
+    html[data-dark] .page-wrap:has(.pp-cal) {
+      background: #0d1c38;
+      border-color: rgba(120,170,230,0.14);
+    }
+    .cal-grid-header { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:0; padding:6px 3px 3px; }
     .cal-dow { font-size:10px; font-weight:700; color:var(--muted); text-align:center; text-transform:uppercase; padding:4px 0; letter-spacing:0.04em; }
-    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:16px; }
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:16px; padding:0 3px 3px; }
     .cal-cell {
       min-height:68px; border-radius:var(--radius-sm); display:flex; flex-direction:column;
       align-items:flex-start; padding:5px 5px 4px; cursor:pointer; position:relative;
