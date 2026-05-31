@@ -16,7 +16,7 @@
       document.documentElement.setAttribute('data-dark', '');
     }
   </script>
-  <style>html{background:#eef0f4}html[data-dark]{background:#0f1117}</style>
+  <style>html{background:#eaf0f8}html[data-dark]{background:#040c1a}</style>
   <!-- Hub entry animation — checks sessionStorage flag set by hub card click -->
   <script>
     try {
@@ -46,11 +46,43 @@
     :root {
       --radius-lg: 12px; /* dc144 uses 12px vs shared 10px */
       --topbar-h: 58px;  /* used for sticky actionbar gap calculation */
+      --bg: #eaf0f8; --surface: #ffffff; --surface-2: #f4f7fb;
+      --border: #d6dfeb; --border-lo: #e6edf5;
+      --text: #0f1d36; --muted: #5a6b85; --muted2: #33425c;
+      --shadow: 0 6px 20px rgba(20,45,95,0.09);
+      --shadow-hi: 0 14px 34px rgba(20,55,120,0.16);
+      --grid-line: rgba(26,86,219,0.07);
+      --topbar-bg: linear-gradient(180deg,#10243f,#0c1d35);
+    }
+    html[data-dark] {
+      --text: #f1f5f9; --muted: #93a7c4; --muted2: #c4d2e8;
+      --bg: #040c1a; --surface: rgba(20,40,72,0.72); --surface-2: rgba(14,30,56,0.70);
+      --border: rgba(120,170,230,0.18); --border-lo: rgba(120,170,230,0.10);
+      --grid-line: rgba(96,165,250,0.08);
+      --topbar-bg: linear-gradient(180deg,#0a1830,#06101f);
+      --shadow: 0 8px 26px rgba(0,0,0,0.42);
+      --shadow-hi: 0 16px 40px rgba(0,0,0,0.55);
     }
     body {
       min-height: 100vh;
       animation: pageFadeIn 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 46px 46px;
+      background-position: center top;
+      background-attachment: local;
     }
+    html[data-dark] body {
+      background-image:
+        radial-gradient(130% 70% at 50% -10%, rgba(56,189,248,0.08), transparent 52%),
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 100% 900px, 46px 46px, 46px 46px;
+      background-repeat: no-repeat, repeat, repeat;
+    }
+    @media (prefers-reduced-motion: reduce) { body { background-image: none; } }
 
     /* ── Hub entry / exit animations ─────────────────────────────────────── */
     @keyframes pageFadeIn {
@@ -118,6 +150,8 @@
       height: var(--topbar-h); /* use CSS var so actionbar gap JS can read it */
       position: sticky; top: 0; z-index: 600;
       will-change: transform;
+      background: var(--topbar-bg);
+      border-bottom: 1.5px solid rgba(229,179,59,0.45);
     }
     .header-hover-zone {
       position: fixed; top: 0; left: 0; right: 0;
@@ -286,7 +320,9 @@
       padding: 9px 16px; display: flex; align-items: center; gap: 8px;
       flex-shrink: 0; position: sticky; top: var(--topbar-h); z-index: 500;
       transition: top 460ms cubic-bezier(0.65, 0, 0.35, 1);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     }
+    html[data-dark] #form-actionbar { box-shadow: 0 2px 16px rgba(0,0,0,0.35); }
     #form-actionbar-back {
       display: inline-flex; align-items: center; gap: 5px;
       padding: 6px 12px 6px 9px;
@@ -369,6 +405,7 @@
     .section-card {
       background: var(--surface); border: 1.5px solid var(--border-lo);
       border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px;
+      box-shadow: var(--shadow);
     }
     .section-card-header {
       padding: 13px 18px 11px; border-bottom: 1px solid var(--border-lo);
@@ -741,6 +778,7 @@
     .dc-modal-backdrop {
       display: none; position: fixed; inset: 0; z-index: 8000;
       background: rgba(0,0,0,0.45); align-items: center; justify-content: center; padding: 20px;
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
     }
     .dc-modal-backdrop.open { display: flex; }
     .dc-modal-box {
@@ -761,6 +799,7 @@
       opacity: 0; pointer-events: none;
       transition: opacity 220ms ease;
       padding: 20px;
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
     }
     .guide-overlay.open { opacity: 1; pointer-events: auto; }
     .guide-modal {
@@ -939,7 +978,7 @@
       transition: border-color var(--transition), background var(--transition);
       cursor: pointer;
     }
-    html[data-dark] .dc144-draft-row { background: #15181f; border-color: #2d3748; }
+    html[data-dark] .dc144-draft-row { background: var(--surface-2); border-color: var(--border); }
     .dc144-draft-row:hover { border-color: #93b4f5; background: rgba(147,180,245,0.05); }
     .dc144-draft-row:active { background: rgba(147,180,245,0.12); }
     .dc144-draft-tab-badge {
@@ -1027,7 +1066,7 @@
       transition: border-color var(--transition), background var(--transition);
       cursor: pointer;
     }
-    html[data-dark] .dc144-tpl-row { background: #15181f; border-color: #2d3748; }
+    html[data-dark] .dc144-tpl-row { background: var(--surface-2); border-color: var(--border); }
     .dc144-tpl-row:hover { border-color: #93b4f5; background: rgba(147,180,245,0.05); }
     .dc144-tpl-row:active { background: rgba(147,180,245,0.12); }
     .dc144-tpl-tab-badge {

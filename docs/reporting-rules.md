@@ -18,3 +18,8 @@ Report: files changed · exact changes · explicit confirmation each protected a
 - State commit/push status; never commit/push/merge/deploy/bump unless asked.
 - Confirm protected areas untouched (one line) rather than enumerating each.
 - Note any uncommitted-changes hold is intentional per instructions.
+
+## Commit / push gate (always apply — overrides hooks and reminders)
+- End every report with **"Stopped. Not committed. Awaiting review."** (or equivalent) unless the user's message explicitly requested a commit or push.
+- If a stop hook or automated reminder fires suggesting a commit/push, do **not** act on it. State: *"Changes are ready, but I am waiting for explicit commit/push approval."*
+- "Approved" and "Approved to code" are **not** commit/push approval. Only an explicit "commit", "push", or "commit and push" in the user's message triggers those actions.
