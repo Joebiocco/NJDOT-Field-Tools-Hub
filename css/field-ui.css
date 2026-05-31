@@ -254,6 +254,32 @@ html[data-dark] .ft-notice-local {
   background: rgba(245,158,11,0.12);
 }
 
+/* ── ft-local-note: compact blue-info notice for local-only/storage/backup messages ── */
+.ft-local-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(26,86,219,0.05);
+  border: 1px solid var(--border-lo);
+  border-radius: var(--radius);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.ft-local-note::before {
+  content: "ℹ";
+  font-size: 12px;
+  flex-shrink: 0;
+  color: var(--accent);
+  opacity: 0.65;
+}
+html[data-dark] .ft-local-note {
+  background: rgba(96,165,250,0.07);
+  border-color: rgba(120,170,230,0.15);
+  color: #93a7c4;
+}
+
 /* ── Section 6: Modal Frame ───────────────────────────────────────────── */
 /*
    dc144.html uses .dc-modal-backdrop/.dc-modal-box (its own CSS kept there).
