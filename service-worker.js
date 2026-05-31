@@ -11,7 +11,7 @@
    - IndexedDB: work-order photos + per-session data (ft_photos DB)
    ============================================================ */
 
-const CACHE = 'ft-v1.29-2026-05-31';
+const CACHE = 'ft-v1.30-2026-05-31';
 
 // Local assets to pre-cache on install
 const LOCAL_ASSETS = [
@@ -19,8 +19,13 @@ const LOCAL_ASSETS = [
   './index.html',
   './manifest.json',
   './css/field-ui.css',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
+  './assets/icons/icon-192-maskable.png',
+  './assets/icons/icon-512-maskable.png',
+  './assets/icons/favicon-32.png',
+  './assets/icons/favicon-16.png',
+  './assets/icons/apple-touch-icon.png',
   './pages/njsearch.html',
   './pages/njfuel.html',
   './pages/WorkOrderCloseout.html',
