@@ -10,14 +10,49 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/field-ui.css">
   <style>
+    /* Page-local Field Operations tokens — refined light + glass dark */
+    :root {
+      --bg: #eaf0f8; --surface: #ffffff; --surface-2: #f4f7fb;
+      --border: #d6dfeb; --border-lo: #e6edf5;
+      --text: #0f1d36; --muted: #5a6b85; --muted2: #33425c;
+      --shadow: 0 6px 20px rgba(20,45,95,0.09);
+      --shadow-hi: 0 14px 34px rgba(20,55,120,0.16);
+      --grid-line: rgba(26,86,219,0.07);
+      --topbar-bg: linear-gradient(180deg,#10243f,#0c1d35);
+    }
+    html[data-dark] {
+      --bg: #040c1a; --surface: rgba(20,40,72,0.72); --surface-2: rgba(14,30,56,0.70);
+      --border: rgba(120,170,230,0.18); --border-lo: rgba(120,170,230,0.10);
+      --text: #f1f5f9; --muted: #93a7c4; --muted2: #c4d2e8;
+      --accent: #3b82f6;
+      --grid-line: rgba(96,165,250,0.08);
+      --topbar-bg: linear-gradient(180deg,#0a1830,#06101f);
+      --shadow: 0 8px 26px rgba(0,0,0,0.42);
+      --shadow-hi: 0 16px 40px rgba(0,0,0,0.55);
+    }
     /* Design tokens + body base + topbar shell now in ../css/field-ui.css */
     body {
       height: 100vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 46px 46px;
+      background-position: center top;
     }
-    #topbar { position: sticky; top: 0; z-index: 600; }
+    html[data-dark] body {
+      background-image:
+        radial-gradient(130% 70% at 50% -10%, rgba(56,189,248,0.08), transparent 52%),
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 100% 900px, 46px 46px, 46px 46px;
+      background-repeat: no-repeat, repeat, repeat;
+    }
+    @media (prefers-reduced-motion:reduce) { body { background-image: none; } }
+    #topbar { position: sticky; top: 0; z-index: 600; background: var(--topbar-bg); }
     .topbar-icon img { height: 38px; width: auto; max-width: 160px; object-fit: contain; }
 
     /* Layout */
@@ -645,6 +680,8 @@
       inset: 0;
       z-index: 1200;
       background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1009,7 +1046,7 @@
   </a>
   <div class="topbar-div"></div>
   <h1>Bridge Navigator</h1>
-  <span class="state-badge">NEW JERSEY</span>
+  <span class="state-badge">NJ</span>
   <div class="topbar-spacer"></div>
   <button class="topbar-help" id="open-guide" aria-label="Help & Guide">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
