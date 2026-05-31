@@ -21,16 +21,43 @@
       --tr:0.14s ease;  /* alias for --transition */
       --gold:#E5B33B; --gold-lo:rgba(229,179,59,0.10); --gold-bd:rgba(229,179,59,0.28);
       --navy:#1e2939; --nav-h:62px;
+      --bg:#eaf0f8; --surface:#ffffff; --surface-2:#f4f7fb;
+      --border:#d6dfeb; --border-lo:#e6edf5;
+      --text:#0f1d36; --muted:#5a6b85; --muted2:#33425c;
+      --shadow:0 6px 20px rgba(20,45,95,0.09);
+      --grid-line:rgba(26,86,219,0.07);
+      --topbar-bg:linear-gradient(180deg,#10243f,#0c1d35);
     }
     /* Timesheet dark mode: uses neutral text (#f1f5f9) instead of gold (#FEE9A1) */
     html[data-dark] {
-      --text:#f1f5f9; --muted:#94a3b8; --muted2:#cbd5e1;
+      --text:#f1f5f9; --muted:#93a7c4; --muted2:#c4d2e8;
+      --bg:#040c1a; --surface:rgba(20,40,72,0.72); --surface-2:rgba(14,30,56,0.70);
+      --border:rgba(120,170,230,0.18); --border-lo:rgba(120,170,230,0.10);
       --red-lo:rgba(220,38,38,0.14);
       --green-lo:rgba(5,150,105,0.14); --orange-lo:rgba(217,119,6,0.14);
+      --grid-line:rgba(96,165,250,0.08);
+      --topbar-bg:linear-gradient(180deg,#0a1830,#06101f);
+      --shadow:0 8px 26px rgba(0,0,0,0.42);
     }
     body {
       min-height:100vh; display:flex; flex-direction:column; padding-bottom:var(--nav-h);
+      background-color:var(--bg);
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size:46px 46px;
+      background-position:center top;
+      background-attachment:local;
     }
+    html[data-dark] body {
+      background-image:
+        radial-gradient(130% 70% at 50% -10%, rgba(56,189,248,0.08), transparent 52%),
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size:100% 900px, 46px 46px, 46px 46px;
+      background-repeat:no-repeat, repeat, repeat;
+    }
+    @media (prefers-reduced-motion:reduce) { body { background-image:none; } }
 
     /* ── Animations ── */
     @keyframes pageFadeIn { from{opacity:0} to{opacity:1} }
@@ -45,7 +72,7 @@
 
     /* ── Topbar ── */
     #topbar {
-      height:54px; background:var(--navy); border-bottom:2px solid var(--gold);
+      height:54px; background:var(--topbar-bg); border-bottom:1.5px solid rgba(229,179,59,0.45);
       display:flex; align-items:center; padding:0 20px; gap:12px; flex-shrink:0;
       position:sticky; top:0; z-index:600;
       transition:transform 460ms cubic-bezier(0.65,0,0.35,1), opacity 460ms cubic-bezier(0.65,0,0.35,1);
@@ -116,6 +143,7 @@
     .day-stat {
       background:var(--surface); border:1.5px solid var(--border-lo);
       border-radius:var(--radius-lg); padding:14px 10px; text-align:center;
+      box-shadow:var(--shadow);
     }
     .day-stat-val { font-size:22px; font-weight:700; line-height:1.1; }
     .day-stat-lbl { font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px; }
@@ -128,10 +156,11 @@
     .entry-card {
       background:var(--surface); border:1.5px solid var(--border-lo); border-radius:var(--radius-lg);
       margin-bottom:10px; overflow:hidden;
+      box-shadow:var(--shadow);
       transition:border-color var(--tr), box-shadow var(--tr);
       animation:cardIn 260ms cubic-bezier(0.16,1,0.3,1) both;
     }
-    .entry-card:hover { border-color:var(--border); box-shadow:0 2px 12px rgba(0,0,0,0.07); }
+    .entry-card:hover { border-color:var(--border); box-shadow:var(--shadow-hi, 0 4px 20px rgba(0,0,0,0.12)); }
     .entry-row { display:flex; align-items:center; padding:14px 16px; gap:12px; cursor:pointer; }
     .entry-type-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
     .dot-Normal    { background:var(--accent); }
@@ -704,6 +733,7 @@
       display:flex; align-items:center; justify-content:center;
       opacity:0; pointer-events:none;
       transition:opacity 220ms ease;
+      backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
     }
     .guide-overlay.open { opacity:1; pointer-events:auto; }
     .guide-modal {
@@ -775,7 +805,7 @@
   <script>
     /* Inherit dark mode from Hub — read only, never write */
     if (localStorage.getItem('field_dark_mode') === '1') document.documentElement.setAttribute('data-dark', '');
-    (function(){var s=document.createElement('style');s.textContent='html{background:#eef0f4}html[data-dark]{background:#0f1117}';document.head.appendChild(s);})();
+    (function(){var s=document.createElement('style');s.textContent='html{background:#eaf0f8}html[data-dark]{background:#040c1a}';document.head.appendChild(s);})();
     try {
       if (sessionStorage.getItem('ft_opening_from_hub') === '1') {
         document.documentElement.classList.add('entering-from-hub');
@@ -793,6 +823,7 @@
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 5l-7 7 7 7"/></svg>
     Home
   </a>
+  <div class="topbar-div"></div>
   <span id="topbar-title">Payroll Calculator</span>
   <button class="topbar-help" id="open-guide" aria-label="Help & Guide">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
