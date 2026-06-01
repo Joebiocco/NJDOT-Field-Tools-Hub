@@ -2691,7 +2691,22 @@ exportPdfBtn.addEventListener('click', async function() {
     var pDd  = String(pNow.getMonth()+1).padStart(2,'0') + '.' +
                String(pNow.getDate()).padStart(2,'0')    + '.' +
                String(pNow.getFullYear()).slice(-2);
-    pdf.save(pWo + '_' + pStr + '_' + pDd + ' Closeout.pdf');
+    // Download via a self-managed blob anchor (same pattern as the HTML
+    // session export above). jsPDF's pdf.save() falls back to window.open()
+    // for the blob URL when <a download> isn't honored (PWA standalone / iOS);
+    // because export is async (image loads + html2canvas) the user-gesture is
+    // gone by then, so that popup is blocked into a stuck about:blank tab.
+    var pdfName = pWo + '_' + pStr + '_' + pDd + ' Closeout.pdf';
+    var pdfBlob = pdf.output('blob');
+    var pdfUrl  = URL.createObjectURL(pdfBlob);
+    var pdfLink = document.createElement('a');
+    pdfLink.href = pdfUrl;
+    pdfLink.download = pdfName;
+    document.body.appendChild(pdfLink);
+    pdfLink.click();
+    // Defer cleanup: revoking the object URL synchronously after click() can
+    // cancel the download on Safari/iOS/PWA before the blob is read.
+    setTimeout(function(){ pdfLink.remove(); URL.revokeObjectURL(pdfUrl); }, 1500);
     showToast('PDF exported successfully', 'ok');
 
   } catch(err) {
