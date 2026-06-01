@@ -86,7 +86,6 @@
       border-bottom:1px solid rgba(229,179,59,0.28);
       box-shadow:0 1px 0 rgba(255,255,255,0.04) inset,0 6px 22px rgba(0,0,0,0.20);
       transition:transform 460ms cubic-bezier(0.65,0,0.35,1),opacity 460ms cubic-bezier(0.65,0,0.35,1);
-      will-change:transform;
     }
     #topbar.header-hidden{transform:translateY(-100%);opacity:0;pointer-events:none;}
     .brand{display:flex;align-items:center;gap:11px;text-decoration:none;flex-shrink:0;}
@@ -296,6 +295,13 @@
     html.returning-from-tool{background:var(--bg);}
     .header-hover-zone{position:fixed;top:0;left:0;right:0;height:14px;z-index:99;pointer-events:auto;}
     @media (hover:none){.header-hover-zone{display:none;}}
+    /* ── Mobile/touch blur-off: saves GPU re-sample on scrolling surfaces without any visible change
+       (light --panel is fully opaque; dark compensates with slightly higher opacity tokens) ── */
+    @media (hover:none),(max-width:760px){
+      .panel{backdrop-filter:none;-webkit-backdrop-filter:none;}
+      .command-input{backdrop-filter:none;-webkit-backdrop-filter:none;}
+      html[data-dark]{--panel:rgba(16,32,60,0.90);--panel-2:rgba(12,26,50,0.88);--glass:rgba(20,40,72,0.82);}
+    }
 
     /* ── Install + update banners ── */
     .install-banner{position:fixed;bottom:0;left:0;right:0;z-index:999;background:#0c1d35;border-top:2px solid #E5B33B;padding:14px 20px calc(18px + env(safe-area-inset-bottom,0px));display:flex;align-items:flex-start;gap:14px;box-shadow:0 -4px 24px rgba(0,0,0,0.32);transform:translateY(110%);transition:transform .3s cubic-bezier(.32,1,.3,1);}
