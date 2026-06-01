@@ -229,8 +229,9 @@
     .tab-card-meta { flex: 1; }
     .tab-card-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
     .tab-card-name { font-size: 16px; font-weight: 700; color: var(--text); }
-    .tab-card-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
-    .tab-card-arrow { color: var(--muted); margin-top: auto; display: flex; justify-content: flex-end; }
+    .tab-card-foot { display: flex; align-items: flex-end; gap: 10px; margin-top: auto; }
+    .tab-card-desc { font-size: 13px; color: var(--muted); line-height: 1.5; flex: 1; }
+    .tab-card-arrow { color: var(--muted); flex-shrink: 0; }
 
     /* ── Session chips (recent drafts) ───────────────────────────────────── */
     .session-chips-list { display: flex; flex-direction: column; gap: 10px; }
@@ -262,6 +263,17 @@
     }
     .session-chip-del:hover { color: var(--red); background: rgba(220,38,38,0.08); }
     .chips-empty { text-align: center; padding: 24px 0; color: var(--muted); font-size: 14px; }
+    .session-chips-extra { display: flex; flex-direction: column; gap: 10px; overflow: hidden; max-height: 0; transition: max-height 280ms ease; }
+    .session-chips-extra.expanded { max-height: 4000px; margin-top: 10px; }
+    .chips-show-more {
+      display: flex; align-items: center; gap: 6px; margin-top: 10px; width: 100%;
+      background: none; border: 1px solid var(--border-lo); border-radius: var(--radius-sm);
+      padding: 8px 14px; font-size: 12px; font-weight: 600; color: var(--muted);
+      cursor: pointer; font-family: var(--sans); text-align: left;
+      transition: background var(--transition), border-color var(--transition), color var(--transition);
+    }
+    .chips-show-more:hover { background: var(--accent-lo); border-color: var(--accent); color: var(--accent); }
+    html[data-dark] .chips-show-more { border-color: var(--border); }
 
     /* ── Template chips ───────────────────────────────────────────────────── */
     .template-chip {

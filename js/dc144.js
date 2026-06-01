@@ -652,9 +652,11 @@ function renderTabCards() {
           '<div class="tab-card-name">' + meta.name + '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="tab-card-desc">' + meta.desc + '</div>' +
-      '<div class="tab-card-arrow">' +
-        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>' +
+      '<div class="tab-card-foot">' +
+        '<div class="tab-card-desc">' + meta.desc + '</div>' +
+        '<div class="tab-card-arrow">' +
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>' +
+        '</div>' +
       '</div>';
     card.addEventListener('click', function() { startNewSession(tab, null); });
     grid.appendChild(card);
@@ -669,9 +671,8 @@ function renderRecentChips() {
     container.innerHTML = '<div class="chips-empty">No recent drafts. Start a new report above.</div>';
     return;
   }
-  var list = document.createElement('div');
-  list.className = 'session-chips-list';
-  arr.forEach(function(rec) {
+
+  function buildChip(rec) {
     var meta = TAB_META[rec.tab] || TAB_META['a'];
     var chip = document.createElement('div');
     chip.className = 'session-chip';
@@ -709,10 +710,41 @@ function renderRecentChips() {
       e.stopPropagation();
       deleteSession(rec.photoKey);
     });
-    list.appendChild(chip);
-  });
+    return chip;
+  }
+
+  var SHOW_LIMIT = 5;
+  var list = document.createElement('div');
+  list.className = 'session-chips-list';
+  arr.slice(0, SHOW_LIMIT).forEach(function(rec) { list.appendChild(buildChip(rec)); });
   container.innerHTML = '';
   container.appendChild(list);
+
+  if (arr.length > SHOW_LIMIT) {
+    var extra = document.createElement('div');
+    extra.className = 'session-chips-extra';
+    arr.slice(SHOW_LIMIT).forEach(function(rec) { extra.appendChild(buildChip(rec)); });
+    container.appendChild(extra);
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chips-show-more';
+    btn.setAttribute('aria-expanded', 'false');
+    btn.textContent = 'Show all recent (' + arr.length + ')';
+    btn.addEventListener('click', function() {
+      var open = extra.classList.contains('expanded');
+      if (open) {
+        extra.classList.remove('expanded');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.textContent = 'Show all recent (' + arr.length + ')';
+      } else {
+        extra.classList.add('expanded');
+        btn.setAttribute('aria-expanded', 'true');
+        btn.textContent = 'Show less';
+      }
+    });
+    container.appendChild(btn);
+  }
 }
 
 function startNewSession(tab, tplData) {

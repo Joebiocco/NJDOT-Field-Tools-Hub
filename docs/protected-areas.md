@@ -6,6 +6,7 @@ Read this **before** touching anything below. Make a specific plan; do not renam
 - ExcelJS `.xlsx` export, `DC144_CELL_MAP` cell addressing, workbook/template (`data/dc144-template.xlsx`), sheet pruning, photo appendix, inspector signature pad, mobile actionbar, export-review modal.
 - IndexedDB store `dc144_sessions` (db `ft_photos` v2). Keys `ft_dc144_recent`, `ft_dc144_templates`.
 - Do not change functional IDs/classes or export/form/signature/photo logic without a plan.
+- Dashboard/recent UI changes are safe to confine to `renderTabCards()` and `renderRecentChips()` without touching export/signature/photo/template logic. Recent-list changes must preserve the `ft_dc144_recent` key name and stored object shape (`photoKey`, `tab`, `projectName`, `date`, `contractId`, `rowCount`, `photoCount`) and must not break delete behavior.
 
 ## Work Order (`pages/WorkOrderCloseout.html`)
 - PDF generation via `html2canvas` + `jsPDF`. **Do not touch the capture/export markup or `.pdf-*` IDs/classes.**
@@ -23,6 +24,7 @@ Read this **before** touching anything below. Make a specific plan; do not renam
 
 ## PWA infra
 - `service-worker.js` (cache name/version, network-first HTML, `LOCAL_ASSETS`) and `manifest.json` (name, theme_color, icons, install behavior). **Do not touch without explicit approval.** New static assets (e.g. `assets/hero/*.webp`) need adding to `LOCAL_ASSETS` only at the deliberate SW/version step.
+- **PWA icon changes:** update `manifest.json` icon paths, `<link rel="apple-touch-icon">` / favicon `<link>` in HTML pages, and add new icon files to `LOCAL_ASSETS`. Validate all icon paths return HTTP 200 before committing. Do not commit ZIP contents or README files from icon export packages.
 
 ## Storage (never rename/clear)
 - localStorage: `ft_bridge_bookmarks`, `ft_fuel_bookmarks`, `wo_recent`, `workorder_draft`, `ft_dc144_recent`, `ft_dc144_templates`, `ft_ts_entries`, `ft_ts_settings`, `field_dark_mode`, `ft_last`, `ft_install_shown`, `ft_bookmark_shown`, `ft_dc144_guide_shown`, `ft_pc_guide_shown`, `ft_wo_guide_shown`.
