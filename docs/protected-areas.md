@@ -21,13 +21,14 @@ Read this **before** touching anything below. Make a specific plan; do not renam
 ## Timesheet / Payroll (`pages/timesheet.html`)
 - Payroll calculations (Normal/Cash/XP/Emergency, shift detection, biweekly summary), bottom-tab nav, entry modal, 15-min increments.
 - Keys `ft_ts_entries`, `ft_ts_settings`. Reads `field_dark_mode` (never writes).
+- `ft_ts_ppoffset` — pay-period navigation offset (integer, how many pay periods forward/back from the current period the user has scrolled). UI convenience only; loss is non-destructive. Do not rename.
 
 ## PWA infra
 - `service-worker.js` (cache name/version, network-first HTML, `LOCAL_ASSETS`) and `manifest.json` (name, theme_color, icons, install behavior). **Do not touch without explicit approval.** New static assets (e.g. `assets/hero/*.webp`) need adding to `LOCAL_ASSETS` only at the deliberate SW/version step.
 - **PWA icon changes:** update `manifest.json` icon paths, `<link rel="apple-touch-icon">` / favicon `<link>` in HTML pages, and add new icon files to `LOCAL_ASSETS`. Validate all icon paths return HTTP 200 before committing. Do not commit ZIP contents or README files from icon export packages.
 
 ## Storage (never rename/clear)
-- localStorage: `ft_bridge_bookmarks`, `ft_fuel_bookmarks`, `wo_recent`, `workorder_draft`, `ft_dc144_recent`, `ft_dc144_templates`, `ft_ts_entries`, `ft_ts_settings`, `field_dark_mode`, `ft_last`, `ft_install_shown`, `ft_bookmark_shown`, `ft_dc144_guide_shown`, `ft_pc_guide_shown`, `ft_wo_guide_shown`.
+- localStorage: `ft_bridge_bookmarks`, `ft_fuel_bookmarks`, `wo_recent`, `workorder_draft`, `ft_dc144_recent`, `ft_dc144_templates`, `ft_ts_entries`, `ft_ts_settings`, `ft_ts_ppoffset`, `field_dark_mode`, `ft_last`, `ft_install_shown`, `ft_bookmark_shown`, `ft_dc144_guide_shown`, `ft_pc_guide_shown`, `ft_wo_guide_shown`.
 - sessionStorage: `ft_opening_from_hub`, `ft_returning_to_hub`.
 - IndexedDB: db `ft_photos` (v2); stores `session_photos`, `dc144_sessions`.
 
