@@ -1505,15 +1505,26 @@ function saveRecentList(arr) {
 // ── INDEXEDDB PHOTO STORE ─────────────────────
 var _photoDB = null;
 var PHOTO_DB_NAME  = 'ft_photos';
-var PHOTO_DB_VER   = 1;
+var PHOTO_DB_VER   = 2;            // shared DB; must match DC-144 (js/dc144.js IDB_DB_VERSION = 2)
 var PHOTO_STORE    = 'session_photos';
+var DC144_STORE    = 'dc144_sessions';  // not used here; created on upgrade so opening the shared DB at v2 never downgrades a DB that DC-144 upgraded
 
 function openPhotoDB() {
   return new Promise(function(resolve, reject) {
     if (_photoDB) { resolve(_photoDB); return; }
     var req = indexedDB.open(PHOTO_DB_NAME, PHOTO_DB_VER);
     req.onupgradeneeded = function(e) {
-      e.target.result.createObjectStore(PHOTO_STORE);
+      // 'ft_photos' is shared with DC-144 (v2). Create any missing stores
+      // without touching existing data: 'session_photos' = Work Order photos,
+      // 'dc144_sessions' = DC-144 sessions. Guard each so an existing store
+      // (e.g. session_photos on a v1->v2 upgrade) is preserved, never recreated.
+      var db = e.target.result;
+      if (!db.objectStoreNames.contains(PHOTO_STORE)) {
+        db.createObjectStore(PHOTO_STORE);
+      }
+      if (!db.objectStoreNames.contains(DC144_STORE)) {
+        db.createObjectStore(DC144_STORE);
+      }
     };
     req.onsuccess = function(e) { _photoDB = e.target.result; resolve(_photoDB); };
     req.onerror   = function()  { reject(new Error('IDB open failed')); };
