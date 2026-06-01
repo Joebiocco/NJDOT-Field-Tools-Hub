@@ -391,3 +391,29 @@ html[data-dark] :where(a, button, input, select, textarea, [tabindex]):focus-vis
   outline-color: #FEE9A1;
   box-shadow: 0 0 0 5px rgba(254,233,161,0.16);
 }
+
+/* ── Leaflet map controls (Bridge / Fuel / Milepost) ─────────────────── */
+.leaflet-control-zoom {
+  border-radius: 8px !important;
+  overflow: hidden;
+  border: none !important;
+}
+.leaflet-bar {
+  box-shadow: 0 2px 10px rgba(15,23,42,0.12) !important;
+  border: none !important;
+}
+.leaflet-control-zoom a { border-bottom: 1px solid rgba(0,0,0,0.08) !important; }
+.leaflet-control-zoom a:last-child { border-bottom: none !important; }
+html[data-dark] .leaflet-control-zoom a,
+html[data-dark] .leaflet-control-layers-toggle {
+  background: #1e2939 !important;
+  color: #f9fafb !important;
+  border-color: rgba(229,179,59,0.2) !important;
+}
+html[data-dark] .leaflet-control-zoom a:hover { background: #273d5a !important; }
+html[data-dark] .leaflet-control-layers {
+  background: #1e2939 !important;
+  color: #f9fafb !important;
+  border: 1px solid rgba(229,179,59,0.25) !important;
+}
+html[data-dark] .leaflet-bar { box-shadow: 0 4px 14px rgba(0,0,0,0.35) !important; }

@@ -250,6 +250,36 @@
       .guide-footer { flex-direction:column;align-items:stretch; }
       .guide-done { width:100%;text-align:center; }
     }
+
+    /* Leaflet popup dark mode */
+    .leaflet-popup-content-wrapper {
+      border-radius: 10px !important;
+      box-shadow: 0 6px 20px rgba(15,23,42,0.14) !important;
+    }
+    html[data-dark] .leaflet-popup-content-wrapper {
+      background: #1e2939 !important;
+      color: #f9fafb !important;
+      border: 1px solid rgba(229,179,59,0.4) !important;
+    }
+    html[data-dark] .leaflet-popup-tip { background: #1e2939 !important; }
+    html[data-dark] .leaflet-popup-close-button { color: #9ca3af !important; }
+
+    /* User location pulsing marker */
+    .user-pulse-marker { position:relative; width:28px; height:28px; }
+    .user-pulse-marker::before {
+      content:''; position:absolute; inset:5px; border-radius:50%;
+      background:#16a34a; border:3px solid #fff;
+      box-shadow:0 3px 10px rgba(0,0,0,0.35); z-index:2;
+    }
+    .user-pulse-marker::after {
+      content:''; position:absolute; inset:0; border-radius:50%;
+      background:rgba(22,163,74,0.28);
+      animation:mmUserPulse 1.7s cubic-bezier(0.16,1,0.3,1) infinite;
+    }
+    @keyframes mmUserPulse {
+      0%  { transform:scale(0.75); opacity:0.9; }
+      80%, 100% { transform:scale(1.65); opacity:0; }
+    }
   </style>
   <script>
     try {
@@ -502,6 +532,20 @@
   L.control.layers({ 'Street': streetLayer, 'Satellite': satLayer }, null, { position: 'topright' }).addTo(map);
   var userMarker = null, userRing = null, nearestMarker = null;
 
+  function makePinIcon(color, active) {
+    var s = active ? 34 : 28;
+    var h = Math.round(s * 1.4);
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + s + '" height="' + h + '" viewBox="0 0 28 38">' +
+      '<defs><filter id="mps"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,0,0,0.45)"/></filter></defs>' +
+      '<path d="M14 0C6.3 0 0 6.3 0 14c0 9.6 12.6 22.3 13.3 23 .4.4.9.4 1.3 0C15.4 36.3 28 23.6 28 14 28 6.3 21.7 0 14 0z" fill="' + color + '" filter="url(#mps)"/>' +
+      '<circle cx="14" cy="14" r="6" fill="white" opacity="0.95"/>' +
+      '</svg>';
+    return L.divIcon({ className: '', iconSize: [s, h], iconAnchor: [s/2, h], popupAnchor: [0, -h], html: svg });
+  }
+  function makeUserPulseIcon() {
+    return L.divIcon({ className: '', iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -18], html: '<div class="user-pulse-marker"></div>' });
+  }
+
   function toRad(v){ return v * Math.PI / 180; }
   function hav(lat1, lon1, lat2, lon2) {
     var R = 6371000, dLat = toRad(lat2-lat1), dLon = toRad(lon2-lon1);
@@ -696,16 +740,12 @@
           fillColor: '#1a56db',
           fillOpacity: 0.18
         }).addTo(map);
-        userMarker = L.circleMarker([lat, lon], {
-          radius: 10,
-          color: '#ffffff',
-          weight: 3,
-          fillColor:'#1a56db',
-          fillOpacity:1
-        }).addTo(map).bindPopup('Your Current Location');
-        var dirText = dirInfo && dirInfo.label ? ('<br>' + dirInfo.label) : '';
-        nearestMarker = L.circleMarker([best[0], best[1]], { radius: 7, color: '#d97706', fillColor:'#d97706', fillOpacity:0.9 }).addTo(map)
-          .bindPopup((routeTypes[best[4]] || 'Route') + ' • MP ' + best[2] + '<br>' + (best[5] || best[3]) + dirText);
+        userMarker = L.marker([lat, lon], { icon: makeUserPulseIcon(), zIndexOffset: 1000 })
+          .addTo(map).bindPopup('Your Current Location');
+        var mpLabel = (routeTypes[best[4]] || 'Route') + ' • MP ' + best[2];
+        var mpDetail = (best[5] || best[3]) + (dirInfo && dirInfo.label ? ' · ' + dirInfo.label : '');
+        nearestMarker = L.marker([best[0], best[1]], { icon: makePinIcon('#d97706', false) }).addTo(map)
+          .bindPopup('<strong>' + esc(mpLabel) + '</strong><br><span style="font-size:11px;color:#9ca3af">' + esc(mpDetail) + '</span>');
         var g = L.featureGroup([userRing, userMarker, nearestMarker]);
         map.fitBounds(g.getBounds().pad(0.35));
         nearestMarker.openPopup();
