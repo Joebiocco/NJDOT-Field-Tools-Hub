@@ -142,6 +142,8 @@ document.addEventListener('keydown', function(e) {
 
 Existing pages use their own modal classes (`dc-modal-*`, `guide-overlay`, `guide-modal`) — do not rename those for styling reasons.
 
+**z-index above Leaflet:** `.ft-modal-backdrop` is set to `z-index: 1050` in `field-ui.css` — above Leaflet's default `z-index: 1000` for `.leaflet-top`/`.leaflet-bottom` controls. Do not reduce map-control z-indexes as a workaround.
+
 ---
 
 ## How to Build a New Tool Page
@@ -365,6 +367,7 @@ Driven by the existing `html[data-dark]` / `field_dark_mode` toggle. The homepag
 - **Continue** uses real existing local data only (`ft_last`, `ft_dc144_recent`, `wo_recent`, `ft_ts_entries`), read-only, **no new storage keys, no fabricated recent activity**. Empty → graceful message + clearly labeled "Open" shortcuts.
 - **No fake links.** Resources with no destination render as disabled `.util-soon` placeholders; Coming Soon tools stay disabled `.is-soon` cards with no `href`.
 - **Search** reuses `#tool-filter` / `.tool-card` / `#tools-empty` — no "no results" before typing.
+- **Tool card structure:** Active tool cards use icon + title together in `.card-top` (`display:flex; align-items:center; gap:10px`). `.card-desc` and `.card-foot` follow as separate flex children of the card. `.card-foot` groups tags on the left; `.card-arrow` pins right via `margin-left:auto`. The RECENT pill prepends to `.card-foot` without displacing the arrow.
 
 **Animation safety** (same as Overlay & Toast Rules): final keyframes end `transform: none`; never put `transform`/`contain: layout`/`will-change`/`filter`/`perspective` on `body`/`html`/main shell; fixed overlays must resolve to the viewport.
 
@@ -396,3 +399,23 @@ Homepage section icons, homepage tool card icons, Continue/recent icons, and ind
 | Coming Soon | muted (overridden by `.grp-soon .card-icon`) | Drainage Finder, Emergency Assistance |
 
 **Scope:** icon color alignment only. Do not broadly recolor controls, toggles, buttons, status dots, map styles, form sections, card borders, or page backgrounds to match icon colors.
+
+---
+
+## Topbar safety rules
+
+**No permanent `will-change`:** Never set `will-change: transform` permanently on `#topbar`/`.topbar`/`.ft-topbar`. The shared `field-ui.css` rule sets only `transition` — no `will-change`. Permanent `will-change` on a sticky element creates a GPU compositing stacking context that clips child content on mobile.
+
+**No absolute title centering with action buttons:** Do not use `position:absolute; left:50%; transform:translateX(-50%)` to center a tool-page topbar title when the topbar contains right-side action buttons — they overlap at desktop widths. Use flex static layout instead.
+
+---
+
+## Map dark mode backing
+
+In `html[data-dark]`, map containers need an explicit dark navy background (e.g. `background: #0c1a30`) to avoid pale/white rounded-corner halos where transparent areas show through. Apply on the outer container (`#map` or `.map-panel`), not on Leaflet internals. Do not alter tile behavior or disable tiles to work around this.
+
+---
+
+## Blueprint grid + dense UI surfaces
+
+Dense UI areas — calendars, pay-period summaries, data tables, dense form sections — need an opaque or near-opaque panel surface when the blueprint grid background is active. Wrap the area in a container with a solid background token (light: `var(--surface-2)`; dark: hardcoded `#0d1c38`) rather than removing the page grid globally. Grid lines must not bleed behind calendar weekday rows, pill labels, or data cells.
