@@ -260,12 +260,45 @@
 
     /* ── Bottom strip ── */
     .util-strip{margin-top:22px;display:grid;grid-template-columns:1.3fr 1.3fr 1fr;gap:16px;}
-    .util-col{padding:16px 18px;}
-    .util-title{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted2);margin:0 0 12px;}
-    .util-links{display:flex;flex-direction:column;gap:9px;}
-    .util-link{font-size:13px;color:var(--accent-2);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:6px;}
-    .util-link:hover{text-decoration:underline;}
-    .util-note{font-size:12.5px;color:var(--muted);line-height:1.5;}
+    .util-col{--util-accent:#0d9488;--util-accent-soft:rgba(13,148,136,0.12);padding:0;overflow:hidden;display:flex;flex-direction:column;}
+    .util-col:nth-child(2){--util-accent:#c47b18;--util-accent-soft:rgba(196,123,24,0.14);}
+    .util-col:nth-child(3){--util-accent:#6d28d9;--util-accent-soft:rgba(109,40,217,0.11);}
+    html[data-dark] .util-col{--util-accent:#2dd4bf;--util-accent-soft:rgba(45,212,191,0.15);}
+    html[data-dark] .util-col:nth-child(2){--util-accent:#fbbf24;--util-accent-soft:rgba(251,191,36,0.16);}
+    html[data-dark] .util-col:nth-child(3){--util-accent:#a78bfa;--util-accent-soft:rgba(167,139,250,0.17);}
+    .util-title{display:flex;align-items:center;gap:9px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted2);margin:0;padding:14px 16px 12px;border-bottom:1px solid var(--border-lo);}
+    .util-title > svg{width:30px;height:30px;box-sizing:border-box;padding:7px;border-radius:9px;background:var(--util-accent-soft);color:var(--util-accent);}
+    .util-links{display:flex;flex-direction:column;gap:7px;padding:14px 16px 16px;}
+    .util-link-main{flex:1;display:flex;align-items:center;gap:10px;min-width:0;}
+    .util-link-label{min-width:0;}
+    .util-link-ic{width:28px;height:28px;box-sizing:border-box;padding:6px;flex-shrink:0;border-radius:8px;background:var(--util-accent-soft);color:var(--util-accent);transition:background .14s,color .14s;}
+    .util-link:hover .util-link-ic{background:var(--util-accent);color:var(--surface);}
+    .util-link{position:relative;box-sizing:border-box;min-height:43px;padding:10px 10px 10px 12px;border:1px solid var(--border-lo);border-left:3px solid var(--util-accent);border-radius:9px;background:var(--surface-2);color:var(--text);text-decoration:none;font-size:12px;line-height:1.35;font-weight:650;display:flex;align-items:center;justify-content:space-between;gap:10px;overflow-wrap:anywhere;box-shadow:0 1px 2px rgba(20,45,95,0.04);transition:background .14s,border-color .14s,box-shadow .14s,transform .14s,color .14s;}
+    .util-link:hover{color:var(--text);text-decoration:none;background:var(--surface);border-color:var(--util-accent);box-shadow:0 5px 14px rgba(20,45,95,0.10),0 0 0 3px var(--util-accent-soft);transform:translateY(-1px);}
+    html[data-dark] .util-link{box-shadow:0 2px 6px rgba(0,0,0,0.16);}
+    html[data-dark] .util-link:hover{box-shadow:0 7px 18px rgba(0,0,0,0.28),0 0 0 3px var(--util-accent-soft);}
+    .util-link:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
+    .util-link:active{transform:translateY(0);}
+    .util-ext{width:22px;height:22px;box-sizing:border-box;padding:5px;flex-shrink:0;border-radius:6px;background:var(--util-accent-soft);color:var(--util-accent);opacity:1;transition:background .14s,color .14s,transform .14s;}
+    .util-link:hover .util-ext{background:var(--util-accent);color:var(--surface);transform:translateX(2px);}
+    .util-note{margin:0 16px 16px;padding:10px 11px;border:1px solid var(--border-lo);border-left:3px solid var(--util-accent);border-radius:9px;background:var(--surface-2);font-size:11.5px;color:var(--muted);line-height:1.5;}
+    .util-live-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 0;}
+    .util-live-label{display:inline-flex;align-items:center;gap:7px;color:var(--muted2);font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;}
+    .util-live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,0.13),0 0 8px rgba(34,197,94,0.65);flex-shrink:0;}
+    .util-live-dot.is-loading{background:var(--gold);box-shadow:0 0 0 3px rgba(229,179,59,0.13);}
+    .util-live-dot.is-error{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,0.13);}
+    .util-live-dot.is-stale{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,0.13);}
+    .util-live-time{font-size:10px;color:var(--muted);white-space:nowrap;}
+    .util-live-list{display:flex;flex-direction:column;gap:7px;padding:10px 16px 6px;}
+    .util-live-state{padding:11px 12px;border:1px dashed var(--border);border-radius:9px;color:var(--muted);font-size:11.5px;line-height:1.45;background:var(--surface-2);}
+    .util-event{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:start;gap:9px;padding:9px 10px;border:1px solid var(--border-lo);border-radius:9px;background:var(--surface-2);}
+    .util-event-icon{width:28px;height:28px;box-sizing:border-box;padding:6px;border-radius:8px;background:var(--util-accent-soft);color:var(--util-accent);}
+    .util-event-main{min-width:0;}
+    .util-event-kicker{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--util-accent);margin-bottom:2px;}
+    .util-event-title{font-size:11.5px;font-weight:750;line-height:1.3;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .util-event-desc{font-size:10.5px;line-height:1.4;color:var(--muted);margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .util-event-time{font-size:9.5px;color:var(--muted);white-space:nowrap;padding-top:1px;}
+    .util-reference-links{padding-top:8px;padding-bottom:10px;}
     .util-soon{font-size:13px;color:var(--muted);display:inline-flex;align-items:center;gap:8px;cursor:default;}
     .util-soon em{font-size:8.5px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:2px 6px;border-radius:5px;background:var(--surface-2);border:1px solid var(--border-lo);}
     .util-stat{font-size:12.5px;color:var(--muted2);display:flex;align-items:center;gap:8px;margin-bottom:8px;}
@@ -549,26 +582,41 @@
   <div id="tools-empty" class="tools-empty" role="status">No tools match your search.</div>
 
   <!-- BOTTOM STRIP -->
+  <!-- Official reference links plus live 511NJ status through the configured Cloudflare proxy. -->
   <section class="util-strip" id="resources" aria-label="Quick links, alerts, resources">
     <div class="panel util-col">
       <h3 class="util-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Quick Links</h3>
       <div class="util-links">
-        <a class="util-link" href="pages/njsearch.html">Bridge Lookup</a>
-        <a class="util-link" href="pages/njfuel.html">Fuel Stations</a>
-        <a class="util-link" href="pages/milemarker.html">Milepost Finder</a>
-        <a class="util-link" href="pages/dc144.html">DC-144 Field Form</a>
+        <a class="util-link" href="https://www.nj1-call.org/" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5 8.5 3l2 4.5-2 1.5a11 11 0 0 0 6.5 6.5l1.5-2 4.5 2-1.5 3.5C10.8 19 5 13.2 5 4.5z"/></svg><span class="util-link-label">NJ One Call / 811 (Call Before You Dig)</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <a class="util-link" href="https://dot.nj.gov/transportation/commuter/roads/" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 3-3 18M16 3l3 18M7 7h10M6 13h12M5 19h14"/></svg><span class="util-link-label">NJDOT Construction &amp; Lane Closures</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <a class="util-link" href="https://dot.nj.gov/transportation/business/procurement/constrserv/awards26.shtm" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></svg><span class="util-link-label">NJDOT Awarded Contracts</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <a class="util-link" href="https://njsld.org/NJDOT/SLD/SheetViewer" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5 9 3l6 3 5-2.5v15L15 21l-6-3-5 2.5z"/><path d="M9 3v15M15 6v15"/></svg><span class="util-link-label">NJDOT Straight Line Diagrams</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <a class="util-link" href="https://dot.nj.gov/transportation/eng/construction/procedures.shtm" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 1 4 17.5z"/><path d="M4 17.5A2.5 2.5 0 0 1 6.5 15H20M8 7h8M8 10h6"/></svg><span class="util-link-label">NJDOT Construction Procedures Handbook</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <a class="util-link" href="https://dot.nj.gov/transportation/about/winter/" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M8 5.3 12 8l4-2.7M8 18.7 12 16l4 2.7M4.8 12H8M16 12h3.2"/></svg><span class="util-link-label">NJDOT Winter Readiness</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
       </div>
     </div>
     <div class="panel util-col">
       <h3 class="util-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alerts &amp; Updates</h3>
-      <p class="util-note">No active alerts. Tools work offline once loaded and save your work on this device.</p>
+      <div class="util-live-head">
+        <span class="util-live-label"><span class="util-live-dot is-loading" id="nj-live-dot" aria-hidden="true"></span>511NJ live events</span>
+        <time class="util-live-time" id="nj-live-updated">Checking&hellip;</time>
+      </div>
+      <div class="util-live-list" id="nj-live-list" aria-live="polite">
+        <div class="util-live-state">Loading current NJ traffic events&hellip;</div>
+      </div>
+      <div class="util-links util-reference-links">
+        <a class="util-link" href="https://511nj.org/trafficmap" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5 9 3l6 3 5-2.5v15L15 21l-6-3-5 2.5z"/><path d="M9 3v15M15 6v15"/><circle cx="12" cy="10" r="2"/></svg><span class="util-link-label">511NJ Live Traffic Map</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <a class="util-link" href="https://www.weather.gov/alerts/nj.html" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.7-1.5A4.5 4.5 0 0 0 7 18z"/><path d="m13 11-2 4h3l-2 4"/></svg><span class="util-link-label">NWS Active Weather Alerts (NJ)</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+      </div>
+      <p class="util-note" id="nj-live-note">Live status from the official 511NJ feed. Refreshes while this page is open; the links above remain available if live data is unavailable.</p>
     </div>
     <div class="panel util-col">
       <h3 class="util-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Resources</h3>
       <div class="util-links">
-        <span class="util-soon" title="Not yet available">Field Manual <em>soon</em></span>
-        <span class="util-soon" title="Not yet available">Standards <em>soon</em></span>
-        <span class="util-soon" title="Not yet available">Training <em>soon</em></span>
+        <a class="util-link" href="https://dot.nj.gov/transportation/eng/specs/index.shtml" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M9 12h6M9 16h6"/></svg><span class="util-link-label">NJDOT Standard Specifications</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <a class="util-link" href="https://www.nj.gov/transportation/eng/specs/2019/pdf/StandSpecRoadBridge_20190528.pdf" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg><span class="util-link-label">2019 Road &amp; Bridge Specs (PDF)</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <a class="util-link" href="https://www.nj.gov/transportation/eng/documents/BSDM/" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19h18M5 19V9c2 0 3 4 7 4s5-4 7-4v10M3 7h18"/></svg><span class="util-link-label">NJDOT Design Manual for Bridges &amp; Structures</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <a class="util-link" href="https://dot.nj.gov/transportation/eng/CADD/v8/stdconsdtls.shtml" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 20 16-16M6 18l2 2M9 15l2 2M12 12l2 2M15 9l2 2M18 6l2 2"/></svg><span class="util-link-label">NJDOT Standard Construction Details</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
       </div>
     </div>
   </section>
@@ -741,6 +789,98 @@
       if((e.key==='k'||e.key==='K')&&(e.metaKey||e.ctrlKey)){e.preventDefault();input.focus();return;}
       if(e.key==='/'&&!/^(input|textarea|select)$/i.test((e.target&&e.target.tagName)||'')&&!e.metaKey&&!e.ctrlKey&&!e.altKey){e.preventDefault();input.focus();}
     });
+  })();
+
+  // Live 511NJ events through the Cloudflare RSS proxy.
+  (function(){
+    var ENDPOINT='https://njdot-511-proxy.joebiocco.workers.dev/';
+    var list=document.getElementById('nj-live-list');
+    var updated=document.getElementById('nj-live-updated');
+    var dot=document.getElementById('nj-live-dot');
+    var note=document.getElementById('nj-live-note');
+    if(!list||!updated||!dot) return;
+    var hasData=false,requestId=0;
+    var EVENT_ICONS={
+      incident:'<path d="M12 3 2.5 20h19L12 3z"/><path d="M12 9v4M12 17h.01"/>',
+      work:'<path d="m8 3-3 18M16 3l3 18M7 7h10M6 13h12M5 19h14"/>',
+      delay:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+      general:'<path d="M4 5.5 9 3l6 3 5-2.5v15L15 21l-6-3-5 2.5z"/><path d="M9 3v15M15 6v15"/>'
+    };
+    function clear(el){while(el.firstChild)el.removeChild(el.firstChild);}
+    function textOf(parent,name){var node=parent.getElementsByTagName(name)[0];return node?String(node.textContent||'').trim():'';}
+    function classify(title,desc){
+      var value=(title+' '+desc).toLowerCase();
+      if(/crash|collision|accident|disabled|fire|emergency/.test(value)) return {label:'Incident',icon:'incident'};
+      if(/construction|roadwork|work zone|closure|maintenance|repair/.test(value)) return {label:'Work zone',icon:'work'};
+      if(/delay|travel time|congestion|slow/.test(value)) return {label:'Delay',icon:'delay'};
+      return {label:'Traffic event',icon:'general'};
+    }
+    function parseFeed(xml){
+      var doc=new DOMParser().parseFromString(xml,'application/xml');
+      if(doc.getElementsByTagName('parsererror').length) throw new Error('Invalid RSS');
+      var channel=doc.getElementsByTagName('channel')[0];
+      var items=Array.prototype.slice.call(doc.getElementsByTagName('item')).map(function(node){
+        var title=textOf(node,'title'),desc=textOf(node,'description'),date=textOf(node,'pubDate');
+        var point=textOf(node,'georss:point').split(/\s+/).map(Number);
+        return {title:title,description:desc,publishedAt:date,lat:point[0],lon:point[1]};
+      }).filter(function(item){return item.title||item.description;});
+      return {publishedAt:channel?textOf(channel,'pubDate'):'',items:items.slice(0,6)};
+    }
+    function age(dateText){
+      var stamp=Date.parse(dateText);if(isNaN(stamp)) return '';
+      var seconds=Math.max(0,(Date.now()-stamp)/1000);
+      if(seconds<90) return 'now';
+      if(seconds<3600) return Math.round(seconds/60)+'m';
+      if(seconds<86400) return Math.round(seconds/3600)+'h';
+      return Math.round(seconds/86400)+'d';
+    }
+    function updatedLabel(dateText){
+      var stamp=Date.parse(dateText);if(isNaN(stamp)) return 'Updated recently';
+      try{return 'Updated '+new Date(stamp).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});}catch(_){return 'Updated recently';}
+    }
+    function setStatus(state,label,copy){
+      dot.className='util-live-dot'+(state?' '+state:'');
+      updated.textContent=label;
+      if(note&&copy) note.textContent=copy;
+    }
+    function render(data){
+      clear(list);
+      if(!data.items.length){
+        var empty=document.createElement('div');empty.className='util-live-state';empty.textContent='No active NJ events reported by 511NJ.';list.appendChild(empty);return;
+      }
+      data.items.forEach(function(item){
+        var kind=classify(item.title,item.description);
+        var article=document.createElement('article');article.className='util-event';
+        var icon=document.createElement('span');icon.className='util-event-icon';icon.setAttribute('aria-hidden','true');
+        icon.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(EVENT_ICONS[kind.icon]||EVENT_ICONS.general)+'</svg>';
+        var main=document.createElement('div');main.className='util-event-main';
+        var kicker=document.createElement('div');kicker.className='util-event-kicker';kicker.textContent=kind.label;
+        var title=document.createElement('div');title.className='util-event-title';title.textContent=item.title||'NJ traffic event';
+        var desc=document.createElement('div');desc.className='util-event-desc';desc.textContent=item.description||'';
+        main.appendChild(kicker);main.appendChild(title);if(item.description)main.appendChild(desc);
+        var time=document.createElement('time');time.className='util-event-time';time.textContent=age(item.publishedAt);var eventStamp=Date.parse(item.publishedAt);if(!isNaN(eventStamp))time.dateTime=new Date(eventStamp).toISOString();
+        article.appendChild(icon);article.appendChild(main);article.appendChild(time);list.appendChild(article);
+      });
+    }
+    function load(){
+      var current=++requestId;
+      if(!hasData)setStatus('is-loading','Checking…','Checking the official 511NJ feed.');
+      fetch(ENDPOINT,{cache:'no-store',headers:{Accept:'application/rss+xml, application/xml, text/xml'}})
+        .then(function(response){if(!response.ok)throw new Error('HTTP '+response.status);return response.text();})
+        .then(function(xml){
+          if(current!==requestId)return;
+          var data=parseFeed(xml);render(data);hasData=true;
+          setStatus('',updatedLabel(data.publishedAt),'Live status from 511NJ. Refreshes while this page is open; the links below remain available as official references.');
+        })
+        .catch(function(){
+          if(current!==requestId)return;
+          if(hasData)setStatus('is-stale','Stale data','The live feed is temporarily unavailable; showing the last successful 511NJ update.');
+          else{clear(list);var state=document.createElement('div');state.className='util-live-state';state.textContent='Live 511NJ data is temporarily unavailable. Use the official links below.';list.appendChild(state);setStatus('is-error','Unavailable','The live feed is unavailable right now. The official 511NJ links below are still available.');}
+        });
+    }
+    load();
+    setInterval(load,300000);
+    document.addEventListener('visibilitychange',function(){if(!document.hidden)load();});
   })();
 
   if('serviceWorker' in navigator){navigator.serviceWorker.register('service-worker.js').catch(function(){});}
