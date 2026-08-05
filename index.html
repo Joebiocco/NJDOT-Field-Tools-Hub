@@ -256,16 +256,14 @@
     /* search empty */
     .tools-empty{display:none;color:var(--muted);font-size:14px;text-align:center;padding:34px 12px;}
     .tools-empty.show{display:block;}
-    body.is-searching .continue-panel,body.is-searching .util-strip,body.is-searching .page-footer{display:none;}
+    body.is-searching .continue-panel,body.is-searching .util-strip,body.is-searching .util-feeds,body.is-searching .page-footer{display:none;}
 
     /* ── Bottom strip ── */
-    .util-strip{margin-top:22px;display:grid;grid-template-columns:1.3fr 1.3fr 1fr;gap:16px;}
+    .util-strip{margin-top:22px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
     .util-col{--util-accent:#0d9488;--util-accent-soft:rgba(13,148,136,0.12);padding:0;overflow:hidden;display:flex;flex-direction:column;}
-    .util-col:nth-child(2){--util-accent:#c47b18;--util-accent-soft:rgba(196,123,24,0.14);}
-    .util-col:nth-child(3){--util-accent:#6d28d9;--util-accent-soft:rgba(109,40,217,0.11);}
+    .util-col.util-resources{--util-accent:#6d28d9;--util-accent-soft:rgba(109,40,217,0.11);}
     html[data-dark] .util-col{--util-accent:#2dd4bf;--util-accent-soft:rgba(45,212,191,0.15);}
-    html[data-dark] .util-col:nth-child(2){--util-accent:#fbbf24;--util-accent-soft:rgba(251,191,36,0.16);}
-    html[data-dark] .util-col:nth-child(3){--util-accent:#a78bfa;--util-accent-soft:rgba(167,139,250,0.17);}
+    html[data-dark] .util-col.util-resources{--util-accent:#a78bfa;--util-accent-soft:rgba(167,139,250,0.17);}
     .util-title{display:flex;align-items:center;gap:9px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted2);margin:0;padding:14px 16px 12px;border-bottom:1px solid var(--border-lo);}
     .util-title > svg{width:30px;height:30px;box-sizing:border-box;padding:7px;border-radius:9px;background:var(--util-accent-soft);color:var(--util-accent);}
     .util-links{display:flex;flex-direction:column;gap:7px;padding:14px 16px 16px;}
@@ -282,22 +280,78 @@
     .util-ext{width:22px;height:22px;box-sizing:border-box;padding:5px;flex-shrink:0;border-radius:6px;background:var(--util-accent-soft);color:var(--util-accent);opacity:1;transition:background .14s,color .14s,transform .14s;}
     .util-link:hover .util-ext{background:var(--util-accent);color:var(--surface);transform:translateX(2px);}
     .util-note{margin:0 16px 16px;padding:10px 11px;border:1px solid var(--border-lo);border-left:3px solid var(--util-accent);border-radius:9px;background:var(--surface-2);font-size:11.5px;color:var(--muted);line-height:1.5;}
-    .util-live-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 0;}
-    .util-live-label{display:inline-flex;align-items:center;gap:7px;color:var(--muted2);font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;}
+    .util-feeds{display:flex;flex-direction:column;gap:16px;margin-top:22px;}
+    .util-feed-panel{--util-accent:#0d9488;--util-accent-soft:rgba(13,148,136,0.12);overflow:hidden;}
+    .util-feed-panel.nws-feed{--util-accent:#2563eb;--util-accent-soft:rgba(37,99,235,0.11);}
+    html[data-dark] .util-feed-panel{--util-accent:#2dd4bf;--util-accent-soft:rgba(45,212,191,0.15);}
+    html[data-dark] .util-feed-panel.nws-feed{--util-accent:#60a5fa;--util-accent-soft:rgba(96,165,250,0.16);}
+    .util-feed-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px 12px;border-bottom:1px solid var(--border-lo);}
+    .util-feed-title{display:flex;align-items:center;gap:9px;min-width:0;margin:0;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);}
+    .util-feed-title > svg{width:30px;height:30px;box-sizing:border-box;padding:7px;border-radius:9px;background:var(--util-accent-soft);color:var(--util-accent);flex-shrink:0;}
+    .util-feed-status{display:flex;align-items:center;gap:7px;flex-shrink:0;font-size:10px;color:var(--muted);white-space:nowrap;}
+    .util-feed-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px 0;color:var(--muted);font-size:11px;line-height:1.4;}
+    .util-feed-toggle{border:1px solid var(--border);border-radius:7px;background:var(--surface-2);color:var(--util-accent);font:inherit;font-size:10px;font-weight:750;padding:5px 8px;cursor:pointer;white-space:nowrap;}
+    .util-feed-toggle:hover{border-color:var(--util-accent);background:var(--util-accent-soft);}
+    .util-feed-toggle:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
     .util-live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,0.13),0 0 8px rgba(34,197,94,0.65);flex-shrink:0;}
     .util-live-dot.is-loading{background:var(--gold);box-shadow:0 0 0 3px rgba(229,179,59,0.13);}
     .util-live-dot.is-error{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,0.13);}
     .util-live-dot.is-stale{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,0.13);}
-    .util-live-time{font-size:10px;color:var(--muted);white-space:nowrap;}
-    .util-live-list{display:flex;flex-direction:column;gap:7px;padding:10px 16px 6px;}
+    .util-live-list{display:flex;flex-direction:column;gap:7px;padding:10px 16px 8px;}
     .util-live-state{padding:11px 12px;border:1px dashed var(--border);border-radius:9px;color:var(--muted);font-size:11.5px;line-height:1.45;background:var(--surface-2);}
-    .util-event{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:start;gap:9px;padding:9px 10px;border:1px solid var(--border-lo);border-radius:9px;background:var(--surface-2);}
+    .util-event{border:1px solid var(--border-lo);border-left:3px solid var(--util-accent);border-radius:9px;background:var(--surface-2);overflow:hidden;}
+    .util-event-summary{display:grid;grid-template-columns:28px minmax(0,1fr) auto 44px;align-items:start;gap:9px;padding:10px 10px 10px 9px;cursor:pointer;list-style:none;}
+    .util-event-summary::-webkit-details-marker{display:none;}
+    .util-event-summary:focus-visible{outline:3px solid var(--focus-ring);outline-offset:-3px;}
     .util-event-icon{width:28px;height:28px;box-sizing:border-box;padding:6px;border-radius:8px;background:var(--util-accent-soft);color:var(--util-accent);}
     .util-event-main{min-width:0;}
     .util-event-kicker{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--util-accent);margin-bottom:2px;}
     .util-event-title{font-size:11.5px;font-weight:750;line-height:1.3;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-    .util-event-desc{font-size:10.5px;line-height:1.4;color:var(--muted);margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .util-event.nws-event{--util-accent:#2563eb;--util-accent-soft:rgba(37,99,235,0.11);}
+    .util-event.nws-event.severity-extreme{--util-accent:#b42318;--util-accent-soft:rgba(180,35,24,0.13);}
+    .util-event.nws-event.severity-severe{--util-accent:#c2410c;--util-accent-soft:rgba(194,65,12,0.13);}
+    .util-event.nws-event.severity-moderate{--util-accent:#b7791f;--util-accent-soft:rgba(183,121,31,0.15);}
+    .util-event.nws-event.severity-minor{--util-accent:#2563eb;--util-accent-soft:rgba(37,99,235,0.11);}
+    .util-event.nws-event.severity-unknown{--util-accent:#64748b;--util-accent-soft:rgba(100,116,139,0.13);}
+    html[data-dark] .util-event.nws-event.severity-extreme{--util-accent:#f87171;--util-accent-soft:rgba(248,113,113,0.17);}
+    html[data-dark] .util-event.nws-event.severity-severe{--util-accent:#fb923c;--util-accent-soft:rgba(251,146,60,0.17);}
+    html[data-dark] .util-event.nws-event.severity-moderate{--util-accent:#fbbf24;--util-accent-soft:rgba(251,191,36,0.17);}
+    html[data-dark] .util-event.nws-event.severity-minor{--util-accent:#60a5fa;--util-accent-soft:rgba(96,165,250,0.17);}
+    html[data-dark] .util-event.nws-event.severity-unknown{--util-accent:#94a3b8;--util-accent-soft:rgba(148,163,184,0.17);}
+    .util-event.nws-event[open] .util-event-title{display:block;-webkit-line-clamp:initial;overflow:visible;}
+    .util-event-detail{padding:0 12px 12px 49px;border-top:1px solid var(--border-lo);}
+    .util-event-detail-title{padding-top:10px;font-size:12px;font-weight:750;line-height:1.4;color:var(--text);}
+    .util-event-desc{font-size:11px;line-height:1.5;color:var(--muted);margin:7px 0 0;white-space:pre-line;}
+    .util-event-instruction{font-size:11px;line-height:1.5;color:var(--muted2);margin:8px 0 0;padding-top:8px;border-top:1px solid var(--border-lo);white-space:pre-line;}
+    .util-event-meta{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:9px;font-size:10px;color:var(--muted);}
+    .util-alert-overview{display:flex;align-items:stretch;gap:8px;padding-top:10px;}
+    .util-alert-area{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:9px 10px;border:1px solid var(--util-accent-soft);border-left:3px solid var(--util-accent);border-radius:8px;background:var(--util-accent-soft);}
+    .util-alert-area-label,.util-alert-fact-label,.util-alert-block-label,.util-alert-instruction-label{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--util-accent);}
+    .util-alert-area-value{font-size:12px;font-weight:750;line-height:1.35;color:var(--text);overflow-wrap:anywhere;}
+    .util-alert-severity{display:inline-flex;align-items:center;align-self:flex-start;gap:5px;flex-shrink:0;padding:6px 8px;border:1px solid var(--util-accent-soft);border-radius:999px;background:var(--util-accent-soft);color:var(--util-accent);font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;}
+    .util-alert-severity::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px var(--util-accent-soft);}
+    .util-alert-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:8px;}
+    .util-alert-fact{min-width:0;padding:8px 9px;border:1px solid var(--border-lo);border-radius:8px;background:var(--surface-2);}
+    .util-alert-fact-label{color:var(--muted);}
+    .util-alert-fact-value{margin-top:3px;font-size:10.5px;line-height:1.35;font-weight:700;color:var(--text);overflow-wrap:anywhere;}
+    .util-alert-description{display:flex;flex-direction:column;gap:8px;margin-top:11px;padding-top:11px;border-top:1px solid var(--border-lo);}
+    .util-alert-section-title{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);}
+    .util-alert-block{padding:9px 10px;border:1px solid var(--border-lo);border-radius:8px;background:var(--surface);}
+    .util-alert-block-copy{margin:5px 0 0;font-size:11px;line-height:1.5;color:var(--muted2);white-space:pre-line;}
+    .util-alert-list{margin:5px 0 0;padding-left:17px;font-size:11px;line-height:1.5;color:var(--muted2);}
+    .util-alert-list li+li{margin-top:5px;}
+    .util-alert-instruction{margin-top:10px;padding:9px 10px;border:1px solid var(--util-accent-soft);border-left:3px solid var(--util-accent);border-radius:8px;background:var(--util-accent-soft);}
+    .util-alert-instruction-copy{margin:4px 0 0;font-size:11px;line-height:1.5;color:var(--text);}
+    .util-event-link{display:inline-flex;margin-top:10px;color:var(--util-accent);font-size:10.5px;font-weight:750;text-decoration:none;}
+    .util-event-link:hover{text-decoration:underline;}
     .util-event-time{font-size:9.5px;color:var(--muted);white-space:nowrap;padding-top:1px;}
+    .util-event-action-wrap{display:inline-flex;align-items:center;justify-content:flex-end;gap:3px;min-width:40px;}
+    .util-event-action{font-size:9px;font-weight:750;color:var(--util-accent);text-align:right;white-space:nowrap;}
+    .util-event-chevron{width:14px;height:14px;box-sizing:border-box;padding:2px;color:var(--util-accent);transition:transform .15s;}
+    .util-event[open] .util-event-chevron{transform:rotate(180deg);}
+    .util-feed-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:2px 16px 14px;font-size:10.5px;color:var(--muted);}
+    .util-feed-reference{color:var(--util-accent);font-weight:750;text-decoration:none;}
+    .util-feed-reference:hover{text-decoration:underline;}
     .util-reference-links{padding-top:8px;padding-bottom:10px;}
     .util-soon{font-size:13px;color:var(--muted);display:inline-flex;align-items:center;gap:8px;cursor:default;}
     .util-soon em{font-size:8.5px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:2px 6px;border-radius:5px;background:var(--surface-2);border:1px solid var(--border-lo);}
@@ -393,6 +447,15 @@
       .continue-extra{grid-template-columns:1fr;}
       .module-tiles{grid-template-columns:1fr 1fr;}
       .util-strip{grid-template-columns:1fr;}
+      .util-feed-head{align-items:flex-start;flex-direction:column;gap:8px;}
+      .util-feed-status{padding-left:39px;}
+      .util-feed-toolbar{align-items:flex-start;flex-direction:column;gap:6px;}
+      .util-feed-foot{align-items:flex-start;flex-direction:column;}
+      .util-event-summary{grid-template-columns:28px minmax(0,1fr) auto;gap:8px;}
+      .util-event-time{grid-column:2;grid-row:2;padding-top:4px;}
+      .util-event-action-wrap{grid-column:3;grid-row:1 / span 2;align-self:center;}
+      .util-event-detail{padding-left:9px;padding-right:12px;}
+      .util-alert-facts{grid-template-columns:repeat(2,minmax(0,1fr));}
     }
     @media (max-width:430px){
       .hero-title{font-size:26px;}
@@ -401,6 +464,7 @@
       .hero-nj{opacity:.5;}
       .module-tiles{grid-template-columns:1fr;}
       .coming-tiles{grid-template-columns:1fr;}
+      .util-alert-facts{grid-template-columns:1fr;}
     }
     @media (prefers-reduced-motion:reduce){
       *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
@@ -595,28 +659,52 @@
         <a class="util-link" href="https://dot.nj.gov/transportation/about/winter/" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M8 5.3 12 8l4-2.7M8 18.7 12 16l4 2.7M4.8 12H8M16 12h3.2"/></svg><span class="util-link-label">NJDOT Winter Readiness</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
       </div>
     </div>
-    <div class="panel util-col">
-      <h3 class="util-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alerts &amp; Updates</h3>
-      <div class="util-live-head">
-        <span class="util-live-label"><span class="util-live-dot is-loading" id="nj-live-dot" aria-hidden="true"></span>511NJ live events</span>
-        <time class="util-live-time" id="nj-live-updated">Checking&hellip;</time>
-      </div>
-      <div class="util-live-list" id="nj-live-list" aria-live="polite">
-        <div class="util-live-state">Loading current NJ traffic events&hellip;</div>
-      </div>
-      <div class="util-links util-reference-links">
-        <a class="util-link" href="https://511nj.org/trafficmap" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5 9 3l6 3 5-2.5v15L15 21l-6-3-5 2.5z"/><path d="M9 3v15M15 6v15"/><circle cx="12" cy="10" r="2"/></svg><span class="util-link-label">511NJ Live Traffic Map</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
-        <a class="util-link" href="https://www.weather.gov/alerts/nj.html" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.7-1.5A4.5 4.5 0 0 0 7 18z"/><path d="m13 11-2 4h3l-2 4"/></svg><span class="util-link-label">NWS Active Weather Alerts (NJ)</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
-      </div>
-      <p class="util-note" id="nj-live-note">Live status from the official 511NJ feed. Refreshes while this page is open; the links above remain available if live data is unavailable.</p>
-    </div>
-    <div class="panel util-col">
+    <div class="panel util-col util-resources">
       <h3 class="util-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Resources</h3>
       <div class="util-links">
         <a class="util-link" href="https://dot.nj.gov/transportation/eng/specs/index.shtml" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M9 12h6M9 16h6"/></svg><span class="util-link-label">NJDOT Standard Specifications</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
         <a class="util-link" href="https://www.nj.gov/transportation/eng/specs/2019/pdf/StandSpecRoadBridge_20190528.pdf" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M8 13h8M8 17h5"/></svg><span class="util-link-label">2019 Road &amp; Bridge Specs (PDF)</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
         <a class="util-link" href="https://www.nj.gov/transportation/eng/documents/BSDM/" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19h18M5 19V9c2 0 3 4 7 4s5-4 7-4v10M3 7h18"/></svg><span class="util-link-label">NJDOT Design Manual for Bridges &amp; Structures</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
         <a class="util-link" href="https://dot.nj.gov/transportation/eng/CADD/v8/stdconsdtls.shtml" target="_blank" rel="noopener"><span class="util-link-main"><svg class="util-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 20 16-16M6 18l2 2M9 15l2 2M12 12l2 2M15 9l2 2M18 6l2 2"/></svg><span class="util-link-label">NJDOT Standard Construction Details</span></span><svg class="util-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVE ALERT FEEDS -->
+  <section class="util-feeds" id="alerts" aria-label="Alerts &amp; Updates">
+    <div class="panel util-feed-panel" id="nj-traffic-feed">
+      <div class="util-feed-head">
+        <h3 class="util-feed-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5 9 3l6 3 5-2.5v15L15 21l-6-3-5 2.5z"/><path d="M9 3v15M15 6v15"/><circle cx="12" cy="10" r="2"/></svg>511NJ Live Traffic</h3>
+        <div class="util-feed-status"><span class="util-live-dot is-loading" id="nj-live-dot" aria-hidden="true"></span><time id="nj-live-updated">Checking&hellip;</time></div>
+      </div>
+      <div class="util-feed-toolbar">
+        <span>Tap any event to read the complete message.</span>
+        <button class="util-feed-toggle" type="button" data-feed-toggle="nj-live-list" aria-expanded="false">Expand all</button>
+      </div>
+      <div class="util-live-list" id="nj-live-list" aria-live="polite">
+        <div class="util-live-state">Loading current NJ traffic events&hellip;</div>
+      </div>
+      <div class="util-feed-foot">
+        <span id="nj-live-note">Live status from the official 511NJ feed. Refreshes every 5 minutes while this page is open.</span>
+        <a class="util-feed-reference" href="https://511nj.org/trafficmap" target="_blank" rel="noopener">Open 511NJ map</a>
+      </div>
+    </div>
+
+    <div class="panel util-feed-panel nws-feed" id="nws-alert-feed">
+      <div class="util-feed-head">
+        <h3 class="util-feed-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.7-1.5A4.5 4.5 0 0 0 7 18z"/><path d="m13 11-2 4h3l-2 4"/></svg>NWS Active Weather Alerts</h3>
+        <div class="util-feed-status"><span class="util-live-dot is-loading" id="nws-live-dot" aria-hidden="true"></span><time id="nws-live-updated">Checking&hellip;</time></div>
+      </div>
+      <div class="util-feed-toolbar">
+        <span>Watches, warnings, and advisories for New Jersey.</span>
+        <button class="util-feed-toggle" type="button" data-feed-toggle="nws-live-list" aria-expanded="false">Expand all</button>
+      </div>
+      <div class="util-live-list" id="nws-live-list" aria-live="polite">
+        <div class="util-live-state">Loading current NWS alerts&hellip;</div>
+      </div>
+      <div class="util-feed-foot">
+        <span id="nws-live-note">Live status from the official National Weather Service feed. Refreshes every 5 minutes.</span>
+        <a class="util-feed-reference" href="https://www.weather.gov/alerts/nj.html" target="_blank" rel="noopener">Open NWS alerts</a>
       </div>
     </div>
   </section>
@@ -791,41 +879,22 @@
     });
   })();
 
-  // Live 511NJ events through the Cloudflare RSS proxy.
+  // Live 511NJ traffic and NWS weather alerts.
   (function(){
-    var ENDPOINT='https://njdot-511-proxy.joebiocco.workers.dev/';
-    var list=document.getElementById('nj-live-list');
-    var updated=document.getElementById('nj-live-updated');
-    var dot=document.getElementById('nj-live-dot');
-    var note=document.getElementById('nj-live-note');
-    if(!list||!updated||!dot) return;
-    var hasData=false,requestId=0;
+    var NJ_ENDPOINT='https://njdot-511-proxy.joebiocco.workers.dev/';
+    var NWS_ENDPOINT='https://api.weather.gov/alerts/active?area=NJ';
+    var REFRESH_MS=300000;
     var EVENT_ICONS={
       incident:'<path d="M12 3 2.5 20h19L12 3z"/><path d="M12 9v4M12 17h.01"/>',
       work:'<path d="m8 3-3 18M16 3l3 18M7 7h10M6 13h12M5 19h14"/>',
       delay:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+      weather:'<path d="M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.7-1.5A4.5 4.5 0 0 0 7 18z"/><path d="m13 11-2 4h3l-2 4"/>',
       general:'<path d="M4 5.5 9 3l6 3 5-2.5v15L15 21l-6-3-5 2.5z"/><path d="M9 3v15M15 6v15"/>'
     };
+    function byId(id){return document.getElementById(id);}
     function clear(el){while(el.firstChild)el.removeChild(el.firstChild);}
     function textOf(parent,name){var node=parent.getElementsByTagName(name)[0];return node?String(node.textContent||'').trim():'';}
-    function classify(title,desc){
-      var value=(title+' '+desc).toLowerCase();
-      if(/crash|collision|accident|disabled|fire|emergency/.test(value)) return {label:'Incident',icon:'incident'};
-      if(/construction|roadwork|work zone|closure|maintenance|repair/.test(value)) return {label:'Work zone',icon:'work'};
-      if(/delay|travel time|congestion|slow/.test(value)) return {label:'Delay',icon:'delay'};
-      return {label:'Traffic event',icon:'general'};
-    }
-    function parseFeed(xml){
-      var doc=new DOMParser().parseFromString(xml,'application/xml');
-      if(doc.getElementsByTagName('parsererror').length) throw new Error('Invalid RSS');
-      var channel=doc.getElementsByTagName('channel')[0];
-      var items=Array.prototype.slice.call(doc.getElementsByTagName('item')).map(function(node){
-        var title=textOf(node,'title'),desc=textOf(node,'description'),date=textOf(node,'pubDate');
-        var point=textOf(node,'georss:point').split(/\s+/).map(Number);
-        return {title:title,description:desc,publishedAt:date,lat:point[0],lon:point[1]};
-      }).filter(function(item){return item.title||item.description;});
-      return {publishedAt:channel?textOf(channel,'pubDate'):'',items:items.slice(0,6)};
-    }
+    function safeUrl(value){return /^https?:\/\//i.test(value||'')?value:'';}
     function age(dateText){
       var stamp=Date.parse(dateText);if(isNaN(stamp)) return '';
       var seconds=Math.max(0,(Date.now()-stamp)/1000);
@@ -838,49 +907,198 @@
       var stamp=Date.parse(dateText);if(isNaN(stamp)) return 'Updated recently';
       try{return 'Updated '+new Date(stamp).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});}catch(_){return 'Updated recently';}
     }
-    function setStatus(state,label,copy){
-      dot.className='util-live-dot'+(state?' '+state:'');
-      updated.textContent=label;
-      if(note&&copy) note.textContent=copy;
+    function displayDate(dateText){
+      var stamp=Date.parse(dateText);if(isNaN(stamp)) return '';
+      try{return new Date(stamp).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}catch(_){return dateText;}
     }
-    function render(data){
-      clear(list);
-      if(!data.items.length){
-        var empty=document.createElement('div');empty.className='util-live-state';empty.textContent='No active NJ events reported by 511NJ.';list.appendChild(empty);return;
+    function classify(title,desc){
+      var value=(title+' '+desc).toLowerCase();
+      if(/crash|collision|accident|disabled|fire|emergency/.test(value)) return {label:'Incident',icon:'incident'};
+      if(/construction|roadwork|work zone|closure|maintenance|repair/.test(value)) return {label:'Work zone',icon:'work'};
+      if(/delay|travel time|congestion|slow/.test(value)) return {label:'Delay',icon:'delay'};
+      return {label:'Traffic event',icon:'general'};
+    }
+    function parseRss(xml){
+      var doc=new DOMParser().parseFromString(xml,'application/xml');
+      if(doc.getElementsByTagName('parsererror').length) throw new Error('Invalid RSS');
+      var channel=doc.getElementsByTagName('channel')[0];
+      var items=Array.prototype.slice.call(doc.getElementsByTagName('item')).map(function(node){
+        var title=textOf(node,'title'),desc=textOf(node,'description'),date=textOf(node,'pubDate');
+        return {title:title,description:desc,publishedAt:date,link:safeUrl(textOf(node,'link'))};
+      }).filter(function(item){return item.title||item.description;});
+      return {updatedAt:channel?textOf(channel,'pubDate'):'',items:items.slice(0,6)};
+    }
+    function parseNws(payload){
+      var items=(payload&&Array.isArray(payload.features)?payload.features:[]).map(function(feature){
+        var p=(feature&&feature.properties)||{};
+        var event=p.event||'Weather alert';
+        return {
+          title:p.headline||event,
+          description:p.description||'',
+          instruction:p.instruction||'',
+          publishedAt:p.sent||p.effective||p.onset||'',
+          effectiveAt:p.effective||p.onset||'',
+          expires:p.expires||p.ends||'',
+          area:p.areaDesc||'New Jersey',
+          severity:p.severity||'',
+          certainty:p.certainty||'',
+          link:safeUrl(p.web||((feature||{}).id)||''),
+          label:event,
+          icon:'weather'
+        };
+      }).filter(function(item){return item.title||item.description;});
+      return {updatedAt:new Date().toISOString(),items:items.slice(0,6)};
+    }
+    function addMeta(meta, value){if(value){var span=document.createElement('span');span.textContent=value;meta.appendChild(span);}}
+    function severityKey(value){
+      var key=String(value||'').toLowerCase().trim();
+      return /^(extreme|severe|moderate|minor)$/.test(key)?key:'unknown';
+    }
+    function severityLabel(value){
+      var key=severityKey(value);return key.charAt(0).toUpperCase()+key.slice(1);
+    }
+    function addFact(container,label,value){
+      if(!value)return;
+      var fact=document.createElement('div');fact.className='util-alert-fact';
+      var factLabel=document.createElement('div');factLabel.className='util-alert-fact-label';factLabel.textContent=label;
+      var factValue=document.createElement('div');factValue.className='util-alert-fact-value';factValue.textContent=value;
+      fact.appendChild(factLabel);fact.appendChild(factValue);container.appendChild(fact);
+    }
+    function appendAlertCopy(parent, lines){
+      var paragraphs=[],bullets=[],current='';
+      lines.forEach(function(line){
+        line=String(line||'').trim();if(!line)return;
+        if(/^[-•]\s*/.test(line)){
+          if(current)bullets.push(current);
+          current=line.replace(/^[-•]\s*/,'').trim();
+        }else if(current){current+=' '+line;}
+        else{paragraphs.push(line);}
+      });
+      if(current)bullets.push(current);
+      if(paragraphs.length){var paragraph=document.createElement('p');paragraph.className='util-alert-block-copy';paragraph.textContent=paragraphs.join(' ');parent.appendChild(paragraph);}
+      if(bullets.length){var list=document.createElement('ul');list.className='util-alert-list';bullets.forEach(function(item){var li=document.createElement('li');li.textContent=item;list.appendChild(li);});parent.appendChild(list);}
+    }
+    function appendNwsDescription(detail, raw){
+      if(!raw)return;
+      var description=document.createElement('div');description.className='util-alert-description';
+      var heading=document.createElement('div');heading.className='util-alert-section-title';heading.textContent='Alert details';description.appendChild(heading);
+      String(raw).replace(/\r/g,'').split(/\n\s*\n/).map(function(group){return group.trim();}).filter(Boolean).forEach(function(group){
+        var lines=group.split('\n').map(function(line){return line.trim();}).filter(Boolean);if(!lines.length)return;
+        var first=lines.shift();
+        var match=/^\*?\s*([A-Z][A-Z\s-]{1,})\s*(?:\.\.\.|…|:)\s*(.*)$/.exec(first);
+        var block=document.createElement('div');block.className='util-alert-block';
+        var bodyLines=[];
+        if(match){
+          var label=document.createElement('div');label.className='util-alert-block-label';label.textContent=match[1].trim();block.appendChild(label);
+          if(match[2])bodyLines.push(match[2]);
+        }else{bodyLines.push(first);}
+        bodyLines=bodyLines.concat(lines);appendAlertCopy(block,bodyLines);description.appendChild(block);
+      });
+      if(description.childNodes.length>1)detail.appendChild(description);
+    }
+    function renderNwsDetail(detail,item){
+      var overview=document.createElement('div');overview.className='util-alert-overview';
+      var area=document.createElement('div');area.className='util-alert-area';
+      var areaLabel=document.createElement('div');areaLabel.className='util-alert-area-label';areaLabel.textContent='Affected area';
+      var areaValue=document.createElement('div');areaValue.className='util-alert-area-value';areaValue.textContent=item.area||'New Jersey';
+      area.appendChild(areaLabel);area.appendChild(areaValue);
+      var severity=document.createElement('span');severity.className='util-alert-severity';severity.textContent=severityLabel(item.severity);severity.setAttribute('aria-label','Severity: '+severityLabel(item.severity));
+      overview.appendChild(area);overview.appendChild(severity);detail.appendChild(overview);
+      var facts=document.createElement('div');facts.className='util-alert-facts';
+      addFact(facts,'Certainty',item.certainty||'Unknown');
+      addFact(facts,'Issued',displayDate(item.publishedAt));
+      addFact(facts,'Effective',displayDate(item.effectiveAt));
+      addFact(facts,'Expires',displayDate(item.expires));
+      if(facts.childNodes.length)detail.appendChild(facts);
+      appendNwsDescription(detail,item.description);
+      if(item.instruction){
+        var instruction=document.createElement('div');instruction.className='util-alert-instruction';
+        var instructionLabel=document.createElement('div');instructionLabel.className='util-alert-instruction-label';instructionLabel.textContent='Recommended action';
+        var instructionCopy=document.createElement('p');instructionCopy.className='util-alert-instruction-copy';instructionCopy.textContent=item.instruction;
+        instruction.appendChild(instructionLabel);instruction.appendChild(instructionCopy);detail.appendChild(instruction);
       }
+    }
+    function resetFeedToggle(list){
+      var button=document.querySelector('[data-feed-toggle="'+list.id+'"]');
+      if(button){button.setAttribute('aria-expanded','false');button.textContent='Expand all';}
+    }
+    function render(data,list,kind){
+      clear(list);
+      resetFeedToggle(list);
+      if(!data.items.length){var empty=document.createElement('div');empty.className='util-live-state';empty.textContent=kind==='nws'?'No active NWS alerts for New Jersey.':'No active NJ events reported by 511NJ.';list.appendChild(empty);return;}
       data.items.forEach(function(item){
-        var kind=classify(item.title,item.description);
-        var article=document.createElement('article');article.className='util-event';
+        var classification=kind==='nws'?{label:item.label||'Weather alert',icon:'weather'}:classify(item.title,item.description);
+        var details=document.createElement('details');details.className='util-event'+(kind==='nws'?' nws-event severity-'+severityKey(item.severity):'');
+        var summary=document.createElement('summary');summary.className='util-event-summary';
         var icon=document.createElement('span');icon.className='util-event-icon';icon.setAttribute('aria-hidden','true');
-        icon.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(EVENT_ICONS[kind.icon]||EVENT_ICONS.general)+'</svg>';
-        var main=document.createElement('div');main.className='util-event-main';
-        var kicker=document.createElement('div');kicker.className='util-event-kicker';kicker.textContent=kind.label;
-        var title=document.createElement('div');title.className='util-event-title';title.textContent=item.title||'NJ traffic event';
-        var desc=document.createElement('div');desc.className='util-event-desc';desc.textContent=item.description||'';
-        main.appendChild(kicker);main.appendChild(title);if(item.description)main.appendChild(desc);
-        var time=document.createElement('time');time.className='util-event-time';time.textContent=age(item.publishedAt);var eventStamp=Date.parse(item.publishedAt);if(!isNaN(eventStamp))time.dateTime=new Date(eventStamp).toISOString();
-        article.appendChild(icon);article.appendChild(main);article.appendChild(time);list.appendChild(article);
+        icon.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(EVENT_ICONS[classification.icon]||EVENT_ICONS.general)+'</svg>';
+        var main=document.createElement('span');main.className='util-event-main';
+        var kicker=document.createElement('span');kicker.className='util-event-kicker';kicker.textContent=kind==='nws'?(severityLabel(item.severity)+' severity'):classification.label;
+        var title=document.createElement('span');title.className='util-event-title';title.textContent=item.title||'Alert';
+        main.appendChild(kicker);main.appendChild(title);
+        var time=document.createElement('time');time.className='util-event-time';time.textContent=age(item.publishedAt);var stamp=Date.parse(item.publishedAt);if(!isNaN(stamp))time.dateTime=new Date(stamp).toISOString();
+        var actionWrap=document.createElement('span');actionWrap.className='util-event-action-wrap';
+        var action=document.createElement('span');action.className='util-event-action';action.textContent='View';
+        var chevron=document.createElement('svg');chevron.className='util-event-chevron';chevron.setAttribute('viewBox','0 0 24 24');chevron.setAttribute('fill','none');chevron.setAttribute('stroke','currentColor');chevron.setAttribute('stroke-width','2');chevron.innerHTML='<path d="m6 9 6 6 6-6"/>';
+        actionWrap.appendChild(action);actionWrap.appendChild(chevron);
+        summary.appendChild(icon);summary.appendChild(main);summary.appendChild(time);summary.appendChild(actionWrap);
+        var detail=document.createElement('div');detail.className='util-event-detail';
+        if(kind==='nws'){
+          detail.className+=' nws-detail';
+          renderNwsDetail(detail,item);
+        }else{
+          var fullTitle=document.createElement('div');fullTitle.className='util-event-detail-title';fullTitle.textContent=item.title||'Alert';detail.appendChild(fullTitle);
+          if(item.description){var desc=document.createElement('p');desc.className='util-event-desc';desc.textContent=item.description;detail.appendChild(desc);}
+          if(item.instruction){var instruction=document.createElement('p');instruction.className='util-event-instruction';instruction.textContent=item.instruction;detail.appendChild(instruction);}
+          var meta=document.createElement('div');meta.className='util-event-meta';
+          if(item.publishedAt)addMeta(meta,'Reported: '+displayDate(item.publishedAt));
+          if(meta.childNodes.length)detail.appendChild(meta);
+        }
+        if(item.link){var link=document.createElement('a');link.className='util-event-link';link.href=item.link;link.target='_blank';link.rel='noopener';link.textContent=kind==='nws'?'Open full NWS alert':'Open official 511NJ event';detail.appendChild(link);}
+        details.appendChild(summary);details.appendChild(detail);list.appendChild(details);
+        details.addEventListener('toggle',function(){action.textContent=details.open?'Hide':'View';});
       });
     }
-    function load(){
-      var current=++requestId;
-      if(!hasData)setStatus('is-loading','Checking…','Checking the official 511NJ feed.');
-      fetch(ENDPOINT,{cache:'no-store',headers:{Accept:'application/rss+xml, application/xml, text/xml'}})
-        .then(function(response){if(!response.ok)throw new Error('HTTP '+response.status);return response.text();})
-        .then(function(xml){
-          if(current!==requestId)return;
-          var data=parseFeed(xml);render(data);hasData=true;
-          setStatus('',updatedLabel(data.publishedAt),'Live status from 511NJ. Refreshes while this page is open; the links below remain available as official references.');
-        })
-        .catch(function(){
-          if(current!==requestId)return;
-          if(hasData)setStatus('is-stale','Stale data','The live feed is temporarily unavailable; showing the last successful 511NJ update.');
-          else{clear(list);var state=document.createElement('div');state.className='util-live-state';state.textContent='Live 511NJ data is temporarily unavailable. Use the official links below.';list.appendChild(state);setStatus('is-error','Unavailable','The live feed is unavailable right now. The official 511NJ links below are still available.');}
-        });
+    function setStatus(feed,state,label,copy){
+      var dot=byId(feed+'-live-dot'),updated=byId(feed+'-live-updated'),note=byId(feed+'-live-note');
+      if(dot)dot.className='util-live-dot'+(state?' '+state:'');
+      if(updated)updated.textContent=label;
+      if(note&&copy)note.textContent=copy;
     }
-    load();
-    setInterval(load,300000);
-    document.addEventListener('visibilitychange',function(){if(!document.hidden)load();});
+    function showError(feed,list,message){
+      clear(list);var state=document.createElement('div');state.className='util-live-state';state.textContent=message;list.appendChild(state);
+      setStatus(feed,'is-error','Unavailable',feed==='nws'?'The NWS alert feed is unavailable right now. The official NWS link below remains available.':'The 511NJ feed is unavailable right now. The official 511NJ map below remains available.');
+    }
+    function bindToggle(button){
+      var list=byId(button.getAttribute('data-feed-toggle'));if(!list)return;
+      button.addEventListener('click',function(){
+        var open=button.getAttribute('aria-expanded')!=='true';
+        Array.prototype.forEach.call(list.querySelectorAll('details.util-event'),function(details){details.open=open;var action=details.querySelector('.util-event-action');if(action)action.textContent=open?'Hide':'View';});
+        button.setAttribute('aria-expanded',open?'true':'false');button.textContent=open?'Collapse all':'Expand all';
+      });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-feed-toggle]'),bindToggle);
+    var njList=byId('nj-live-list'),nwsList=byId('nws-live-list');
+    if(!njList||!nwsList)return;
+    var njHasData=false,nwsHasData=false,njRequest=0,nwsRequest=0;
+    function loadNj(){
+      var current=++njRequest;if(!njHasData)setStatus('nj','is-loading','Checking…','Checking the official 511NJ feed.');
+      fetch(NJ_ENDPOINT,{cache:'no-store',headers:{Accept:'application/rss+xml, application/xml, text/xml'}})
+        .then(function(response){if(!response.ok)throw new Error('HTTP '+response.status);return response.text();})
+        .then(function(xml){if(current!==njRequest)return;var data=parseRss(xml);render(data,njList,'nj');njHasData=true;setStatus('nj','',updatedLabel(data.updatedAt),'Live status from 511NJ. Refreshes every 5 minutes while this page is open.');})
+        .catch(function(){if(current!==njRequest)return;if(njHasData)setStatus('nj','is-stale','Stale data','The 511NJ feed is temporarily unavailable; showing the last successful update.');else showError('nj',njList,'Live 511NJ data is temporarily unavailable. Use the official map below.');});
+    }
+    function loadNws(){
+      var current=++nwsRequest;if(!nwsHasData)setStatus('nws','is-loading','Checking…','Checking the official National Weather Service feed.');
+      fetch(NWS_ENDPOINT,{cache:'no-store',headers:{Accept:'application/geo+json'}})
+        .then(function(response){if(!response.ok)throw new Error('HTTP '+response.status);return response.json();})
+        .then(function(payload){if(current!==nwsRequest)return;var data=parseNws(payload);render(data,nwsList,'nws');nwsHasData=true;setStatus('nws','',updatedLabel(data.updatedAt),'Live status from the official National Weather Service feed. Refreshes every 5 minutes.');})
+        .catch(function(){if(current!==nwsRequest)return;if(nwsHasData)setStatus('nws','is-stale','Stale data','The NWS feed is temporarily unavailable; showing the last successful update.');else showError('nws',nwsList,'Live NWS alerts are temporarily unavailable. Use the official alerts link below.');});
+    }
+    function loadAll(){loadNj();loadNws();}
+    loadAll();
+    setInterval(loadAll,REFRESH_MS);
+    document.addEventListener('visibilitychange',function(){if(!document.hidden)loadAll();});
   })();
 
   if('serviceWorker' in navigator){navigator.serviceWorker.register('service-worker.js').catch(function(){});}
