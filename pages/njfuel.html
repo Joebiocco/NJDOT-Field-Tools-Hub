@@ -485,12 +485,12 @@
     @keyframes coordCopyPulse {
       0% { transform: scale(1); }
       45% { transform: scale(1.16); }
-      100% { transform: scale(1); }
+      100% { transform: none; }
     }
     @keyframes coordLabelPop {
       0% { opacity: 0; transform: translateX(50%) translateY(5px) scale(0.96); }
       20%, 82% { opacity: 1; transform: translateX(50%) translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateX(50%) translateY(-3px) scale(0.98); }
+      100% { opacity: 0; transform: none; }
     }
     .filter-toggle {
       display: inline-flex; align-items: center; justify-content: center; gap: 5px;
@@ -556,7 +556,7 @@
     }
     /* Page fade-in on load */
     @keyframes pageFadeIn { from { opacity: 0; } to { opacity: 1; } }
-    html:not(.entering-from-hub):not(.exiting-to-hub) body { animation: pageFadeIn 360ms cubic-bezier(0.16, 1, 0.3, 1); }
+    html:not(.entering-from-hub):not(.exiting-to-hub):not([data-transition-settled]) body { animation: pageFadeIn 360ms cubic-bezier(0.16, 1, 0.3, 1); }
     /* Button tap scale (works on real buttons + anchor buttons) */
     button:active,
     .btn:active,
@@ -678,7 +678,7 @@
     .fuel-bookmark-btn svg { width: 11px; height: 11px; }
     @keyframes fuelBookmarkPop {
       0% { transform: scale(1); } 40% { transform: scale(1.22); }
-      70% { transform: scale(0.95); } 100% { transform: scale(1); }
+      70% { transform: scale(0.95); } 100% { transform: none; }
     }
     .fuel-bookmark-btn.popping { animation: fuelBookmarkPop 420ms cubic-bezier(0.16, 1, 0.3, 1); }
     .fuel-bookmark-filter {
@@ -768,6 +768,10 @@
       contain: paint style;
     }
     html.entering-from-hub { background: var(--bg); }
+    @media (prefers-reduced-motion: reduce) {
+      html.entering-from-hub body,
+      html.exiting-to-hub body { animation:none !important; opacity:1 !important; transform:none !important; will-change:auto !important; contain:none !important; }
+    }
 
   
     /* Map tooltip styling — small, non-blocking, well above pins */
@@ -880,6 +884,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
       opacity: 0;
       pointer-events: none;
       transition: opacity 220ms ease;
@@ -887,9 +892,10 @@
     .guide-overlay.open { opacity: 1; pointer-events: auto; }
     .guide-modal {
       background: var(--surface);
+      font-family: var(--sans);
       border-radius: 18px;
-      width: min(520px, calc(100vw - 24px));
-      max-height: min(680px, calc(100dvh - 40px));
+      width: min(520px, 100%);
+      max-height: min(680px, calc(100dvh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
       display: flex;
       flex-direction: column;
       box-shadow: 0 24px 64px rgba(0,0,0,0.3);
@@ -906,7 +912,7 @@
       border-bottom: 1.5px solid var(--border-lo);
       flex-shrink: 0;
     }
-    .guide-header-title { font-size: 16px; font-weight: 700; }
+    .guide-header-title { font-family: var(--sans); font-size: 16px; font-weight: 700; line-height: 1.25; }
     .guide-close {
       background: none;
       border: none;
@@ -915,6 +921,8 @@
       line-height: 1;
       cursor: pointer;
       padding: 0 4px;
+      font-family: var(--sans);
+      transition: color var(--transition);
     }
     .guide-close:hover { color: var(--text); }
     .guide-slides { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
@@ -933,17 +941,21 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 17px;
+      font-size: 0;
       font-weight: 800;
       flex-shrink: 0;
       margin-top: 1px;
     }
-    .gi-blue { background: var(--accent-lo); }
-    .gi-green { background: rgba(16,185,129,0.12); }
-    .gi-orange { background: rgba(245,158,11,0.12); }
-    .gi-red { background: rgba(220,38,38,0.10); }
-    .gi-navy { background: rgba(30,41,57,0.08); }
-    html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
+    .guide-icon svg { width: 20px; height: 20px; display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .gi-blue { background: var(--accent-lo); color: var(--accent); }
+    .gi-green { background: rgba(16,185,129,0.12); color: #059669; }
+    .gi-orange { background: rgba(245,158,11,0.12); color: #b45309; }
+    .gi-red { background: rgba(220,38,38,0.10); color: #dc2626; }
+    .gi-navy { background: rgba(30,41,57,0.08); color: var(--muted2); }
+    html[data-dark] .gi-green { background: rgba(52,211,153,0.16); color: #6ee7b7; }
+    html[data-dark] .gi-orange { background: rgba(251,191,36,0.16); color: #fcd34d; }
+    html[data-dark] .gi-red { background: rgba(244,63,94,0.16); color: #fb7185; }
+    html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); color: var(--muted); }
     .guide-slide-body { flex: 1; min-width: 0; }
     .guide-slide-title { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
     .guide-slide-text { font-size: 13px; color: var(--muted2); line-height: 1.55; }
@@ -987,25 +999,27 @@
 
     @media (max-width: 520px) {
       .guide-modal {
-        width: calc(100vw - 18px);
-        max-height: calc(100dvh - 26px);
+        width: 100%;
+        max-height: calc(100dvh - 26px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         border-radius: 14px;
       }
       .guide-header { padding: 15px 16px 12px; }
       .guide-header-title { font-size: 15px; line-height: 1.25; }
       .guide-slide { padding: 16px; gap: 11px; }
-      .guide-icon { width: 34px; height: 34px; border-radius: 10px; font-size: 15px; }
+      .guide-icon { width: 34px; height: 34px; border-radius: 10px; }
+      .guide-icon svg { width: 18px; height: 18px; }
       .guide-slide-title { font-size: 13px; }
       .guide-slide-text { font-size: 12px; line-height: 1.5; }
       .guide-footer { padding: 12px 16px; }
     }
     @media (max-width: 380px) {
       .guide-modal {
-        width: calc(100vw - 12px);
-        max-height: calc(100dvh - 18px);
+        width: 100%;
+        max-height: calc(100dvh - 18px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
       }
       .guide-slide { padding: 14px; gap: 9px; }
-      .guide-icon { width: 30px; height: 30px; font-size: 14px; }
+      .guide-icon { width: 30px; height: 30px; }
+      .guide-icon svg { width: 16px; height: 16px; }
       .guide-pill { font-size: 10px; padding: 3px 8px; }
       .guide-footer { align-items: stretch; flex-direction: column; }
       .guide-done { width: 100%; }
@@ -1019,7 +1033,41 @@
   </style>
   <script>if(localStorage.getItem("field_dark_mode")==="1")document.documentElement.setAttribute("data-dark","");</script>
   <style>html{background:#eef0f4}html[data-dark]{background:#0f1117}</style>
-  <script>try{if(sessionStorage.getItem('ft_opening_from_hub')==='1'){sessionStorage.removeItem('ft_opening_from_hub');document.documentElement.classList.add('entering-from-hub');setTimeout(function(){document.documentElement.classList.remove('entering-from-hub');},420);}}catch(_){}</script>
+  <script>
+  (function(){
+    var d=document.documentElement, entering=false, fallbackTimer=0;
+    function settle(){
+      if(!entering) return;
+      entering=false;
+      if(fallbackTimer) clearTimeout(fallbackTimer);
+      d.setAttribute('data-transition-settled','');
+      d.classList.remove('entering-from-hub');
+      document.removeEventListener('animationend',onAnimationEnd);
+      document.removeEventListener('animationcancel',onAnimationEnd);
+    }
+    function onAnimationEnd(e){
+      if(e.target===document.body && /^slideIn/.test(e.animationName||'')) settle();
+    }
+    try{
+      if(sessionStorage.getItem('ft_opening_from_hub')==='1'){
+        sessionStorage.removeItem('ft_opening_from_hub');
+        d.classList.add('entering-from-hub');
+        entering=true;
+      }
+    }catch(_){ }
+    if(entering){
+      document.addEventListener('animationend',onAnimationEnd);
+      document.addEventListener('animationcancel',onAnimationEnd);
+      function armFallback(){
+        if(entering) fallbackTimer=setTimeout(settle,400);
+      }
+      if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',armFallback,{once:true});
+      else armFallback();
+    }else{
+      setTimeout(function(){d.setAttribute('data-transition-settled','');},420);
+    }
+  })();
+  </script>
   <!-- Google Analytics 4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XZJ7XL4S34"></script>
   <script>
@@ -1112,29 +1160,29 @@
 </div> <!-- /main-layout -->
 <div class="fuel-toast" id="fuel-toast" role="status" aria-live="polite"></div>
 
-<div class="guide-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="Fuel Station Finder Guide">
+<div class="guide-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="Fuel Station Finder Guide" aria-hidden="true">
   <div class="guide-modal">
     <div class="guide-header">
       <div class="guide-header-title">How to Use Fuel Station Finder</div>
-      <button class="guide-close" id="guide-close" aria-label="Close">&times;</button>
+      <button class="guide-close" id="guide-close" type="button" aria-label="Close">&times;</button>
     </div>
     <div class="guide-slides">
       <div class="guide-slide">
-        <div class="guide-icon gi-blue">1</div>
+        <div class="guide-icon gi-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></div>
         <div class="guide-slide-body">
           <div class="guide-slide-title">Start with Your Location</div>
           <div class="guide-slide-text">The page requests your current GPS location when it opens. Use <strong>Refresh Location</strong> anytime you need a fresh position in the field.</div>
         </div>
       </div>
       <div class="guide-slide">
-        <div class="guide-icon gi-green">2</div>
+        <div class="guide-icon gi-green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z"/><path d="M9 4v13.5M15 6.5V20"/></svg></div>
         <div class="guide-slide-body">
           <div class="guide-slide-title">Read the Map and Station List</div>
           <div class="guide-slide-text">Stations are sorted by distance from you. The pulsing marker shows your location, and selecting a station card centers the map on that station pin.</div>
         </div>
       </div>
       <div class="guide-slide">
-        <div class="guide-icon gi-orange">3</div>
+        <div class="guide-icon gi-orange"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="11" cy="18" r="2"/></svg></div>
         <div class="guide-slide-body">
           <div class="guide-slide-title">Filter What You Need</div>
           <div class="guide-slide-text">Use the fuel filters and <strong>Show Closed</strong> control to narrow the list and map to the stations that matter for the current trip.</div>
@@ -1146,14 +1194,14 @@
         </div>
       </div>
       <div class="guide-slide">
-        <div class="guide-icon gi-navy">4</div>
+        <div class="guide-icon gi-navy"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-2.9-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/></svg></div>
         <div class="guide-slide-body">
           <div class="guide-slide-title">Save Important Stations</div>
           <div class="guide-slide-text">Tap the star on a station card to bookmark it. Your <strong>My Bookmarks</strong> area stays near the top so saved stations are easy to revisit.</div>
         </div>
       </div>
       <div class="guide-slide">
-        <div class="guide-icon gi-red">5</div>
+        <div class="guide-icon gi-red"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11h11"/><path d="m10 6 5 5-5 5"/><path d="M19 4v16"/></svg></div>
         <div class="guide-slide-body">
           <div class="guide-slide-title">Directions, Coordinates, and Exports</div>
           <div class="guide-slide-text">Use <strong>Directions</strong> or <strong>Google Maps</strong> for navigation, copy coordinates from a station card, and export either the visible filtered list or the full station list for Google My Maps.</div>
@@ -1162,7 +1210,7 @@
     </div>
     <div class="guide-footer">
       <div class="guide-footer-note">Tap <strong>?</strong> in the header anytime to reopen this guide.</div>
-      <button class="guide-done" id="guide-done">Got it</button>
+      <button class="guide-done" id="guide-done" type="button">Got it</button>
     </div>
   </div>
 </div>
@@ -1881,9 +1929,11 @@
 
     function openGuide() {
       guideOverlay.classList.add('open');
+      guideOverlay.setAttribute('aria-hidden', 'false');
     }
     function closeGuide() {
       guideOverlay.classList.remove('open');
+      guideOverlay.setAttribute('aria-hidden', 'true');
     }
 
     openBtn.addEventListener('click', openGuide);
@@ -1920,7 +1970,7 @@
       body.style.willChange = 'transform, opacity';
       body.style.backfaceVisibility = 'hidden';
       void body.offsetWidth;
-      body.style.transition = 'opacity 320ms cubic-bezier(0.65, 0, 0.35, 1), transform 320ms cubic-bezier(0.65, 0, 0.35, 1)';
+      body.style.transition = 'opacity 300ms cubic-bezier(0.65, 0, 0.35, 1), transform 300ms cubic-bezier(0.65, 0, 0.35, 1)';
       body.style.opacity = '0';
       body.style.transform = 'translate3d(-30vw, 0, 0) scale(0.97)';
       setTimeout(function() { window.location.href = link.href; }, 300);
@@ -1999,8 +2049,19 @@
 
 
   // Clean up stale transition classes on bfcache restore
-  window.addEventListener('pageshow', function() {
-    document.documentElement.classList.remove('exiting-to-tool', 'exiting-to-hub', 'entering-from-hub', 'returning-from-tool');
+  window.addEventListener('pageshow', function(e) {
+    if (!e.persisted) return;
+    var d = document.documentElement;
+    d.setAttribute('data-transition-settled', '');
+    d.classList.remove('exiting-to-tool', 'exiting-to-hub', 'entering-from-hub', 'returning-from-tool');
+    var body = document.body;
+    if (body) {
+      body.style.transition = '';
+      body.style.opacity = '';
+      body.style.transform = '';
+      body.style.willChange = '';
+      body.style.backfaceVisibility = '';
+    }
   });
 
   // Intercept browser back button to play Hub-return animation
@@ -2022,12 +2083,12 @@
       body.style.willChange = 'transform, opacity';
       body.style.backfaceVisibility = 'hidden';
       void body.offsetWidth;
-      body.style.transition = 'opacity 320ms cubic-bezier(0.65, 0, 0.35, 1), transform 320ms cubic-bezier(0.65, 0, 0.35, 1)';
+      body.style.transition = 'opacity 300ms cubic-bezier(0.65, 0, 0.35, 1), transform 300ms cubic-bezier(0.65, 0, 0.35, 1)';
       body.style.opacity = '0';
       body.style.transform = 'translate3d(-30vw, 0, 0) scale(0.97)';
       setTimeout(function() {
         window.location.href = '../index.html';
-      }, 340);
+      }, 300);
     });
     // Re-add the dummy state if the page is restored from bfcache (after navigating back)
     window.addEventListener('pageshow', function(e) {

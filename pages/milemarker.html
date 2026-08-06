@@ -55,12 +55,31 @@
     @media (prefers-reduced-motion:reduce) { body { background-image:none; } }
 
     /* ── Navigation transitions ── */
-    html:not(.entering-from-hub):not(.exiting-to-hub) body { animation:pageFadeIn 360ms cubic-bezier(0.16,1,0.3,1); }
+    html:not(.entering-from-hub):not(.exiting-to-hub):not([data-transition-settled]) body { animation:pageFadeIn 360ms cubic-bezier(0.16,1,0.3,1); }
     @keyframes pageFadeIn { from { opacity:0; } to { opacity:1; } }
     @keyframes slideInLeft { 0% { opacity:0; transform:translate3d(-18vw,0,0) scale(0.98); } 100% { opacity:1; transform:none; } }
     @keyframes slideOutLeft { 0% { opacity:1; transform:translate3d(0,0,0) scale(1); } 50% { opacity:0; transform:translate3d(-30vw,0,0) scale(0.98); } 100% { opacity:0; transform:translate3d(-40vw,0,0) scale(0.97); } }
     html.entering-from-hub body { opacity:0; transform:translate3d(-18vw,0,0) scale(0.98); animation:slideInLeft 360ms cubic-bezier(0.22,1,0.36,1) both !important; will-change:transform,opacity; }
     html.exiting-to-hub body { animation:slideOutLeft 300ms cubic-bezier(0.65,0,0.35,1) both !important; overflow:hidden; will-change:transform,opacity; }
+
+    /* ── Page content reveal ─────────────────────────────────────────────── */
+    @keyframes mmContentReveal { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+    .wrap > .hero,
+    .wrap > .layout { animation:mmContentReveal 420ms cubic-bezier(0.16,1,0.3,1) var(--mm-reveal-delay,0ms) both; }
+    .wrap > .layout { --mm-reveal-delay:70ms; }
+    @keyframes mmResultReveal { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+    #result-body > * { animation:mmResultReveal 320ms cubic-bezier(0.16,1,0.3,1) both; }
+
+    @media (prefers-reduced-motion:reduce) {
+      *,*::before,*::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
+      body { background-image:none; animation:none; }
+      html.entering-from-hub body,
+      html.exiting-to-hub body { animation:none !important; opacity:1 !important; transform:none !important; will-change:auto !important; contain:none !important; }
+      .wrap > .hero,
+      .wrap > .layout,
+      .status-dot.active,
+      .user-pulse-marker::after { animation:none !important; }
+    }
 
     /* ── Topbar ── */
     #topbar { position:sticky; top:0; z-index:600; height:58px; padding:0 16px; gap:12px; background:var(--topbar-bg); }
@@ -70,34 +89,61 @@
     .wrap { max-width:1180px; margin:0 auto; padding:18px 16px 36px; }
 
     /* ── Locator card ── */
-    .hero { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 18px; margin-bottom:14px; box-shadow:var(--shadow); }
-    .hero-top { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:14px; align-items:start; }
-    .hero-heading { display:flex; align-items:flex-start; gap:12px; }
-    .hero-ic { width:36px; height:36px; border-radius:10px; background:rgba(13,148,136,0.12); color:#0d9488; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
-    html[data-dark] .hero-ic { background:rgba(45,212,191,0.14); color:#2dd4bf; }
-    .hero h1 { font-size:20px; font-weight:800; line-height:1.25; margin-bottom:4px; color:var(--text); }
-    .hero p { color:var(--muted); font-size:13px; line-height:1.5; max-width:640px; }
-    .actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    .hero {
+      position:relative;
+      isolation:isolate;
+      overflow:hidden;
+      background:linear-gradient(135deg,var(--surface) 0%,rgba(244,248,253,0.98) 72%,rgba(236,250,248,0.94) 100%);
+      border:1px solid var(--border);
+      border-left:3px solid rgba(13,148,136,0.62);
+      border-radius:14px;
+      padding:16px 18px 14px 16px;
+      margin-bottom:14px;
+      box-shadow:0 10px 28px rgba(20,55,120,0.12);
+    }
+    .hero::after {
+      content:'';
+      position:absolute;
+      width:190px;
+      height:190px;
+      top:-112px;
+      right:-64px;
+      z-index:-1;
+      border-radius:50%;
+      background:rgba(13,148,136,0.08);
+      box-shadow:0 0 0 24px rgba(13,148,136,0.025);
+      pointer-events:none;
+    }
+    html[data-dark] .hero {
+      background:linear-gradient(135deg,rgba(20,40,72,0.86) 0%,rgba(14,30,56,0.92) 72%,rgba(13,70,68,0.34) 100%);
+      border-left-color:rgba(45,212,191,0.68);
+      box-shadow:0 12px 32px rgba(0,0,0,0.42);
+    }
+    html[data-dark] .hero::after { background:rgba(45,212,191,0.10); box-shadow:0 0 0 24px rgba(45,212,191,0.03); }
+    .hero-top { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:14px; align-items:center; }
+    .hero-heading { display:flex; align-items:flex-start; gap:13px; }
+    .hero-ic { width:40px; height:40px; border-radius:12px; background:rgba(13,148,136,0.13); color:#0d9488; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; box-shadow:0 4px 12px rgba(13,148,136,0.10); }
+    html[data-dark] .hero-ic { background:rgba(45,212,191,0.15); color:#2dd4bf; box-shadow:0 4px 14px rgba(0,0,0,0.18); }
+    .hero h1 { font-size:20px; font-weight:800; line-height:1.25; margin-bottom:4px; color:var(--text); letter-spacing:-0.015em; }
+    .hero p { color:var(--muted); font-size:13px; line-height:1.5; max-width:680px; }
+    .actions { position:relative; z-index:1; display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    .hero .ft-btn-primary { min-height:42px; padding:10px 18px; border-radius:9px; box-shadow:0 6px 14px rgba(26,86,219,0.18); }
+    .hero .ft-btn-primary:hover { box-shadow:0 8px 18px rgba(26,86,219,0.26); }
     #retry-btn { display:none; }
     #retry-btn.visible { display:inline-flex; }
     @media (max-width:720px) { .actions .ft-btn { flex:1; } }
     @media (max-width:600px) { .actions .ft-btn { width:100%; } }
 
-    /* ── Route type toggle ── */
-    .mode-toggle { display:inline-flex; gap:2px; background:var(--border-lo); border:1px solid var(--border); border-radius:10px; padding:3px; margin-top:14px; }
-    .mode-btn { font-family:var(--sans); font-size:13px; font-weight:600; padding:7px 16px; border:none; background:transparent; color:var(--muted); border-radius:8px; cursor:pointer; transition:background 0.15s,color 0.15s,box-shadow 0.15s; white-space:nowrap; }
-    .mode-btn.active { background:var(--surface); color:#0d9488; box-shadow:0 1px 4px rgba(0,0,0,0.10); }
-    html[data-dark] .mode-btn.active { color:#2dd4bf; background:rgba(45,212,191,0.08); box-shadow:0 1px 4px rgba(0,0,0,0.4); }
-
     /* ── Status indicator ── */
-    .status-wrap { margin-top:12px; display:flex; align-items:center; gap:8px; min-height:22px; padding-top:10px; border-top:1px solid var(--border-lo); }
-    .status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; background:var(--muted); transition:background 0.2s; }
-    .status-dot.active { background:#0d9488; animation:pulse 1.4s ease infinite; }
+    .status-wrap { position:relative; z-index:1; margin-top:14px; display:flex; align-items:center; gap:8px; min-height:0; padding:8px 11px; border:1px solid var(--border-lo); border-radius:10px; background:rgba(255,255,255,0.52); box-shadow:inset 0 1px 0 rgba(255,255,255,0.62); }
+    html[data-dark] .status-wrap { background:rgba(4,12,26,0.26); border-color:rgba(120,170,230,0.14); box-shadow:inset 0 1px 0 rgba(148,163,184,0.06); }
+    .status-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; background:var(--muted); transition:background 0.2s; box-shadow:0 0 0 3px rgba(90,107,133,0.10); }
+    .status-dot.active { background:#0d9488; animation:pulse 1.4s ease infinite; box-shadow:0 0 0 3px rgba(13,148,136,0.13); }
     html[data-dark] .status-dot.active { background:#2dd4bf; }
-    .status-dot.ok { background:#10b981; animation:none; }
-    .status-dot.err { background:#dc2626; animation:none; }
+    .status-dot.ok { background:#10b981; animation:none; box-shadow:0 0 0 3px rgba(16,185,129,0.13); }
+    .status-dot.err { background:#dc2626; animation:none; box-shadow:0 0 0 3px rgba(220,38,38,0.12); }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
-    #status { font-size:13px; color:var(--muted); }
+    #status { font-size:12.5px; font-weight:600; color:var(--muted); }
 
     /* ── Result layout ── */
     .layout { display:grid; gap:14px; grid-template-columns:1fr; align-items:start; }
@@ -131,15 +177,15 @@
     .small { font-size:11px; color:var(--muted); margin-top:12px; line-height:1.5; }
 
     /* ── Map card ── */
-    .map-card { padding:0; overflow:hidden; background:#e8ecf0; border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow-hi); }
-    html[data-dark] .map-card { background:#0c1a30; border-color:var(--border); }
-    #map { height:340px; border:0; border-radius:0; overflow:hidden; background:#e8ecf0; }
-    html[data-dark] #map { background:#0c1a30; }
+    .map-card { padding:0; overflow:visible; background:transparent; border:0; border-radius:0; box-shadow:none; }
+    html[data-dark] .map-card { background:transparent; border:0; }
+    #map { height:364px; width:100%; margin:0; border:1px solid var(--border); border-radius:14px; overflow:hidden; background:#e8ecf0; box-shadow:0 10px 28px rgba(15,23,42,0.10); }
+    html[data-dark] #map { background:#0c1a30; box-shadow:0 12px 32px rgba(0,0,0,0.32); }
+    .map-unavailable { height:100%; min-height:220px; display:flex; align-items:center; justify-content:center; padding:24px; color:var(--muted); background:var(--surface-2); font-size:13px; line-height:1.5; text-align:center; }
 
     /* ── Responsive ── */
     @media (max-width:720px) {
       .wrap { padding:14px 10px 28px; }
-      .map-card { border-radius:12px; }
       .hero-top { grid-template-columns:1fr; gap:12px; }
       .actions { justify-content:stretch; }
     }
@@ -149,8 +195,8 @@
       .hero-ic { width:32px; height:32px; }
       .actions { flex-direction:column; gap:8px; }
       .card { padding:14px 16px; }
-      .map-card { padding:0; border-radius:12px; }
-      #map { height:280px; }
+      .map-card { padding:0; }
+      #map { height:304px; }
     }
     @media (min-width:720px) {
       .wrap { padding:20px 24px 40px; }
@@ -158,13 +204,14 @@
       .hero h1 { font-size:22px; }
       .layout { grid-template-columns:minmax(340px, 400px) minmax(0, 1fr); align-items:start; gap:16px; }
       .card { padding:18px 20px; }
-      #map { height:460px; }
+      .map-card { padding:0; }
+      #map { height:484px; }
     }
     @media (min-width:1100px) {
       .hero h1 { font-size:24px; }
       .layout { grid-template-columns:minmax(360px, 410px) minmax(0, 1fr); }
       .map-card { position:sticky; top:72px; }
-      #map { height:540px; }
+      #map { height:564px; }
     }
 
     /* ── Help modal — guide-slide structure (page-local) ── */
@@ -175,10 +222,11 @@
     /* Override ft-modal-box padding/radius/layout for the guide format */
     .ft-modal-box {
       padding:0;
+      font-family:var(--sans);
       border-radius:18px;
-      width:min(520px,calc(100vw - 24px));
+      width:min(520px,100%);
       max-width:none;
-      max-height:min(680px,calc(100dvh - 40px));
+      max-height:min(680px,calc(100dvh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
       display:flex;
       flex-direction:column;
       overflow:hidden;
@@ -189,11 +237,12 @@
       border-bottom:1.5px solid var(--border-lo);
       flex-shrink:0;
     }
-    .guide-header-title { font-size:16px;font-weight:700;color:var(--text); }
+    .guide-header-title { font-family:var(--sans);font-size:16px;font-weight:700;line-height:1.25;color:var(--text); }
     .guide-close {
       background:none;border:none;color:var(--muted);
       font-size:22px;line-height:1;cursor:pointer;padding:0 4px;
       font-family:var(--sans);
+      transition:color var(--transition);
     }
     .guide-close:hover { color:var(--text); }
     .guide-slides { overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch; }
@@ -205,8 +254,10 @@
     .guide-icon {
       width:40px;height:40px;border-radius:12px;
       display:flex;align-items:center;justify-content:center;
+      font-size:0;
       flex-shrink:0;margin-top:1px;
     }
+    .guide-icon svg { width:20px;height:20px;display:block; }
     .gi-blue  { background:rgba(26,86,219,0.10);  color:var(--accent); }
     .gi-teal  { background:rgba(13,148,136,0.12); color:#0d9488; }
     .gi-green { background:rgba(16,185,129,0.12); color:#059669; }
@@ -234,21 +285,28 @@
     .guide-done:hover { background:#1647b8; }
     .guide-done:active { transform:scale(0.97); }
     @media (max-width:520px) {
-      .ft-modal-box { width:calc(100vw - 18px);max-height:calc(100dvh - 26px);border-radius:14px; }
+      .ft-modal-box { width:100%;max-height:calc(100dvh - 26px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));border-radius:14px; }
       .guide-header { padding:15px 16px 12px; }
       .guide-header-title { font-size:15px; }
       .guide-slide { padding:16px;gap:11px; }
       .guide-icon { width:34px;height:34px;border-radius:10px; }
+      .guide-icon svg { width:18px;height:18px; }
       .guide-slide-title { font-size:13px; }
       .guide-slide-text { font-size:12px;line-height:1.5; }
       .guide-footer { padding:12px 16px; }
     }
     @media (max-width:380px) {
-      .ft-modal-box { width:calc(100vw - 12px);max-height:calc(100dvh - 18px); }
+      .ft-modal-box { width:100%;max-height:calc(100dvh - 18px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
       .guide-slide { padding:14px;gap:9px; }
       .guide-icon { width:30px;height:30px; }
+      .guide-icon svg { width:16px;height:16px; }
       .guide-footer { flex-direction:column;align-items:stretch; }
       .guide-done { width:100%;text-align:center; }
+    }
+    @media (max-width:330px) {
+      .guide-slide { display:block; }
+      .guide-icon { margin-bottom:8px; }
+      .guide-header-title { font-size:14px; }
     }
 
     /* Leaflet popup dark mode */
@@ -285,11 +343,40 @@
     try {
       if (localStorage.getItem('field_dark_mode') === '1') document.documentElement.setAttribute('data-dark', '');
       var ftpp=document.createElement('style');ftpp.textContent='html{background:#eaf0f8}html[data-dark]{background:#040c1a}';document.head.appendChild(ftpp);
-      if (sessionStorage.getItem('ft_opening_from_hub') === '1') {
-        document.documentElement.classList.add('entering-from-hub');
-        sessionStorage.removeItem('ft_opening_from_hub');
-      }
     } catch (_) {}
+    (function () {
+      var d = document.documentElement, entering = false, fallbackTimer = 0;
+      function settle() {
+        if (!entering) return;
+        entering = false;
+        if (fallbackTimer) clearTimeout(fallbackTimer);
+        d.setAttribute('data-transition-settled', '');
+        d.classList.remove('entering-from-hub');
+        document.removeEventListener('animationend', onAnimationEnd);
+        document.removeEventListener('animationcancel', onAnimationEnd);
+      }
+      function onAnimationEnd(e) {
+        if (e.target === document.body && /^slideIn/.test(e.animationName || '')) settle();
+      }
+      try {
+        if (sessionStorage.getItem('ft_opening_from_hub') === '1') {
+          d.classList.add('entering-from-hub');
+          sessionStorage.removeItem('ft_opening_from_hub');
+          entering = true;
+        }
+      } catch (_) {}
+      if (entering) {
+        document.addEventListener('animationend', onAnimationEnd);
+        document.addEventListener('animationcancel', onAnimationEnd);
+        function armFallback() {
+          if (entering) fallbackTimer = setTimeout(settle, 400);
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', armFallback, { once: true });
+        else armFallback();
+      } else {
+        setTimeout(function () { d.setAttribute('data-transition-settled', ''); }, 420);
+      }
+    }());
   </script>
 </head>
 <body>
@@ -308,11 +395,11 @@
 </div>
 
 <!-- Help modal — ft-modal-backdrop shell, guide-slide content -->
-<div class="ft-modal-backdrop" id="mm-help-overlay" role="dialog" aria-modal="true" aria-label="How to use Milepost Finder">
+<div class="ft-modal-backdrop" id="mm-help-overlay" role="dialog" aria-modal="true" aria-label="How to use Milepost Finder" aria-hidden="true">
   <div class="ft-modal-box">
     <div class="guide-header">
       <div class="guide-header-title">How to Use Milepost Finder</div>
-      <button class="guide-close" aria-label="Close" onclick="document.getElementById('mm-help-overlay').classList.remove('open')">&times;</button>
+      <button class="guide-close" type="button" aria-label="Close" onclick="var o=document.getElementById('mm-help-overlay');o.classList.remove('open');o.setAttribute('aria-hidden','true')">&times;</button>
     </div>
     <div class="guide-slides">
       <div class="guide-slide">
@@ -320,8 +407,8 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="9" height="10" rx="2"/><rect x="13" y="7" width="9" height="10" rx="2"/></svg>
         </div>
         <div class="guide-slide-body">
-          <div class="guide-slide-title">Choose a Route Type</div>
-          <div class="guide-slide-text">Select <strong>State / US / Interstate</strong> for numbered highways, or <strong>County Routes</strong> for local roads. The toggle is at the top of the locator card.</div>
+          <div class="guide-slide-title">Automatic Route Matching</div>
+          <div class="guide-slide-text">The finder checks both <strong>State / US / Interstate</strong> and <strong>County Route</strong> roadways. It shows a milepost only when one signed route is uniquely confirmed.</div>
         </div>
       </div>
       <div class="guide-slide">
@@ -330,7 +417,7 @@
         </div>
         <div class="guide-slide-body">
           <div class="guide-slide-title">Find Nearest Milepost</div>
-          <div class="guide-slide-text">Tap <strong>Find Nearest Milepost</strong> and allow location access when prompted. Your device GPS locates you and searches for the closest official milepost on the selected route type.</div>
+          <div class="guide-slide-text">Tap <strong>Find Nearest Milepost</strong> and allow location access when prompted. GPS is matched to the authoritative roadway centerline before a milepost is shown.</div>
         </div>
       </div>
       <div class="guide-slide">
@@ -339,7 +426,7 @@
         </div>
         <div class="guide-slide-body">
           <div class="guide-slide-title">Review the Result</div>
-          <div class="guide-slide-text">The result card shows the <strong>nearest milepost</strong>, route name, distance from your location, and a map pin. Use the map to visually confirm the position.</div>
+          <div class="guide-slide-text">The result card shows a <strong>confirmed milepost</strong>, route name, distance from your location, GPS accuracy, and a map pin. If the route cannot be uniquely identified, the page shows no milepost.</div>
         </div>
       </div>
       <div class="guide-slide">
@@ -354,7 +441,7 @@
     </div>
     <div class="guide-footer">
       <div class="guide-footer-note">Tap <strong>?</strong> in the header to reopen this guide.</div>
-      <button class="guide-done" id="mm-help-close">Got it</button>
+      <button class="guide-done" id="mm-help-close" type="button">Got it</button>
     </div>
   </div>
 </div>
@@ -369,12 +456,8 @@
           </div>
           <div>
             <h1>Nearest Milepost Finder</h1>
-            <p id="hero-desc">Use GPS to find the nearest official milepost for major roads or county routes.</p>
+            <p id="hero-desc">Match your GPS fix against both route families and show a confirmed milepost.</p>
           </div>
-        </div>
-        <div class="mode-toggle" role="group" aria-label="Route type">
-          <button class="mode-btn" id="mode-state">State / US / Interstate</button>
-          <button class="mode-btn" id="mode-local">County Routes</button>
         </div>
       </div>
       <div class="actions">
@@ -400,7 +483,7 @@
           No result yet. Tap the button above.
         </div>
       </div>
-      <p class="small">Loads nearby data tiles only — not the full statewide dataset.</p>
+      <p class="small">Matches your live GPS fix to authoritative roadway geometry and loads only the nearby tiles needed for the check.</p>
     </article>
     <article class="card map-card">
       <div id="map"></div>
@@ -409,9 +492,10 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../js/milepost-lookup.js"></script>
+<script src="../js/roadway-lookup.js"></script>
 <script>
 (function() {
-  setTimeout(function() { document.documentElement.classList.remove('entering-from-hub'); }, 420);
   try { localStorage.setItem('ft_last', 'milemarker'); } catch(_) {}
 
   // Help modal open/close
@@ -420,10 +504,18 @@
     var openBtn = document.getElementById('mm-help-btn');
     var closeBtn = document.getElementById('mm-help-close');
     if (openBtn && overlay) {
-      openBtn.addEventListener('click', function() { overlay.classList.add('open'); });
-      closeBtn.addEventListener('click', function() { overlay.classList.remove('open'); });
-      overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.classList.remove('open'); });
-      document.addEventListener('keydown', function(e) { if (e.key === 'Escape') overlay.classList.remove('open'); });
+      function openHelp() {
+        overlay.classList.add('open');
+        overlay.setAttribute('aria-hidden', 'false');
+      }
+      function closeHelp() {
+        overlay.classList.remove('open');
+        overlay.setAttribute('aria-hidden', 'true');
+      }
+      openBtn.addEventListener('click', openHelp);
+      closeBtn.addEventListener('click', closeHelp);
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) closeHelp(); });
+      document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && overlay.classList.contains('open')) closeHelp(); });
     }
   });
   if ('serviceWorker' in navigator) {
@@ -481,55 +573,34 @@
   }
   function byId(id){ return document.getElementById(id); }
 
-  var routeTypes = {
-    "1":"Interstate", "2":"US Route", "3":"NJ State Highway",
-    "4":"Authority / Parkway / Expressway", "5":"County Route",
-    "6":"Local Route", "7":"Local Street", "8":"Ramp / Connector"
-  };
-  var currentMode = 'state';
-  var stateSet = { "1":1, "2":1, "3":1, "4":1 };
-  var countySet  = { "5":1 };
-  var AUX_ROUTE_EXACT_THRESHOLD_M = 30.48;  // 100 ft
-  var MAINLINE_NEAR_THRESHOLD_M = 121.92;   // 400 ft
-  function modeAllowsSubtype(sub) {
-    var s = String(sub || '');
-    return currentMode === 'state' ? (!!stateSet[s] || s === '8') : !!countySet[s];
-  }
-  function isAuxiliaryRoutePoint(p) {
-    var subtype = String(p && p[4] || '');
-    var text = String(((p && p[3]) || '') + ' ' + ((p && p[5]) || '')).toUpperCase();
-    if (subtype === '8') return true;
-    return /\b(RAMP|CONNECTOR|SECONDARY)\b|[_][A-Z0-9]*S\b|[_]S\b/.test(text);
-  }
-  function updateModeButtons() {
-    var bState = document.getElementById('mode-state');
-    var bLocal = document.getElementById('mode-local');
-    if (!bState || !bLocal) return;
-    if (currentMode === 'state') {
-      bState.classList.add('active'); bLocal.classList.remove('active');
-      document.getElementById('hero-desc').textContent = 'Use GPS to find the nearest State, US, Interstate, or Parkway mainline milepost.';
-      document.getElementById('status').textContent = 'Mode: State / US / Interstate. Tap "Find Near Me" to get started.';
-    } else {
-      bLocal.classList.add('active'); bState.classList.remove('active');
-      document.getElementById('hero-desc').textContent = 'Use GPS to find the nearest County Route milepost.';
-      document.getElementById('status').textContent = 'Mode: County Routes. Tap "Find Near Me" to get started.';
+  var routeTypes = MilepostLookup.routeTypes;
+  var currentMode = 'auto';
+  var lastAccuracy = null;
+  var map = null;
+  var mapElement = byId('map');
+  if (typeof L !== 'undefined') {
+    try {
+      map = L.map('map', { wheelDebounceTime: 200 }).setView([40.1, -74.5], 8);
+      var streetLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        attribution: 'Map data &copy; Google',
+        subdomains: '0123',
+        maxZoom: 20
+      });
+      var satLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        attribution: 'Map data &copy; Google',
+        subdomains: '0123',
+        maxZoom: 20
+      }).addTo(map);
+      L.control.layers({ 'Street': streetLayer, 'Satellite': satLayer }, null, { position: 'topright' }).addTo(map);
+    } catch (_) {
+      map = null;
     }
   }
-  var idx = null;
-  var chunkCache = {};
-  var tileSize = 0.1;
-  var map = L.map('map', { wheelDebounceTime: 200 }).setView([40.1, -74.5], 8);
-  var streetLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-    attribution: 'Map data &copy; Google',
-    subdomains: '0123',
-    maxZoom: 20
-  });
-  var satLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-    attribution: 'Map data &copy; Google',
-    subdomains: '0123',
-    maxZoom: 20
-  }).addTo(map);
-  L.control.layers({ 'Street': streetLayer, 'Satellite': satLayer }, null, { position: 'topright' }).addTo(map);
+  if (!map && mapElement) {
+    mapElement.textContent = 'The map library is unavailable. GPS matching can still provide a confirmed milepost.';
+    mapElement.classList.add('map-unavailable');
+    mapElement.setAttribute('role', 'status');
+  }
   var userMarker = null, userRing = null, nearestMarker = null;
 
   function makePinIcon(color, active) {
@@ -546,51 +617,47 @@
     return L.divIcon({ className: '', iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -18], html: '<div class="user-pulse-marker"></div>' });
   }
 
-  function toRad(v){ return v * Math.PI / 180; }
-  function hav(lat1, lon1, lat2, lon2) {
-    var R = 6371000, dLat = toRad(lat2-lat1), dLon = toRad(lon2-lon1);
-    var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
-    return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  }
-  function bearingDeg(lat1, lon1, lat2, lon2) {
-    var p1 = toRad(lat1), p2 = toRad(lat2), dLon = toRad(lon2 - lon1);
-    var y = Math.sin(dLon) * Math.cos(p2);
-    var x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dLon);
-    var b = Math.atan2(y, x) * 180 / Math.PI;
-    return (b + 360) % 360;
-  }
-  function cardinalFromBearing(b) {
-    if (b >= 315 || b < 45) return 'Northbound';
-    if (b >= 45 && b < 135) return 'Eastbound';
-    if (b >= 135 && b < 225) return 'Southbound';
-    return 'Westbound';
-  }
-  function nearestDirFromRoute(best, points) {
-    var sri = best[3], bestI = -1, bestD = Infinity;
-    for (var i = 0; i < points.length; i++) {
-      var p = points[i];
-      if (p[3] !== sri) continue;
-      var d = hav(best[0], best[1], p[0], p[1]);
-      if (d < bestD) { bestD = d; bestI = i; }
-    }
-    if (bestI < 0) return null;
-    var a = null, c = null;
-    for (var j = bestI - 1; j >= 0; j--) { if (points[j][3] === sri) { a = points[j]; break; } }
-    for (var k = bestI + 1; k < points.length; k++) { if (points[k][3] === sri) { c = points[k]; break; } }
-    var from = a, to = c;
-    if (!from && c) from = points[bestI];
-    if (!to && a) to = points[bestI];
-    if (!from || !to || (from[0] === to[0] && from[1] === to[1])) return null;
-    var b = bearingDeg(from[0], from[1], to[0], to[1]);
-    return { bearing: b, label: cardinalFromBearing(b) };
-  }
-  function tileKey(lat, lon){ return Math.floor(lat / tileSize) + "_" + Math.floor(lon / tileSize); }
-  function fmtDist(m){ return m < 1609 ? Math.round(m) + " ft" : (m / 1609.344).toFixed(2) + " mi"; }
-  function cleanSRI(s) {
-    return String(s || '').replace(/_+$/g, '');
-  }
+  var hav = MilepostLookup.hav;
+  var nearestDirFromRoute = MilepostLookup.nearestDirFromRoute;
+  var fmtDist = MilepostLookup.fmtDist;
+  var cleanSRI = MilepostLookup.cleanSRI;
   function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function setResult(res, userLat, userLon, dirInfo){
+  function accuracyFeet(meters) {
+    var value = Number(meters);
+    return isFinite(value) && value > 0 ? Math.round(value * 3.28084) + ' ft' : 'unavailable';
+  }
+  function modeLabel(mode) {
+    if (mode === 'state') return 'State / US / Interstate';
+    if (mode === 'local' || mode === 'county') return 'County Route';
+    return 'numbered roadway';
+  }
+  function setEmptyResult(message){
+    byId('result-body').innerHTML =
+      '<div class="result-empty">' +
+        '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>' +
+        esc(message) +
+      '</div>';
+  }
+  function noResultMessage(result) {
+    var decision = result && result.decision;
+    if (decision && decision.reason === 'competing-family-within-uncertainty') {
+      return 'No milepost shown: the GPS uncertainty area reaches both route families.';
+    }
+    if (decision && decision.reason === 'competing-route-within-uncertainty') {
+      return 'No milepost shown: the GPS uncertainty area reaches more than one signed route.';
+    }
+    if (decision && decision.reason === 'accuracy-too-low') {
+      return 'No milepost shown: GPS accuracy is too broad to identify one route safely.';
+    }
+    if (decision && decision.reason === 'no-route-near-fix') {
+      return 'No confirmed ' + modeLabel(currentMode) + ' is close enough to this GPS fix.';
+    }
+    if (decision && decision.reason === 'roadway-data-unavailable') {
+      return 'Authoritative roadway data is unavailable. Reload and try again.';
+    }
+    return 'No confirmed ' + modeLabel(currentMode) + ' milepost was found for this GPS fix.';
+  }
+  function setResult(res, userLat, userLon, dirInfo, accuracy){
     var routeName = res[5] || cleanSRI(res[3]) || 'Unknown Route';
     var routeClass = routeTypes[res[4]] || ('Type ' + res[4]);
     var dirLabel = dirInfo && dirInfo.label ? dirInfo.label : '—';
@@ -617,162 +684,121 @@
         '<div class="r-zone-title">Your Location</div>' +
         '<div class="r-grid">' +
           '<div class="r-field r-field-wide"><div class="r-label">GPS Coordinates</div><div class="r-value r-mono">' + userLat.toFixed(6) + ',&nbsp;' + userLon.toFixed(6) + '</div></div>' +
+          '<div class="r-field r-field-wide"><div class="r-label">GPS Accuracy</div><div class="r-value">±' + esc(accuracyFeet(accuracy)) + '</div></div>' +
         '</div>' +
       '</div>';
   }
 
-  function fetchJsonWithFallback(paths) {
-    var i = 0;
-    function next() {
-      if (i >= paths.length) return Promise.reject(new Error('all fetch attempts failed'));
-      var p = paths[i++];
-      return fetch(p, { cache: 'no-store' }).then(function(r){
-        if (!r.ok) throw new Error('http ' + r.status);
-        return r.json();
-      }).catch(function(){ return next(); });
-    }
-    return next();
+  function findNearest(lat, lon, accuracy) {
+    return MilepostLookup.findNearest(lat, lon, currentMode, accuracy);
   }
 
-  function loadIndex() {
-    if (idx) return Promise.resolve(idx);
-    var paths = ['../data/mileposts/index.json'];
-    if (location.protocol === 'file:') {
-      paths.push('http://127.0.0.1:8765/data/mileposts/index.json');
-      paths.push('http://localhost:8765/data/mileposts/index.json');
-    }
-    return fetchJsonWithFallback(paths).then(function(j){
-      idx = j; tileSize = +j.tileSizeDeg || 0.1; return j;
-    });
+  function clearNearestMarker() {
+    if (nearestMarker && map) map.removeLayer(nearestMarker);
+    nearestMarker = null;
   }
 
-  function loadChunk(tile) {
-    if (chunkCache[tile]) return Promise.resolve(chunkCache[tile]);
-    var meta = idx.tiles[tile];
-    if (!meta) return Promise.resolve([]);
-    var paths = ['../' + meta.file];
-    if (location.protocol === 'file:') {
-      paths.push('http://127.0.0.1:8765/' + meta.file);
-      paths.push('http://localhost:8765/' + meta.file);
-    }
-    return fetchJsonWithFallback(paths).then(function(j){
-      chunkCache[tile] = j.points || [];
-      return chunkCache[tile];
-    }).catch(function(){ return []; });
+  function clearUserLocation() {
+    if (userMarker && map) map.removeLayer(userMarker);
+    if (userRing && map) map.removeLayer(userRing);
+    userMarker = null;
+    userRing = null;
   }
 
-  function neighborTiles(lat, lon, radius) {
-    var baseLat = Math.floor(lat / tileSize), baseLon = Math.floor(lon / tileSize), out = [];
-    for (var a = -radius; a <= radius; a++) {
-      for (var b = -radius; b <= radius; b++) {
-        out.push((baseLat + a) + "_" + (baseLon + b));
-      }
-    }
-    return out;
-  }
-
-  function findNearest(lat, lon) {
-    return loadIndex().then(function() {
-      var r = 1;
-      function step() {
-        var keys = neighborTiles(lat, lon, r).filter(function(k){ return !!idx.tiles[k]; });
-        if (!keys.length && r < 3) { r++; return step(); }
-        return Promise.all(keys.map(loadChunk)).then(function(sets){
-          var all = [];
-          for (var i=0; i<sets.length; i++) for (var j=0; j<sets[i].length; j++) all.push(sets[i][j]);
-          if (!all.length && r < 3) { r++; return step(); }
-          var best = null;
-          var bestMainline = null;
-          var bestAuxiliary = null;
-          for (var x=0; x<all.length; x++) {
-            var p = all[x];
-            if (!modeAllowsSubtype(p[4])) continue;
-            var d = hav(lat, lon, p[0], p[1]);
-            p._dist = d;
-            if (currentMode === 'state') {
-              if (isAuxiliaryRoutePoint(p)) {
-                if (!bestAuxiliary || d < bestAuxiliary._dist) bestAuxiliary = p;
-              } else if (!bestMainline || d < bestMainline._dist) {
-                bestMainline = p;
-              }
-            } else if (!best || d < best._dist) {
-              best = p;
-            }
-          }
-          if (currentMode === 'state') {
-            best = bestMainline;
-            if (bestAuxiliary && bestAuxiliary._dist <= AUX_ROUTE_EXACT_THRESHOLD_M && (!bestMainline || bestMainline._dist > MAINLINE_NEAR_THRESHOLD_M)) {
-              best = bestAuxiliary;
-            }
-          }
-          // If points exist but none matched the current mode, expand radius once more
-          if (!best && all.length && r < 3) { r++; return step(); }
-          return { best: best, points: all };
-        });
-      }
-      return step();
-    });
+  function renderUserLocation(lat, lon, accuracy) {
+    if (!map) return;
+    if (userMarker) map.removeLayer(userMarker);
+    if (userRing) map.removeLayer(userRing);
+    var radius = Number(accuracy);
+    if (!isFinite(radius) || radius <= 0) radius = 30;
+    userRing = L.circle([lat, lon], {
+      radius: radius,
+      color: '#1a56db',
+      weight: 2,
+      fillColor: '#1a56db',
+      fillOpacity: 0.18
+    }).addTo(map);
+    userMarker = L.marker([lat, lon], { icon: makeUserPulseIcon(), zIndexOffset: 1000 })
+      .addTo(map)
+      .bindPopup('<strong>You are here</strong><br><span style="font-size:11px;color:#64748b">±' + esc(accuracyFeet(accuracy)) + ' GPS accuracy</span>');
+    map.fitBounds(userRing.getBounds().pad(0.45));
   }
 
   function doLocate() {
     setStatus('Getting GPS location…', 'active');
     byId('find-btn').disabled = true;
+    lastAccuracy = null;
+    clearNearestMarker();
+    clearUserLocation();
+    setEmptyResult('Waiting for a fresh GPS fix…');
     if (!navigator.geolocation) { setStatus('Geolocation is not supported on this browser.', 'err'); byId('find-btn').disabled = false; return; }
     navigator.geolocation.getCurrentPosition(function(pos){
       var lat = pos.coords.latitude, lon = pos.coords.longitude;
-      setStatus('Searching nearby ' + (currentMode === 'state' ? 'State / US / Interstate' : 'County Routes') + ' tiles…', 'active');
-      findNearest(lat, lon).then(function(result){
+      lastAccuracy = pos.coords.accuracy;
+      renderUserLocation(lat, lon, lastAccuracy);
+      setStatus('Matching GPS to authoritative roadway geometry…', 'active');
+      findNearest(lat, lon, lastAccuracy).then(function(result){
         byId('find-btn').disabled = false;
         var label = byId('find-btn-label'); if (label) label.textContent = 'Refresh Location';
-        if (!result || !result.best) { setStatus('No ' + (currentMode === 'state' ? 'State / US / Interstate' : 'County Routes') + ' milepost found near this location.', 'err'); return; }
+        if (!result || !result.best) {
+          clearNearestMarker();
+          setEmptyResult(noResultMessage(result));
+          setStatus(noResultMessage(result), 'err');
+          if (userMarker) userMarker.openPopup();
+          return;
+        }
         var best = result.best;
         var dirInfo = nearestDirFromRoute(best, result.points || []);
-        setResult(best, lat, lon, dirInfo);
-        setStatus('Nearest milepost found.', 'ok');
+        setResult(best, lat, lon, dirInfo, lastAccuracy);
+        setStatus('Confirmed milepost match found.', 'ok');
 
-        if (userMarker) map.removeLayer(userMarker);
-        if (userRing) map.removeLayer(userRing);
-        if (nearestMarker) map.removeLayer(nearestMarker);
-        userRing = L.circle([lat, lon], {
-          radius: Math.max(25, Math.min(80, (pos.coords.accuracy || 30) * 0.6)),
-          color: '#1a56db',
-          weight: 2,
-          fillColor: '#1a56db',
-          fillOpacity: 0.18
-        }).addTo(map);
-        userMarker = L.marker([lat, lon], { icon: makeUserPulseIcon(), zIndexOffset: 1000 })
-          .addTo(map).bindPopup('Your Current Location');
+        if (map) {
+          clearNearestMarker();
         var mpLabel = (routeTypes[best[4]] || 'Route') + ' • MP ' + best[2];
         var mpDetail = (best[5] || best[3]) + (dirInfo && dirInfo.label ? ' · ' + dirInfo.label : '');
         nearestMarker = L.marker([best[0], best[1]], { icon: makePinIcon('#d97706', false) }).addTo(map)
           .bindPopup('<strong>' + esc(mpLabel) + '</strong><br><span style="font-size:11px;color:#9ca3af">' + esc(mpDetail) + '</span>');
         var g = L.featureGroup([userRing, userMarker, nearestMarker]);
         map.fitBounds(g.getBounds().pad(0.35));
-        nearestMarker.openPopup();
+          nearestMarker.openPopup();
+        }
       }).catch(function() {
         byId('find-btn').disabled = false;
         var label = byId('find-btn-label'); if (label) label.textContent = 'Refresh Location';
+        clearNearestMarker();
+        setEmptyResult('Authoritative roadway data could not be loaded. Try again when the roadway index is available.');
         if (location.protocol === 'file:') {
           setStatus('Could not load data. Use local server: http://127.0.0.1:8765/pages/milemarker.html', 'err');
         } else {
-          setStatus('Could not search milepost data. Try again.', 'err');
+          setStatus('Could not load authoritative roadway data. Try again.', 'err');
         }
       });
     }, function(err){
       byId('find-btn').disabled = false;
+      lastAccuracy = null;
+      clearNearestMarker();
+      clearUserLocation();
+      setEmptyResult('No current GPS fix. Allow location access, then try again.');
       setStatus('Location error: ' + err.message, 'err');
     }, { enableHighAccuracy:true, timeout:15000, maximumAge:0 });
   }
 
   document.getElementById('find-btn').addEventListener('click', doLocate);
   document.getElementById('retry-btn').addEventListener('click', doLocate);
-  document.getElementById('mode-state').addEventListener('click', function() { currentMode = 'state'; updateModeButtons(); });
-  document.getElementById('mode-local').addEventListener('click', function() { currentMode = 'local'; updateModeButtons(); });
-  updateModeButtons();
-
   // Clean up stale transition classes on bfcache restore
-  window.addEventListener('pageshow', function() {
-    document.documentElement.classList.remove('exiting-to-tool', 'exiting-to-hub', 'entering-from-hub', 'returning-from-tool');
+  window.addEventListener('pageshow', function(e) {
+    if (!e.persisted) return;
+    var d = document.documentElement;
+    d.setAttribute('data-transition-settled', '');
+    d.classList.remove('exiting-to-tool', 'exiting-to-hub', 'entering-from-hub', 'returning-from-tool');
+    var body = document.body;
+    if (body) {
+      body.style.transition = '';
+      body.style.opacity = '';
+      body.style.transform = '';
+      body.style.willChange = '';
+      body.style.backfaceVisibility = '';
+    }
   });
 
   // Intercept browser back button to play Home-return animation

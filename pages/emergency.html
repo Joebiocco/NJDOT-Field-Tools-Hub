@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Emergency Assistance — Field Tools</title>
+  <meta name="theme-color" content="#E5B33B">
+  <link rel="manifest" href="../manifest.json">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <link rel="stylesheet" href="../css/field-ui.css">
+
+  <script>
+    if (localStorage.getItem('field_dark_mode') === '1') {
+      document.documentElement.setAttribute('data-dark', '');
+    }
+    try {
+      var ftPrepaint = document.createElement('style');
+      ftPrepaint.textContent = 'html{background:#eaf0f8}html[data-dark]{background:#040c1a}';
+      document.head.appendChild(ftPrepaint);
+    } catch (_) {}
+  </script>
+
+  <style>
+    /* ── Theme tokens — matches Bridge Navigator / Milepost Finder ── */
+    :root {
+      --bg:#eaf0f8; --surface:#ffffff; --surface-2:#f4f7fb;
+      --border:#d6dfeb; --border-lo:#e6edf5;
+      --text:#0f1d36; --muted:#5a6b85; --muted2:#33425c;
+      --shadow:0 6px 20px rgba(20,45,95,0.09);
+      --grid-line:rgba(26,86,219,0.07);
+      --topbar-bg:linear-gradient(180deg,#10243f,#0c1d35);
+      --radius-lg:14px;
+      --teal:#0d9488; --teal-lo:rgba(13,148,136,0.10);
+    }
+    html[data-dark] {
+      --bg:#040c1a; --surface:rgba(20,40,72,0.72); --surface-2:rgba(14,30,56,0.70);
+      --border:rgba(120,170,230,0.18); --border-lo:rgba(120,170,230,0.10);
+      --text:#f1f5f9; --muted:#93a7c4; --muted2:#c4d2e8;
+      --grid-line:rgba(96,165,250,0.08);
+      --topbar-bg:linear-gradient(180deg,#0a1830,#06101f);
+      --shadow:0 8px 26px rgba(0,0,0,0.42);
+      --teal:#2dd4bf; --teal-lo:rgba(45,212,191,0.14);
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 46px 46px;
+      background-position: center top;
+      background-attachment: local;
+    }
+    @media (prefers-reduced-motion: reduce) { body { background-image: none; } }
+
+    @keyframes pageFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    html:not(.entering-from-hub):not(.exiting-to-hub):not([data-transition-settled]) body { animation: pageFadeIn 360ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+    @keyframes slideInFromLeft {
+      0%   { opacity: 0; transform: translate3d(-18vw, 0, 0) scale(0.98); }
+      100% { opacity: 1; transform: none; }
+    }
+    @keyframes slideOutLeft {
+      0%   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+      50%  { opacity: 0; transform: translate3d(-30vw, 0, 0) scale(0.98); }
+      100% { opacity: 0; transform: translate3d(-40vw, 0, 0) scale(0.97); }
+    }
+    html.entering-from-hub body {
+      opacity: 0;
+      transform: translate3d(-18vw, 0, 0) scale(0.98);
+      animation: slideInFromLeft 360ms cubic-bezier(0.22, 1, 0.36, 1) both !important;
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      contain: paint style;
+    }
+    html.exiting-to-hub body {
+      animation: slideOutLeft 300ms cubic-bezier(0.65, 0, 0.35, 1) both !important;
+      overflow: hidden;
+      will-change: transform, opacity;
+    }
+
+    /* ── Page content reveal ─────────────────────────────────────────────── */
+    @keyframes emContentReveal {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .wrap > .hero,
+    .wrap > .em-action-bar,
+    .wrap > .em-primary-layout,
+    .wrap > .card,
+    .wrap > .em-disclaimer {
+      animation: emContentReveal 420ms cubic-bezier(0.16, 1, 0.3, 1) var(--em-reveal-delay, 0ms) both;
+    }
+    .wrap > .em-action-bar { --em-reveal-delay: 55ms; }
+    .wrap > .em-primary-layout { --em-reveal-delay: 105ms; }
+    .wrap > article.card:nth-of-type(1) { --em-reveal-delay: 155ms; }
+    .wrap > article.card:nth-of-type(2) { --em-reveal-delay: 205ms; }
+    .wrap > .em-disclaimer { --em-reveal-delay: 255ms; }
+    @keyframes emResultReveal {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: none; }
+    }
+    #em-state-result,
+    #em-local-result { animation: emResultReveal 320ms cubic-bezier(0.16,1,0.3,1) both; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+      body { animation: none; }
+      html.entering-from-hub body,
+      html.exiting-to-hub body { animation: none !important; opacity: 1 !important; transform: none !important; will-change: auto !important; contain: none !important; }
+      .wrap > .hero,
+      .wrap > .em-action-bar,
+      .wrap > .em-primary-layout,
+      .wrap > .card,
+      .wrap > .em-disclaimer,
+      .status-dot.active,
+      .em-user-marker::after { animation: none !important; }
+    }
+
+    #topbar {
+      background: var(--topbar-bg);
+      position: sticky;
+      top: 0;
+      z-index: 600;
+    }
+    @media (max-width: 520px) {
+      #topbar { padding: 0 12px; gap: 10px; }
+      #topbar h1 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+      #topbar .state-badge { display: none; }
+    }
+
+    /* ── Layout ── */
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 18px 16px 40px; flex: 1; width: 100%; }
+
+    .hero { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-bottom: 10px; box-shadow: var(--shadow); }
+    .hero-top { display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; align-items: start; }
+    .hero-heading { display: flex; align-items: flex-start; gap: 12px; }
+    .hero-ic { width: 36px; height: 36px; border-radius: 10px; background: rgba(225,29,72,0.12); color: #be123c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    html[data-dark] .hero-ic { background: rgba(244,63,94,0.16); color: #fb7185; }
+    .hero h1 { font-size: 20px; font-weight: 800; line-height: 1.25; margin-bottom: 4px; color: var(--text); }
+    .hero p { color: var(--muted); font-size: 13px; line-height: 1.5; max-width: 640px; }
+    .ft-btn-danger { background: #be123c; color: #fff; border-color: #be123c; }
+    .ft-btn-danger:hover { background: #9f1239; border-color: #9f1239; }
+    html[data-dark] .ft-btn-danger { background: #e11d48; border-color: #e11d48; }
+    html[data-dark] .ft-btn-danger:hover { background: #be123c; border-color: #be123c; }
+    .ft-btn-ghost { background: transparent; color: var(--muted2); border-color: var(--border); }
+    .ft-btn-ghost:hover { background: var(--surface-2); }
+
+    /* Compact action strip stays available while a responder scrolls for details. */
+    .em-action-bar {
+      position: sticky;
+      top: 58px;
+      z-index: 500;
+      margin: 0 0 14px;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 8px 22px rgba(20,45,95,0.12);
+    }
+    html[data-dark] .em-action-bar { box-shadow: 0 10px 26px rgba(0,0,0,0.38); }
+    .em-action-row { display: grid; grid-template-columns: 1.08fr 1fr 1fr; gap: 8px; }
+    .em-action { min-width: 0; min-height: 40px; padding: 9px 10px; font-size: 12px; }
+    .em-action svg { flex: 0 0 auto; }
+    .em-action.is-disabled { opacity: 0.48; cursor: not-allowed; }
+    .em-action-feedback { min-height: 0; padding: 2px 4px 0; color: var(--muted); font-size: 10.5px; line-height: 1.35; text-align: center; }
+    .em-action-feedback:empty { display: none; }
+
+    .status-wrap { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 10px; border-top: 1px solid var(--border-lo); flex-wrap: wrap; }
+    .status-main { min-width: 0; flex: 1 1 250px; }
+    .status-heading { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+    .status-label { color: var(--muted2); font-size: 10px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+    .status-side { display: flex; align-items: center; justify-content: flex-end; gap: 9px; flex: 0 0 auto; }
+    .em-status-time { color: var(--muted); font-size: 10.5px; white-space: nowrap; }
+    .em-refresh-btn { padding: 5px 10px; font-size: 11px; min-height: 32px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--muted); transition: background 0.2s; }
+    .status-dot.active { background: #be123c; animation: pulse 1.4s ease infinite; }
+    .status-dot.ok { background: #10b981; animation: none; }
+    .status-dot.err { background: #dc2626; animation: none; }
+    .status-dot.last-known { background: #d97706; animation: none; }
+    .status-dot.blocked { background: #dc2626; animation: none; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    #em-status { font-size: 13px; color: var(--muted); }
+    .status-wrap.is-ok .status-label { color: #047857; }
+    .status-wrap.is-last-known .status-label { color: #b45309; }
+    .status-wrap.is-blocked .status-label,
+    .status-wrap.is-err .status-label { color: #be123c; }
+    html[data-dark] .status-wrap.is-ok .status-label { color: #6ee7b7; }
+    html[data-dark] .status-wrap.is-last-known .status-label { color: #fcd34d; }
+    html[data-dark] .status-wrap.is-blocked .status-label,
+    html[data-dark] .status-wrap.is-err .status-label { color: #fda4af; }
+
+    .em-location-line {
+      display: none;
+      width: 100%;
+      margin-top: 0;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-lo);
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .em-location-line.show { display: flex; }
+    .em-location-details { min-width: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; }
+    .em-coords-text { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; color: var(--text); }
+    .em-coords-acc { font-size: 11.5px; color: var(--muted); }
+    .em-location-updated { width: 100%; color: var(--muted); font-size: 10.5px; }
+    .em-loc-actions { display: flex; gap: 6px; }
+    .em-mini-btn {
+      padding: 5px 11px; font-size: 11.5px; border-radius: var(--radius-sm);
+      border: 1.5px solid var(--accent); background: transparent; color: var(--accent);
+      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; white-space: nowrap;
+    }
+    .em-mini-btn:hover { background: var(--accent-lo); }
+    .em-mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+    .em-coordinate-card { padding: 14px 16px 15px; }
+    .em-coordinate-card .card-title { margin-bottom: 8px; }
+    .em-coordinate-card .em-location-line { display: flex; align-items: flex-end; padding-top: 0; border-top: 0; }
+    .em-coordinate-card .em-coords-text { display: block; font-size: 18px; font-weight: 800; letter-spacing: 0.01em; line-height: 1.25; }
+    .em-coordinate-card .em-coords-acc { font-size: 11.5px; }
+    .em-coordinate-card .em-location-updated { margin-top: 3px; }
+    .em-coordinate-card .em-mini-btn { min-height: 36px; }
+    .em-route-decision-card {
+      padding: 13px 16px 14px;
+      border-left: 3px solid var(--border);
+    }
+    .em-route-decision-card.is-suggested,
+    .em-route-decision-card.is-confirmed { border-left-color: var(--teal); }
+    .em-route-decision-card.is-loading { border-left-color: var(--accent); }
+    .em-route-decision-card.is-uncertain { border-left-color: #d97706; }
+    .em-route-decision-card.is-stale,
+    .em-route-decision-card.is-error { border-left-color: #dc2626; }
+    .em-route-decision-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .em-route-decision-head .card-title { margin-bottom: 0; }
+    .em-route-decision-badge {
+      flex: 0 0 auto;
+      padding: 3px 8px;
+      border-radius: 100px;
+      background: var(--surface-2);
+      color: var(--muted2);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .em-route-decision-card.is-suggested .em-route-decision-badge,
+    .em-route-decision-card.is-confirmed .em-route-decision-badge { background: rgba(13,148,136,0.12); color: #047857; }
+    .em-route-decision-card.is-loading .em-route-decision-badge { background: rgba(26,86,219,0.1); color: var(--accent); }
+    .em-route-decision-card.is-uncertain .em-route-decision-badge { background: rgba(217,119,6,0.12); color: #92400e; }
+    .em-route-decision-card.is-stale .em-route-decision-badge,
+    .em-route-decision-card.is-error .em-route-decision-badge { background: rgba(220,38,38,0.1); color: #b91c1c; }
+    html[data-dark] .em-route-decision-card.is-suggested .em-route-decision-badge,
+    html[data-dark] .em-route-decision-card.is-confirmed .em-route-decision-badge { color: #6ee7b7; }
+    html[data-dark] .em-route-decision-card.is-loading .em-route-decision-badge { color: #93c5fd; }
+    html[data-dark] .em-route-decision-card.is-uncertain .em-route-decision-badge { color: #fcd34d; }
+    html[data-dark] .em-route-decision-card.is-stale .em-route-decision-badge,
+    html[data-dark] .em-route-decision-card.is-error .em-route-decision-badge { color: #fda4af; }
+    .em-route-decision-main { margin-top: 9px; color: var(--text); font-size: 14px; font-weight: 800; line-height: 1.25; }
+    .em-route-decision-copy { margin: 4px 0 0; color: var(--muted); font-size: 11.5px; line-height: 1.45; }
+    .em-route-decision-detail { margin-top: 8px; color: var(--muted2); font-size: 10.5px; line-height: 1.4; }
+    .em-route-card.is-hidden { display: none; }
+    .em-route-no-selection {
+      grid-column: 1 / -1;
+      padding: 18px 16px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    /* ── Location view + result columns ── */
+    .em-primary-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
+      gap: 14px;
+      align-items: start;
+      margin-bottom: 14px;
+    }
+    .em-primary-layout > .card,
+    .em-primary-layout > .em-results-column,
+    .em-primary-layout > .results-grid .card { margin-bottom: 0; }
+    .em-results-column { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+    .em-results-column > .card { margin-bottom: 0; }
+    .em-primary-layout .results-grid {
+      grid-template-columns: 1fr;
+      margin-bottom: 0;
+    }
+
+    .map-card {
+      padding: 0;
+      overflow: hidden;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 14px 34px rgba(20,55,120,0.16);
+      position: sticky;
+      top: 126px;
+    }
+    html[data-dark] .map-card { background: var(--bg); box-shadow: 0 16px 40px rgba(0,0,0,0.55); }
+    .map-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 15px 16px 13px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border-lo);
+    }
+    .map-head-copy { min-width: 0; }
+    .map-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--teal);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .map-eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .map-card-head h2 { color: var(--text); font-size: 17px; line-height: 1.25; margin-bottom: 3px; }
+    .map-card-head p { color: var(--muted); font-size: 11.5px; line-height: 1.45; }
+    .map-status-pill {
+      flex-shrink: 0;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .map-status-pill.is-loading { color: #b45309; border-color: rgba(217,119,6,0.28); background: rgba(217,119,6,0.08); }
+    .map-status-pill.is-ready { color: #047857; border-color: rgba(16,185,129,0.32); background: rgba(16,185,129,0.10); }
+    .map-status-pill.is-error { color: #be123c; border-color: rgba(225,29,72,0.30); background: rgba(225,29,72,0.08); }
+    .map-status-pill.is-stale { color: #b45309; border-color: rgba(217,119,6,0.30); background: rgba(217,119,6,0.10); }
+    html[data-dark] .map-status-pill.is-loading { color: #fcd34d; background: rgba(245,158,11,0.12); }
+    html[data-dark] .map-status-pill.is-ready { color: #6ee7b7; background: rgba(52,211,153,0.12); }
+    html[data-dark] .map-status-pill.is-error { color: #fda4af; background: rgba(244,63,94,0.14); }
+    html[data-dark] .map-status-pill.is-stale { color: #fcd34d; background: rgba(245,158,11,0.14); }
+    .map-shell { position: relative; display: flex; flex-direction: column; background: transparent; overflow: hidden; }
+    #em-map {
+      height: 430px;
+      width: auto;
+      margin: 12px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #e8ecf0;
+      box-shadow: 0 10px 28px rgba(15,23,42,0.10);
+    }
+    html[data-dark] #em-map { background: #0c1a30; box-shadow: 0 12px 32px rgba(0,0,0,0.32); }
+    .map-key {
+      display: none;
+      position: absolute;
+      top: 22px;
+      left: 22px;
+      z-index: 450;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 9px;
+      border: 1px solid rgba(15,29,54,0.12);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.92);
+      box-shadow: 0 3px 12px rgba(15,23,42,0.14);
+      color: #1f2937;
+      font-size: 10.5px;
+      font-weight: 700;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .map-key.is-visible { display: flex; }
+    html[data-dark] .map-key { background: rgba(15,29,54,0.92); border-color: rgba(148,163,184,0.22); color: #f1f5f9; }
+    .map-key-dot { width: 9px; height: 9px; border-radius: 50%; background: #0d9488; border: 2px solid #fff; box-shadow: 0 0 0 1px #0d9488; }
+    .map-key-divider { width: 1px; height: 13px; background: currentColor; opacity: 0.18; }
+    .map-key-muted { color: #64748b; font-weight: 500; }
+    html[data-dark] .map-key-muted { color: #a8bad3; }
+    .map-recenter-control {
+      position: absolute;
+      left: 22px;
+      bottom: 22px;
+      z-index: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 36px;
+      padding: 7px 10px;
+      border: 1px solid rgba(15,29,54,0.16);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.94);
+      box-shadow: 0 3px 12px rgba(15,23,42,0.18);
+      color: #1a56db;
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .map-recenter-control:hover { background: #fff; border-color: rgba(26,86,219,0.42); }
+    .map-recenter-control:focus-visible { outline: 3px solid rgba(26,86,219,0.38); outline-offset: 2px; }
+    .map-recenter-control:disabled { opacity: 0.55; cursor: not-allowed; }
+    html[data-dark] .map-recenter-control { background: rgba(15,29,54,0.94); border-color: rgba(148,163,184,0.28); color: #93c5fd; }
+    html[data-dark] .map-recenter-control:hover { background: #172b49; }
+    .map-card-foot {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      min-height: 48px;
+      padding: 10px 14px 11px;
+      background: var(--surface);
+      border-top: 1px solid var(--border-lo);
+    }
+    .map-footnote { display: flex; align-items: center; gap: 7px; width: 100%; min-width: 0; color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .map-footnote svg { flex-shrink: 0; color: var(--teal); }
+    .map-card-foot .em-location-line .em-mini-btn { flex-shrink: 0; }
+
+    /* Clear, always-visible current-location marker */
+    .em-user-marker { position: relative; width: 36px; height: 36px; }
+    .em-user-marker::before {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      z-index: 2;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      background: #0d9488;
+      box-shadow: 0 2px 10px rgba(15,23,42,0.42), 0 0 0 1px rgba(13,148,136,0.45);
+    }
+    .em-user-marker::after {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      border-radius: 50%;
+      animation: emLocationPulse 1.8s ease-out infinite;
+    }
+    @keyframes emLocationPulse {
+      0% { opacity: 0.82; box-shadow: 0 0 0 0 rgba(13,148,136,0.55); }
+      70% { opacity: 0; box-shadow: 0 0 0 15px rgba(13,148,136,0); }
+      100% { opacity: 0; box-shadow: 0 0 0 0 rgba(13,148,136,0); }
+    }
+    .em-here-tooltip {
+      padding: 5px 8px !important;
+      border: none !important;
+      border-radius: 7px !important;
+      background: #0f766e !important;
+      color: #fff !important;
+      box-shadow: 0 3px 10px rgba(15,23,42,0.22) !important;
+      font-size: 11px !important;
+      font-weight: 800 !important;
+      white-space: nowrap;
+    }
+    .em-here-accuracy { display: block; margin-top: 2px; font-size: 10px; font-weight: 600; opacity: 0.92; }
+    .em-here-tooltip::before { border-top-color: #0f766e !important; }
+    html[data-dark] .em-here-tooltip { background: #115e59 !important; }
+    html[data-dark] .em-here-tooltip::before { border-top-color: #115e59 !important; }
+    .em-popup-meta { color: #64748b; font-size: 11px; }
+    html[data-dark] .em-popup-meta { color: #a8bad3; }
+
+    .leaflet-popup-content-wrapper { border-radius: 10px !important; box-shadow: 0 6px 20px rgba(15,23,42,0.16) !important; }
+    html[data-dark] .leaflet-popup-content-wrapper { background: #1e2939 !important; color: #f9fafb !important; border: 1px solid rgba(229,179,59,0.4) !important; }
+    html[data-dark] .leaflet-popup-tip { background: #1e2939 !important; }
+    html[data-dark] .leaflet-popup-close-button { color: #9ca3af !important; }
+
+    /* ── Result columns — State vs County side by side ── */
+    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; align-items: start; }
+    @media (max-width: 700px) { .results-grid { grid-template-columns: 1fr; } }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
+    .card:last-child { margin-bottom: 0; }
+    .results-grid .card { margin-bottom: 0; }
+    .card-title { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; color: var(--muted2); margin-bottom: 12px; }
+    .card-title-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .card-title-dot.dot-blue { background: var(--accent); }
+    .card-title-dot.dot-teal { background: var(--teal); }
+
+    .result-empty { text-align: center; padding: 20px 12px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .result-empty svg { display: block; margin: 0 auto 10px; opacity: 0.3; }
+    .r-header { background: var(--surface-2); border: 1px solid var(--border-lo); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .r-header.zone-blue { border-left: 4px solid var(--accent); }
+    .r-header.zone-teal { border-left: 4px solid var(--teal); }
+    .r-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .r-sri-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 100px; letter-spacing: 0.03em; white-space: nowrap; color: #fff; }
+    .r-sri-badge.badge-blue { background: var(--accent); }
+    .r-sri-badge.badge-teal { background: var(--teal); }
+    .r-summary { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
+    .r-stat { background: var(--surface-2); border: 1px solid var(--border-lo); border-radius: var(--radius); padding: 8px 10px; min-width: 0; }
+    .r-stat-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 2px; }
+    .r-stat-val { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .r-stat-primary.stat-blue { color: var(--accent); font-size: 17px; font-weight: 700; }
+    .r-stat-primary.stat-teal { color: var(--teal); font-size: 17px; font-weight: 700; }
+    .r-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .r-field { background: var(--surface-2); border: 1px solid var(--border-lo); border-radius: var(--radius); padding: 9px 11px; min-width: 0; }
+    .r-field-wide { grid-column: 1 / -1; }
+    .r-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 2px; }
+    .r-value { font-size: 13px; font-weight: 500; color: var(--text); word-break: break-word; }
+    .r-stale-note { margin: -2px 0 10px; padding: 7px 9px; border-left: 3px solid #d97706; border-radius: 5px; background: rgba(217,119,6,0.08); color: #92400e; font-size: 10.5px; line-height: 1.4; }
+    html[data-dark] .r-stale-note { background: rgba(245,158,11,0.12); color: #fcd34d; }
+
+    /* ── Safety checklist ── */
+    .em-checklist { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; list-style: none; }
+    @media (max-width: 600px) { .em-checklist { grid-template-columns: 1fr; } }
+    .em-checklist li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text); line-height: 1.4; padding: 4px 0; }
+    .em-checklist li svg { flex-shrink: 0; margin-top: 2px; color: #d97706; }
+    .card-note { font-size: 11.5px; color: var(--muted); font-weight: 400; margin-top: 10px; }
+
+    /* ── Guideline links ── */
+    .em-links { display: flex; flex-direction: column; gap: 8px; }
+    .em-link {
+      display: flex; align-items: center; gap: 9px; padding: 10px 12px;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      color: var(--text); text-decoration: none; font-size: 13px; font-weight: 600;
+      background: var(--surface-2);
+    }
+    .em-link:hover { background: var(--accent-lo); border-color: var(--accent); }
+    .em-link svg { flex-shrink: 0; color: var(--accent); }
+    .em-link-ext { margin-left: auto; color: var(--muted); flex-shrink: 0; }
+
+    /* ── Disclaimer ── */
+    .em-disclaimer {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--border-lo);
+      border-radius: var(--radius);
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    @media (max-width: 600px) {
+      .wrap { padding: 14px 10px 28px; }
+      .em-primary-layout { grid-template-columns: 1fr; }
+      .map-card { position: static; }
+      .em-action { padding: 9px 6px; font-size: 11px; gap: 4px; }
+      .status-wrap { align-items: flex-start; }
+      .status-side { width: 100%; justify-content: space-between; }
+      .r-summary, .r-grid { grid-template-columns: 1fr 1fr; }
+      .map-card-head { padding: 13px 14px 12px; }
+      .map-card-head h2 { font-size: 16px; }
+      #em-map { height: 320px; }
+      .map-key { top: 12px; left: 12px; }
+      .map-recenter-control { left: 12px; bottom: 12px; }
+      .map-card-foot { align-items: flex-start; }
+      .map-footnote { padding-top: 1px; }
+    }
+    @media (min-width: 861px) {
+      .wrap { max-width: 1120px; padding: 20px 24px 40px; }
+      .em-primary-layout {
+        grid-template-columns: minmax(0, 1.22fr) minmax(360px, 0.78fr);
+        align-items: stretch;
+      }
+      .map-card { display: flex; flex-direction: column; min-height: 620px; }
+      .map-shell { flex: 1 1 auto; min-height: 500px; }
+      #em-map { height: auto; min-height: 0; flex: 1 1 auto; }
+    }
+    @media (min-width: 601px) and (max-width: 860px) {
+      .em-primary-layout { grid-template-columns: 1fr; }
+      .map-card { position: static; }
+      #em-map { height: 360px; }
+    }
+    @media (pointer: coarse) {
+      .em-action, .em-mini-btn, .em-refresh-btn { min-height: 44px; }
+    }
+    @media (max-width: 420px) {
+      .map-key-muted, .map-key-divider { display: none; }
+      .map-key { font-size: 10px; }
+    }
+
+    /* ── Help modal — shared "guide" format (see Milepost Finder) ─────────
+       .ft-modal-backdrop already centers on the viewport via
+       position:fixed + flex centering (css/field-ui.css); this just
+       restyles the box into the icon+title+text guide layout used
+       consistently across every tool page's tutorial. ── */
+    .ft-modal-backdrop { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+    .ft-modal-box.guide-box {
+      padding: 0;
+      font-family: var(--sans);
+      border-radius: 18px;
+      width: min(520px, 100%);
+      max-width: none;
+      max-height: min(680px, calc(100dvh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .guide-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 20px 14px;
+      border-bottom: 1.5px solid var(--border-lo);
+      flex-shrink: 0;
+    }
+    .guide-header-title { font-family: var(--sans); font-size: 16px; font-weight: 700; line-height: 1.25; color: var(--text); }
+    .guide-close {
+      background: none; border: none; color: var(--muted);
+      font-size: 22px; line-height: 1; cursor: pointer; padding: 0 4px;
+      font-family: var(--sans);
+      transition: color var(--transition);
+    }
+    .guide-close:hover { color: var(--text); }
+    .guide-slides { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+    .guide-slide {
+      padding: 20px 22px; border-bottom: 1px solid var(--border-lo);
+      display: flex; gap: 14px; align-items: flex-start;
+    }
+    .guide-slide:last-child { border-bottom: none; }
+    .guide-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .guide-icon svg { width: 20px; height: 20px; display: block; }
+    .gi-red   { background: rgba(190,18,60,0.12);  color: #be123c; }
+    .gi-teal  { background: var(--teal-lo); color: var(--teal); }
+    .gi-blue  { background: rgba(26,86,219,0.10);  color: var(--accent); }
+    html[data-dark] .gi-red { background: rgba(244,63,94,0.16); color: #fb7185; }
+    html[data-dark] .gi-blue { background: rgba(96,165,250,0.16); color: #93c5fd; }
+    .guide-slide-body { flex: 1; min-width: 0; }
+    .guide-slide-title { font-size: 14px; font-weight: 700; margin-bottom: 5px; color: var(--text); }
+    .guide-slide-text { font-size: 13px; color: var(--muted2, var(--muted)); line-height: 1.55; }
+    .guide-slide-text strong { color: var(--text); }
+    .guide-footer {
+      padding: 14px 20px; border-top: 1.5px solid var(--border-lo);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0; gap: 10px;
+    }
+    .guide-footer-note { font-size: 11px; color: var(--muted); }
+    .guide-done {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: var(--radius); padding: 10px 22px;
+      font-family: var(--sans); font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: background var(--transition);
+    }
+    .guide-done:hover { background: #1647b8; }
+    .guide-done:active { transform: scale(0.97); }
+    @media (max-width: 520px) {
+      .ft-modal-box.guide-box { width: 100%; max-height: calc(100dvh - 26px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); border-radius: 14px; }
+      .guide-header { padding: 15px 16px 12px; }
+      .guide-header-title { font-size: 15px; }
+      .guide-slide { padding: 16px; gap: 11px; }
+      .guide-icon { width: 34px; height: 34px; border-radius: 10px; }
+      .guide-icon svg { width: 18px; height: 18px; }
+      .guide-slide-title { font-size: 13px; }
+      .guide-slide-text { font-size: 12px; line-height: 1.5; }
+      .guide-footer { padding: 12px 16px; }
+    }
+    @media (max-width: 380px) {
+      .ft-modal-box.guide-box { width: 100%; max-height: calc(100dvh - 18px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
+      .guide-slide { padding: 14px; gap: 9px; }
+      .guide-icon { width: 30px; height: 30px; }
+      .guide-icon svg { width: 16px; height: 16px; }
+      .guide-footer { align-items: stretch; flex-direction: column; }
+      .guide-done { width: 100%; }
+    }
+    @media (max-width: 330px) {
+      .guide-slide { display: block; }
+      .guide-icon { margin-bottom: 8px; }
+      .guide-header-title { font-size: 14px; }
+    }
+
+    /* ── Location permission warning ─────────────────────────────────── */
+    .location-warning-box {
+      width: min(420px, calc(100vw - 24px));
+      max-width: none;
+      padding: 24px;
+      border-top: 4px solid #be123c;
+    }
+    #em-location-warning {
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      min-height: 100dvh;
+    }
+    .location-warning-head { display: flex; align-items: flex-start; gap: 12px; }
+    .location-warning-icon {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 11px;
+      color: #be123c;
+      background: rgba(225,29,72,0.12);
+    }
+    html[data-dark] .location-warning-icon { color: #fb7185; background: rgba(244,63,94,0.16); }
+    .location-warning-title { color: var(--text); font-size: 18px; line-height: 1.25; margin: 2px 0 5px; }
+    .location-warning-text { color: var(--muted2); font-size: 13px; line-height: 1.55; }
+    .location-warning-text strong { color: var(--text); }
+    .location-warning-note {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-left: 3px solid #d97706;
+      border-radius: var(--radius-sm);
+      background: rgba(217,119,6,0.08);
+      color: var(--muted2);
+      font-size: 11.5px;
+      line-height: 1.45;
+    }
+    html[data-dark] .location-warning-note { background: rgba(245,158,11,0.12); }
+    .location-warning-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 20px; }
+    @media (max-width: 520px) {
+      .location-warning-box { width: calc(100vw - 18px); padding: 20px; }
+      .location-warning-actions { flex-direction: column-reverse; }
+      .location-warning-actions .ft-btn { width: 100%; }
+    }
+
+    /* ── Overlay safety rules apply — see docs/ui-style-guide.md ── */
+  </style>
+</head>
+<body>
+
+<div id="topbar">
+  <a class="topbar-back" href="../index.html" id="back-link">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    Home
+  </a>
+  <div class="topbar-div"></div>
+  <h1>Emergency Assistance</h1>
+  <span class="state-badge">NJ</span>
+  <div class="topbar-spacer"></div>
+  <button class="topbar-help" id="tool-help-btn" type="button" aria-label="Open help">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+  </button>
+</div>
+
+<div class="ft-modal-backdrop" id="tool-help-modal" role="dialog"
+     aria-modal="true" aria-label="How to use Emergency Assistance" aria-hidden="true">
+  <div class="ft-modal-box guide-box">
+    <div class="guide-header">
+      <div class="guide-header-title">How to Use Emergency Assistance</div>
+      <button class="guide-close" id="tool-help-x" type="button" aria-label="Close">&times;</button>
+    </div>
+    <div class="guide-slides">
+      <div class="guide-slide">
+        <div class="guide-icon gi-red">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+        </div>
+        <div class="guide-slide-body">
+          <div class="guide-slide-title">Call 911 First</div>
+          <div class="guide-slide-text">For any injury, active hazard, or highway incident, tap <strong>Call 911</strong> first.</div>
+        </div>
+      </div>
+      <div class="guide-slide">
+        <div class="guide-icon gi-teal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg>
+        </div>
+        <div class="guide-slide-body">
+          <div class="guide-slide-title">See Where You Are</div>
+          <div class="guide-slide-text">The map centers on your current GPS position and marks it with a pulsing <strong>You are here</strong> marker. The blue circle shows the estimated accuracy area; use <strong>Recenter</strong> or switch between Street and Satellite as needed.</div>
+        </div>
+      </div>
+      <div class="guide-slide">
+        <div class="guide-icon gi-blue">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/></svg>
+        </div>
+        <div class="guide-slide-body">
+          <div class="guide-slide-title">Share or Copy a Report</div>
+          <div class="guide-slide-text">Tap <strong>Share report</strong> to open your phone’s share sheet when available. If sharing is unavailable, the same ready-to-read location summary (coordinates, route, milepost, direction) is copied for dispatch or your field notes.</div>
+        </div>
+      </div>
+    </div>
+    <div class="guide-footer">
+      <div class="guide-footer-note">Tap <strong>?</strong> in the header to reopen this guide.</div>
+      <button class="guide-done" id="tool-help-close" type="button">Got it</button>
+    </div>
+  </div>
+</div>
+
+<div class="ft-modal-backdrop" id="em-location-warning" role="dialog"
+     aria-modal="true" aria-labelledby="em-location-warning-title"
+     aria-describedby="em-location-warning-text" aria-hidden="true">
+  <div class="ft-modal-box location-warning-box">
+    <div class="location-warning-head">
+      <div class="location-warning-icon" aria-hidden="true">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      </div>
+      <div>
+        <h2 class="location-warning-title" id="em-location-warning-title">Turn on location access</h2>
+        <p class="location-warning-text" id="em-location-warning-text"><strong>Location must be turned on and allowed for this page to work.</strong> Enable Location Services, then choose Allow for your browser. Without GPS, the map cannot show “You are here” and nearby mileposts cannot be found.</p>
+      </div>
+    </div>
+    <div class="location-warning-note">If this is an active emergency, call 911 first. You can return here after location access is enabled.</div>
+    <div class="location-warning-actions">
+      <button class="ft-btn ft-btn-ghost" id="em-location-warning-close" type="button">Not now</button>
+      <button class="ft-btn ft-btn-primary" id="em-location-warning-retry" type="button">Try Again</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="hero">
+    <div class="hero-top">
+      <div class="hero-heading">
+        <div class="hero-ic" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+        </div>
+        <div>
+          <h1>Emergency Assistance</h1>
+          <p>Call 911 first for any injury, active hazard, or highway incident. Use the live map to confirm where you are, then share the nearest milepost with dispatch.</p>
+        </div>
+      </div>
+    </div>
+    <div class="status-wrap is-loading" id="em-status-wrap">
+      <div class="status-main">
+        <div class="status-heading">
+          <div class="status-dot active" id="em-status-dot"></div>
+          <span class="status-label" id="em-status-label">Locating</span>
+        </div>
+        <div id="em-status" role="status" aria-live="polite">Getting GPS location…</div>
+      </div>
+      <div class="status-side">
+        <span class="em-status-time" id="em-status-time">Waiting for first GPS fix</span>
+        <button class="ft-btn ft-btn-ghost em-refresh-btn" id="em-locate-btn" type="button">Refresh</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="em-action-bar" aria-label="Emergency actions">
+    <div class="em-action-row">
+      <a class="ft-btn ft-btn-danger em-action" href="tel:911" aria-label="Call 911 now">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z"/></svg>
+        Call 911
+      </a>
+      <button class="ft-btn ft-btn-primary em-action" id="em-copy-report-btn" type="button" aria-label="Share or copy emergency location report">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <span id="em-report-action-label">Share report</span>
+      </button>
+      <a class="ft-btn ft-btn-ghost em-action is-disabled" id="em-maps-link" href="#" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        Open in Maps
+      </a>
+    </div>
+    <div class="em-action-feedback" id="em-action-feedback" role="status" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+    <section class="em-primary-layout" aria-label="Current location and nearest mileposts">
+
+    <article class="card map-card" aria-labelledby="em-map-heading">
+      <div class="map-card-head">
+        <div class="map-head-copy">
+          <div class="map-eyebrow"><span class="map-eyebrow-dot"></span><span id="em-map-eyebrow">Location map</span></div>
+          <h2 id="em-map-heading">Your location</h2>
+          <p id="em-map-subtitle" aria-live="polite">Waiting for a GPS fix to place your marker.</p>
+        </div>
+        <span class="map-status-pill is-loading" id="em-map-state">Locating</span>
+      </div>
+      <div class="map-shell">
+        <div id="em-map" aria-label="Map showing your current GPS location and surrounding roads"></div>
+        <div class="map-key" id="em-map-key" aria-hidden="true">
+          <span class="map-key-dot"></span>
+          <span>You are here</span>
+          <span class="map-key-divider"></span>
+          <span class="map-key-muted">Blue circle = GPS accuracy</span>
+        </div>
+        <button class="map-recenter-control" id="em-recenter-btn" type="button" disabled aria-label="Recenter map on your last GPS fix" title="Recenter map">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          Recenter
+        </button>
+      </div>
+      <div class="map-card-foot">
+        <div class="map-footnote">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          <span id="em-map-footnote">New Jersey overview shown until GPS is ready.</span>
+        </div>
+      </div>
+    </article>
+
+    <div class="em-results-column">
+      <article class="card em-coordinate-card" aria-labelledby="em-coordinates-heading">
+        <div class="card-title" id="em-coordinates-heading"><span class="card-title-dot dot-teal"></span>Current coordinates</div>
+        <div class="em-location-line show" id="em-location-line">
+          <div class="em-location-details">
+            <span class="em-coords-text" id="em-coords-val">—</span>
+            <span class="em-coords-acc" id="em-coords-acc"></span>
+            <span class="em-location-updated" id="em-location-updated">Waiting for a GPS fix</span>
+          </div>
+          <div class="em-loc-actions">
+            <button class="em-mini-btn" id="em-copy-coords-btn" type="button" disabled>Copy Coords</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="card em-route-decision-card" id="em-route-decision-card" aria-labelledby="em-route-decision-heading">
+        <div class="em-route-decision-head">
+          <div class="card-title" id="em-route-decision-heading"><span class="card-title-dot dot-teal"></span>Route type check</div>
+          <span class="em-route-decision-badge" id="em-route-decision-badge">Waiting</span>
+        </div>
+        <div class="em-route-decision-main" id="em-route-decision-main">Waiting for a live GPS fix.</div>
+        <p class="em-route-decision-copy" id="em-route-decision-copy">No route card appears until authoritative road geometry and the GPS uncertainty area identify one route safely.</p>
+        <div class="em-route-decision-detail" id="em-route-decision-detail"></div>
+      </article>
+
+      <section class="results-grid" aria-label="Confirmed route details">
+
+    <article class="card em-route-card" id="em-state-card">
+      <div class="card-title"><span class="card-title-dot dot-blue"></span>State / US / Interstate</div>
+      <div id="em-state-body">
+        <div class="result-empty" id="em-state-empty">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          Waiting for location…
+        </div>
+        <div id="em-state-result" style="display:none;"></div>
+      </div>
+    </article>
+
+    <article class="card em-route-card" id="em-county-card">
+      <div class="card-title"><span class="card-title-dot dot-teal"></span>County Route</div>
+      <div id="em-local-body">
+        <div class="result-empty" id="em-local-empty">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          Waiting for location…
+        </div>
+        <div id="em-local-result" style="display:none;"></div>
+      </div>
+    </article>
+
+        <div class="em-route-no-selection" id="em-route-no-selection" role="status" aria-live="polite">
+          Route details will appear only after the GPS fix is matched to one route with no competing route inside the uncertainty area.
+        </div>
+
+      </section>
+    </div>
+  </section>
+
+  <article class="card">
+    <div class="card-title">General Roadside Safety Reminders</div>
+    <ul class="em-checklist">
+      <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Turn on hazard lights immediately</li>
+      <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>If safe, move to the shoulder or breakdown lane</li>
+      <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Stay inside the vehicle if exiting means stepping into traffic</li>
+      <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Wear a high-visibility vest if available</li>
+      <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Place cones or flares only if you can do so safely</li>
+      <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Stay alert for oncoming traffic at all times</li>
+    </ul>
+    <div class="card-note">General roadside safety practice — not a substitute for official protocol. See the guidelines below for full detail.</div>
+  </article>
+
+  <article class="card">
+    <div class="card-title">Official Guidelines</div>
+    <div class="em-links">
+      <a class="em-link" href="https://www.nj.gov/njsp/info/pdf/hwincsafeprocedures.pdf" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        NJSP — Highway Incident Traffic Safety Guidelines (PDF)
+        <svg class="em-link-ext" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </a>
+      <a class="em-link" href="https://dot.nj.gov/transportation/eng/pdf/WorkZoneSafetySetupGuide.pdf" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        NJDOT — Work Zone Safety Set-up Guide (PDF)
+        <svg class="em-link-ext" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </a>
+      <a class="em-link" href="https://www.nj.gov/transportation/commuter/motoristassistance/stimp.shtm" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        NJDOT — Statewide Traffic Incident Management Program
+        <svg class="em-link-ext" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </a>
+    </div>
+    <div class="card-note">These open official NJDOT/NJSP resources in a new tab for full protocol detail.</div>
+  </article>
+
+  <div class="em-disclaimer">
+    This page is a convenience tool only and does not constitute official guidance, legal advice, or a substitute for your agency's training, judgment, or protocols. GPS and milepost data may be inaccurate, delayed, or unavailable. Always call 911 in an emergency and follow official procedures. By using this page you agree that Field Tools Hub and its developers are not liable for any injury, loss, or damage arising from its use or your reliance on the information shown.
+  </div>
+
+</div><!-- /.wrap -->
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../js/milepost-lookup.js"></script>
+<script src="../js/roadway-lookup.js"></script>
+<script>
+/* ── Boilerplate ──────────────────────────────────────────────────────── */
+
+(function() {
+  var d = document.documentElement, entering = false, fallbackTimer = 0;
+  function settle() {
+    if (!entering) return;
+    entering = false;
+    if (fallbackTimer) clearTimeout(fallbackTimer);
+    d.setAttribute('data-transition-settled', '');
+    d.classList.remove('entering-from-hub');
+    document.removeEventListener('animationend', onAnimationEnd);
+    document.removeEventListener('animationcancel', onAnimationEnd);
+  }
+  function onAnimationEnd(e) {
+    if (e.target === document.body && /^slideIn/.test(e.animationName || '')) settle();
+  }
+  try {
+    if (sessionStorage.getItem('ft_opening_from_hub')) {
+      d.classList.add('entering-from-hub');
+      sessionStorage.removeItem('ft_opening_from_hub');
+      entering = true;
+    }
+  } catch(_) {}
+  if (entering) {
+    document.addEventListener('animationend', onAnimationEnd);
+    document.addEventListener('animationcancel', onAnimationEnd);
+    function armFallback() {
+    if (entering) fallbackTimer = setTimeout(settle, 400);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', armFallback, { once: true });
+    else armFallback();
+  } else {
+    setTimeout(function() { d.setAttribute('data-transition-settled', ''); }, 420);
+  }
+})();
+
+try { localStorage.setItem('ft_last', 'emergency'); } catch(_) {}
+
+document.getElementById('back-link').addEventListener('click', function(e) {
+  e.preventDefault();
+  var href = this.getAttribute('href');
+  document.documentElement.classList.add('exiting-to-hub');
+  try { sessionStorage.setItem('ft_returning_to_hub', '1'); } catch(_) {}
+  setTimeout(function() { window.location.href = href; }, 300);
+});
+
+(function() {
+  var overlay = document.getElementById('tool-help-modal');
+  var openBtn = document.getElementById('tool-help-btn');
+  var closeBtn = document.getElementById('tool-help-close');
+  var closeX = document.getElementById('tool-help-x');
+  if (!overlay || !openBtn) return;
+  function open() {
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+  function close() {
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+  openBtn.addEventListener('click', open);
+  closeBtn.addEventListener('click', close);
+  if (closeX) closeX.addEventListener('click', close);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) close();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) close();
+  });
+})();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'RELOAD') window.location.reload();
+  });
+}
+
+window.addEventListener('storage', function(ev) {
+  if (ev.key !== 'field_dark_mode') return;
+  if (ev.newValue === '1') document.documentElement.setAttribute('data-dark', '');
+  else document.documentElement.removeAttribute('data-dark');
+});
+
+/* ── Tool-specific JS ─────────────────────────────────────────────────── */
+
+(function() {
+  var locateBtn = document.getElementById('em-locate-btn');
+  var copyReportBtn = document.getElementById('em-copy-report-btn');
+  var reportActionLabel = document.getElementById('em-report-action-label');
+  var actionFeedback = document.getElementById('em-action-feedback');
+  var statusWrap = document.getElementById('em-status-wrap');
+  var statusEl = document.getElementById('em-status');
+  var statusDot = document.getElementById('em-status-dot');
+  var statusLabel = document.getElementById('em-status-label');
+  var statusTime = document.getElementById('em-status-time');
+  var locationLine = document.getElementById('em-location-line');
+  var coordsVal = document.getElementById('em-coords-val');
+  var coordsAcc = document.getElementById('em-coords-acc');
+  var locationUpdated = document.getElementById('em-location-updated');
+  var copyCoordsBtn = document.getElementById('em-copy-coords-btn');
+  var mapsLink = document.getElementById('em-maps-link');
+  var recenterBtn = document.getElementById('em-recenter-btn');
+  var mapStateEl = document.getElementById('em-map-state');
+  var mapEyebrowEl = document.getElementById('em-map-eyebrow');
+  var mapSubtitleEl = document.getElementById('em-map-subtitle');
+  var mapFootnoteEl = document.getElementById('em-map-footnote');
+  var mapKey = document.getElementById('em-map-key');
+  var locationWarning = document.getElementById('em-location-warning');
+  var locationWarningClose = document.getElementById('em-location-warning-close');
+  var locationWarningRetry = document.getElementById('em-location-warning-retry');
+  var locationWarningText = document.getElementById('em-location-warning-text');
+  var routeDecisionCard = document.getElementById('em-route-decision-card');
+  var routeDecisionBadge = document.getElementById('em-route-decision-badge');
+  var routeDecisionMain = document.getElementById('em-route-decision-main');
+  var routeDecisionCopy = document.getElementById('em-route-decision-copy');
+  var routeDecisionDetail = document.getElementById('em-route-decision-detail');
+  var stateCard = document.getElementById('em-state-card');
+  var countyCard = document.getElementById('em-county-card');
+  var routeNoSelection = document.getElementById('em-route-no-selection');
+
+  var lastFix = null; // { lat, lon, accuracy, timestamp, receivedAt, stale }
+  var lastResults = { state: null, local: null }; // best point arrays, with dirInfo/fresh attached
+  var lastRoadMatch = null;
+  var roadwayMatchPending = false;
+  var roadwayMatchError = false;
+  var emergencyMap = null;
+  var userMarker = null;
+  var accuracyCircle = null;
+  var mapIsReady = false;
+  var feedbackTimer = null;
+  var buttonTimer = null;
+
+  function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  function setStatus(msg, state, label) {
+    if (statusEl) statusEl.textContent = msg;
+    if (statusDot) statusDot.className = 'status-dot' + (state ? ' ' + state : '');
+    if (statusLabel) statusLabel.textContent = label || (state === 'ok' ? 'Live GPS' : state === 'last-known' ? 'Last known' : state === 'blocked' ? 'Location blocked' : state === 'err' ? 'GPS unavailable' : state === 'active' ? 'Locating' : 'Location status');
+    if (statusWrap) statusWrap.className = 'status-wrap' + (state ? ' is-' + state : '');
+  }
+
+  function formatTime(timestamp) {
+    if (!timestamp) return '';
+    try {
+      return new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    } catch (_) { return ''; }
+  }
+
+  function setStatusTime(text) {
+    if (statusTime) statusTime.textContent = text;
+  }
+
+  function showActionFeedback(message) {
+    if (!actionFeedback) return;
+    window.clearTimeout(feedbackTimer);
+    actionFeedback.textContent = message || '';
+    if (message) feedbackTimer = window.setTimeout(function() { actionFeedback.textContent = ''; }, 3600);
+  }
+
+  function flashButton(btn, resultText, defaultText) {
+    if (!btn) return;
+    var original = defaultText || btn.getAttribute('data-default-label') || btn.textContent;
+    window.clearTimeout(buttonTimer);
+    btn.setAttribute('data-default-label', original);
+    var label = btn.querySelector('span');
+    if (label) label.textContent = resultText;
+    else btn.textContent = resultText;
+    buttonTimer = window.setTimeout(function() {
+      if (label) label.textContent = original;
+      else btn.textContent = original;
+    }, 1800);
+  }
+
+  function setMapStatus(label, state) {
+    if (!mapStateEl) return;
+    mapStateEl.className = 'map-status-pill' + (state ? ' is-' + state : '');
+    mapStateEl.textContent = label;
+    if (mapEyebrowEl) {
+      mapEyebrowEl.textContent = label === 'Live GPS' ? 'Live location' : label === 'Last known' ? 'Last known location' : label === 'Blocked' ? 'Location blocked' : state === 'loading' ? 'Getting location' : 'Location map';
+    }
+  }
+
+  function setMapCopy(subtitle, footnote) {
+    if (mapSubtitleEl) mapSubtitleEl.textContent = subtitle;
+    if (mapFootnoteEl) mapFootnoteEl.textContent = footnote;
+  }
+
+  function setMapsLink(lat, lon) {
+    if (!mapsLink) return;
+    mapsLink.href = 'https://maps.google.com/?q=' + lat.toFixed(6) + ',' + lon.toFixed(6);
+    mapsLink.classList.remove('is-disabled');
+    mapsLink.setAttribute('aria-disabled', 'false');
+    mapsLink.removeAttribute('tabindex');
+  }
+
+  function markResultsStale() {
+    ['state', 'local'].forEach(function(mode) {
+      var result = lastResults[mode];
+      var resultEl = document.getElementById('em-' + mode + '-result');
+      if (!result || !resultEl || resultEl.style.display === 'none') return;
+      result.fresh = false;
+      resultEl.classList.add('is-stale');
+      if (!resultEl.querySelector('.r-stale-note')) {
+        var note = document.createElement('div');
+        note.className = 'r-stale-note';
+        note.textContent = 'Last known match — milepost data could not be refreshed.';
+        resultEl.insertBefore(note, resultEl.firstChild);
+      }
+    });
+  }
+
+  if (reportActionLabel && !navigator.share) reportActionLabel.textContent = 'Copy report';
+
+  function hideLocationWarning() {
+    if (!locationWarning) return;
+    locationWarning.classList.remove('open');
+    locationWarning.setAttribute('aria-hidden', 'true');
+  }
+
+  function setLocationWarningMode(permissionState) {
+    if (!locationWarningText || !locationWarningRetry) return;
+    if (permissionState === 'denied') {
+      locationWarningText.innerHTML = '<strong>Your browser is blocking location access for this site.</strong> Use the site settings or lock icon to allow Location, then press Try Again. Browsers do not show the permission prompt again while access is blocked.';
+      locationWarningRetry.textContent = 'I Turned It On — Try Again';
+    } else {
+      locationWarningText.innerHTML = '<strong>Location must be turned on and allowed for this page to work.</strong> Enable Location Services, then choose Allow for your browser. Without GPS, the map cannot show “You are here” and nearby mileposts cannot be found.';
+      locationWarningRetry.textContent = 'Try Again';
+    }
+  }
+
+  function showLocationWarning(permissionState) {
+    if (!locationWarning) return;
+    setLocationWarningMode(permissionState || 'unknown');
+    locationWarning.setAttribute('aria-hidden', 'false');
+    locationWarning.classList.add('open');
+    setTimeout(function() {
+      if (locationWarningRetry) locationWarningRetry.focus();
+    }, 0);
+  }
+
+  if (locationWarningClose) locationWarningClose.addEventListener('click', hideLocationWarning);
+  function retryLocation() {
+    hideLocationWarning();
+    doLocate();
+  }
+  if (locationWarningRetry) locationWarningRetry.addEventListener('click', retryLocation);
+  if (locationWarning) {
+    locationWarning.addEventListener('click', function(e) {
+      if (e.target === locationWarning) hideLocationWarning();
+    });
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') hideLocationWarning();
+  });
+
+  function initMap() {
+    if (!document.getElementById('em-map')) return false;
+    if (typeof L === 'undefined') {
+      setMapStatus('Unavailable', 'error');
+      setMapCopy('The map library could not be loaded.', 'Use the coordinates and Open in Maps link above.');
+      return false;
+    }
+    try {
+      emergencyMap = L.map('em-map', { wheelDebounceTime: 200, zoomControl: false }).setView([40.1, -74.5], 8);
+      var streetLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        attribution: 'Map data &copy; Google',
+        subdomains: '0123',
+        maxZoom: 20
+      });
+      var satelliteLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        attribution: 'Map data &copy; Google',
+        subdomains: '0123',
+        maxZoom: 20
+      });
+      streetLayer.addTo(emergencyMap);
+      L.control.layers({ 'Street': streetLayer, 'Satellite': satelliteLayer }, null, { position: 'topright' }).addTo(emergencyMap);
+      L.control.zoom({ position: 'bottomright' }).addTo(emergencyMap);
+      mapIsReady = true;
+      setTimeout(function() { emergencyMap.invalidateSize(true); }, 60);
+      return true;
+    } catch (_) {
+      emergencyMap = null;
+      setMapStatus('Unavailable', 'error');
+      setMapCopy('The map could not be initialized.', 'Use the coordinates and Open in Maps link above.');
+      return false;
+    }
+  }
+
+  function zoomForAccuracy(accuracy) {
+    var meters = Number(accuracy) || 50;
+    if (meters > 1200) return 12;
+    if (meters > 600) return 13;
+    if (meters > 250) return 14;
+    return 16;
+  }
+
+  function formatAccuracyFeet(accuracy) {
+    return Math.max(1, Math.round((Number(accuracy) || 50) * 3.28084));
+  }
+
+  function makeUserLocationIcon() {
+    return L.divIcon({
+      className: '',
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+      popupAnchor: [0, -20],
+      html: '<div class="em-user-marker"></div>'
+    });
+  }
+
+  function renderUserLocation(lat, lon, accuracy) {
+    if (!mapIsReady || !emergencyMap) return;
+    if (userMarker) emergencyMap.removeLayer(userMarker);
+    if (accuracyCircle) emergencyMap.removeLayer(accuracyCircle);
+
+    var accuracyMeters = Number(accuracy) || 50;
+    var circleRadius = Math.max(25, Math.min(3000, accuracyMeters));
+    accuracyCircle = L.circle([lat, lon], {
+      radius: circleRadius,
+      color: '#1a56db',
+      weight: 2,
+      fillColor: '#3b82f6',
+      fillOpacity: 0.14,
+      interactive: false
+    }).addTo(emergencyMap);
+    userMarker = L.marker([lat, lon], {
+      icon: makeUserLocationIcon(),
+      zIndexOffset: 1000,
+      title: 'You are here'
+    }).addTo(emergencyMap);
+    userMarker.bindTooltip('<strong>You are here</strong><span class="em-here-accuracy">±' + formatAccuracyFeet(accuracyMeters) + ' ft accuracy</span>', {
+      permanent: true,
+      direction: 'top',
+      offset: [0, -15],
+      className: 'em-here-tooltip',
+      opacity: 1
+    });
+    userMarker.bindPopup('<strong>You are here</strong><br><span class="em-popup-meta">GPS accuracy ±' + Math.round(accuracyMeters) + 'm / ±' + formatAccuracyFeet(accuracyMeters) + 'ft</span>');
+    if (mapKey) mapKey.classList.add('is-visible');
+    emergencyMap.setView([lat, lon], zoomForAccuracy(accuracyMeters), { animate: true });
+  }
+
+  function recenterMap() {
+    if (!lastFix || !mapIsReady || !emergencyMap) return;
+    emergencyMap.setView([lastFix.lat, lastFix.lon], zoomForAccuracy(lastFix.accuracy), { animate: true });
+  }
+
+  initMap();
+  renderRouteDecision();
+  if (recenterBtn) recenterBtn.addEventListener('click', recenterMap);
+  window.addEventListener('resize', function() {
+    if (emergencyMap) emergencyMap.invalidateSize();
+  });
+
+  function fallbackCopy(text) {
+    var field = document.createElement('textarea');
+    field.value = text;
+    field.setAttribute('readonly', '');
+    field.style.position = 'fixed';
+    field.style.opacity = '0';
+    document.body.appendChild(field);
+    field.select();
+    var copied = false;
+    try { copied = document.execCommand('copy'); } catch (_) {}
+    document.body.removeChild(field);
+    return copied;
+  }
+
+  function copyText(text, btn, defaultText, feedbackText) {
+    var finish = function() {
+      flashButton(btn, 'Copied', defaultText);
+      showActionFeedback(feedbackText || 'Copied to clipboard.');
+      return true;
+    };
+    var fail = function() {
+      showActionFeedback('Copy was not available. Select the report text from the page and try again.');
+      return false;
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(finish).catch(function() {
+        return fallbackCopy(text) ? finish() : fail();
+      });
+    }
+    return Promise.resolve(fallbackCopy(text) ? finish() : fail());
+  }
+
+  if (copyCoordsBtn) copyCoordsBtn.addEventListener('click', function() {
+    if (!lastFix) {
+      showActionFeedback('Get a GPS fix before copying coordinates.');
+      return;
+    }
+    copyText(lastFix.lat.toFixed(6) + ', ' + lastFix.lon.toFixed(6), copyCoordsBtn, 'Copy Coords', 'Coordinates copied.');
+  });
+
+  if (mapsLink) mapsLink.addEventListener('click', function(e) {
+    if (!lastFix) {
+      e.preventDefault();
+      showActionFeedback('Open in Maps becomes available after GPS finds you.');
+    }
+  });
+
+  function emergencyFormatDistance(meters) {
+    var value = Number(meters);
+    if (!isFinite(value) || value < 0) return '—';
+    var feet = value * 3.28084;
+    return feet < 5280 ? Math.round(feet) + ' ft' : (value / 1609.344).toFixed(2) + ' mi';
+  }
+
+  function getRouteDecision() {
+    if (!lastFix) return { status: 'insufficient', route: null, label: 'Route type cannot be determined', reason: 'no-fix' };
+    if (lastFix.stale) return { status: 'stale', route: null, label: 'Route type not checked', reason: 'stale-gps' };
+    if (roadwayMatchPending) return { status: 'loading', route: null, label: 'Matching GPS to authoritative road geometry', reason: 'roadway-match-pending' };
+    if (roadwayMatchError || !window.RoadwayLookup || typeof RoadwayLookup.classifyRouteType !== 'function') {
+      return { status: 'insufficient', route: null, label: 'Authoritative route data is unavailable', reason: 'roadway-data-unavailable' };
+    }
+    return RoadwayLookup.classifyRouteType(lastRoadMatch, lastFix.accuracy, true);
+  }
+
+  function routeDistanceText(meters) {
+    return isFinite(Number(meters)) ? emergencyFormatDistance(Number(meters)) : 'unavailable';
+  }
+
+  function routeCandidateSummary(decision) {
+    if (!isFinite(Number(decision.stateDistance)) || !isFinite(Number(decision.countyDistance))) return '';
+    var accuracy = isFinite(Number(decision.accuracy)) ? 'GPS ±' + formatAccuracyFeet(decision.accuracy) + ' ft · ' : '';
+    return accuracy + 'State / US / Interstate: ' + routeDistanceText(decision.stateDistance) + ' · County Route: ' + routeDistanceText(decision.countyDistance) + '.';
+  }
+
+  function finiteDistance(value) {
+    return value !== null && value !== undefined && isFinite(Number(value));
+  }
+
+  function authoritativeCandidateSummary(decision) {
+    var stateText = finiteDistance(decision.stateDistance) ? routeDistanceText(decision.stateDistance) : 'not mapped nearby';
+    var countyText = finiteDistance(decision.countyDistance) ? routeDistanceText(decision.countyDistance) : 'not mapped nearby';
+    var accuracy = finiteDistance(decision.accuracy) ? 'GPS accuracy ' + formatAccuracyFeet(decision.accuracy) + ' ft · ' : '';
+    return accuracy + 'State / US / Interstate: ' + stateText + ' · County Route: ' + countyText + '.';
+  }
+
+  function roadwayPoint(candidate) {
+    if (!candidate) return null;
+    var point = [candidate.matchLat, candidate.matchLon, candidate.mp, candidate.sri, candidate.subtype, candidate.name, ''];
+    point._dist = candidate.distanceM;
+    point._roadway = true;
+    point._routeClass = candidate.routeClass;
+    point._source = candidate.source;
+    return point;
+  }
+
+  function setRouteCardVisible(card, visible) {
+    if (!card) return;
+    if (visible) card.classList.remove('is-hidden');
+    else card.classList.add('is-hidden');
+    card.setAttribute('aria-hidden', visible ? 'false' : 'true');
+  }
+
+  function applyRouteVisibility(decision) {
+    var confirmed = decision && decision.status === 'confirmed' && decision.route;
+    setRouteCardVisible(stateCard, confirmed && decision.route === 'state');
+    setRouteCardVisible(countyCard, confirmed && decision.route === 'county');
+    if (routeNoSelection) {
+      routeNoSelection.style.display = confirmed ? 'none' : 'block';
+      if (confirmed) routeNoSelection.textContent = '';
+      else if (decision.reason === 'roadway-match-pending') routeNoSelection.textContent = 'Matching the live GPS fix to the NJDOT roadway network…';
+      else if (decision.reason === 'roadway-data-unavailable') routeNoSelection.textContent = 'Authoritative road geometry is unavailable, so no route is shown.';
+      else if (decision.reason === 'no-fix') routeNoSelection.textContent = 'Route details will appear only after the GPS fix is matched to one route with no competing route inside the uncertainty area.';
+      else routeNoSelection.textContent = 'No route is shown because the GPS uncertainty area does not uniquely identify one route.';
+    }
+    if (confirmed && decision.routeCandidate) {
+      var mode = decision.route === 'state' ? 'state' : 'local';
+      var point = roadwayPoint(decision.routeCandidate);
+      if (point) renderResult(mode, point, decision.routeCandidate.direction ? { label: decision.routeCandidate.direction } : null);
+    }
+  }
+
+  function renderRouteDecision() {
+    if (!routeDecisionCard) return;
+    var decision = getRouteDecision();
+    var visualState = decision.status === 'confirmed' ? 'confirmed' :
+      decision.status === 'loading' ? 'loading' :
+      decision.status === 'stale' ? 'stale' :
+      decision.reason === 'no-fix' ? 'idle' : 'uncertain';
+    var badge = decision.status === 'confirmed' ? 'Confirmed' : decision.status === 'loading' ? 'Matching' : 'No decision';
+    var main = decision.label || 'Route type cannot be determined';
+    var copy = 'No route card is shown until the authoritative road match is unique inside the GPS uncertainty area.';
+    var detail = authoritativeCandidateSummary(decision);
+
+    if (decision.status === 'confirmed') {
+      copy = 'A unique NJDOT roadway-centerline match was found. Only this route is shown; the alternate route family is outside the GPS uncertainty area.';
+      detail = authoritativeCandidateSummary(decision) + ' Route matched: ' + (decision.routeCandidate && decision.routeCandidate.name || 'numbered road') + '.';
+    } else if (decision.status === 'loading') {
+      detail = '';
+    } else if (decision.reason === 'no-fix') {
+      badge = 'Waiting';
+      main = 'Waiting for a live GPS fix.';
+      copy = 'The page will show a route only after live GPS and authoritative road geometry agree.';
+      detail = '';
+    } else if (decision.reason === 'stale-gps') {
+      badge = 'Last known';
+      main = 'Route type not checked against current GPS.';
+      copy = 'The displayed mileposts are from the last successful fix and are not used to choose a route type. Refresh GPS before reporting.';
+      detail = '';
+    } else if (decision.reason === 'accuracy-too-low') {
+      main = 'GPS accuracy is too broad to choose safely.';
+      copy = 'The current accuracy is about ±' + formatAccuracyFeet(decision.accuracy) + ' ft, so nearby state-family and county routes cannot be separated reliably.';
+    } else if (decision.reason === 'competing-family-within-uncertainty') {
+      main = 'State-family and county routes overlap the GPS uncertainty.';
+      copy = 'The closer line is not treated as proof. The uncertainty area reaches both route families, so no route is shown.';
+    } else if (decision.reason === 'competing-route-within-uncertainty') {
+      main = 'The route number is not uniquely identified.';
+      copy = 'More than one signed route in the winning family is inside the GPS uncertainty area. No route card is shown.';
+    } else if (decision.reason === 'no-route-near-fix') {
+      main = 'No numbered-road geometry is close enough.';
+      copy = 'The page cannot safely identify a route from this GPS fix, so it leaves the route cards hidden.';
+    } else if (decision.reason === 'roadway-data-unavailable') {
+      badge = 'Unavailable';
+      main = 'Authoritative route data is unavailable.';
+      copy = 'No nearest-milepost guess is used as a substitute. Reload when the road index is available, then refresh GPS.';
+    } else if (decision.reason === 'insufficient-separation') {
+      main = 'The route evidence is not separated enough.';
+      copy = 'The page will not promote one route over another without a clear geometry match.';
+    } else if (decision.reason === 'candidates-too-close') {
+      main = 'Both route types are too close to distinguish.';
+      copy = 'The candidate distances overlap the GPS uncertainty. Do not use the closer result as proof of the road you are on.';
+    } else if (decision.reason === 'winner-too-far') {
+      main = 'No route candidate is close enough for a safe selection.';
+      copy = 'The nearest milepost point is too far away to identify the road from GPS proximity alone.';
+    } else if (decision.reason === 'missing-candidate') {
+      main = 'Both route candidates are needed before choosing.';
+      copy = 'One route-family source is missing or unavailable. The page will not infer the missing route type.';
+    } else if (decision.reason === 'auxiliary-candidate') {
+      main = 'A ramp or connector is nearby, so no route type is selected.';
+      copy = 'Ramp geometry can sit beside either route family. Confirm the signed mainline route before reporting it.';
+    } else if (decision.reason === 'classifier-unavailable') {
+      main = 'Route type check is unavailable.';
+      copy = 'Use the individual route results and verify the signed route. No automatic choice was made.';
+    }
+
+    routeDecisionCard.className = 'card em-route-decision-card is-' + visualState;
+    if (routeDecisionBadge) routeDecisionBadge.textContent = badge;
+    if (routeDecisionMain) routeDecisionMain.textContent = main;
+    if (routeDecisionCopy) routeDecisionCopy.textContent = copy;
+    if (routeDecisionDetail) routeDecisionDetail.textContent = detail;
+    applyRouteVisibility(decision);
+  }
+
+  function routeLine(mode, res) {
+    if (!res) return (mode === 'state' ? 'State/US/Interstate' : 'County Route') + ': no nearby match found.';
+    var routeTypes = MilepostLookup.routeTypes;
+    var cleanSRI = MilepostLookup.cleanSRI;
+    var routeName = res.best[5] || cleanSRI(res.best[3]) || 'Unknown Route';
+    var dirLabel = res.dirInfo && res.dirInfo.label ? res.dirInfo.label : '';
+    var label = mode === 'state' ? 'State/US/Interstate' : 'County Route';
+    return (res.fresh === false ? 'Last known ' : '') + label + ': ' + routeName + ', MP ' + res.best[2] + (dirLabel ? ', ' + dirLabel : '');
+  }
+
+  function buildReport() {
+    var reportTime = new Date().toLocaleString();
+    var lines = ['EMERGENCY LOCATION REPORT', 'Report created: ' + reportTime];
+    if (lastFix) {
+      lines.push('GPS status: ' + (lastFix.stale ? 'Last known' : 'Live GPS'));
+      lines.push('GPS fix: ' + lastFix.lat.toFixed(6) + ', ' + lastFix.lon.toFixed(6) +
+        (lastFix.accuracy ? ' (±' + Math.round(lastFix.accuracy) + 'm accuracy)' : ''));
+      lines.push('GPS updated: ' + new Date(lastFix.timestamp || lastFix.receivedAt || Date.now()).toLocaleString());
+    } else {
+      lines.push('GPS status: unavailable');
+    }
+    var routeDecision = getRouteDecision();
+    lines.push('Route type check: ' + routeDecision.label + (routeDecision.status === 'suggested' ? ' — verify before reporting.' : '.'));
+    var candidateSummary = authoritativeCandidateSummary(routeDecision);
+    if (candidateSummary) lines.push('Route candidate distances: ' + candidateSummary);
+    if (routeDecision.status === 'confirmed' && routeDecision.routeCandidate) {
+      var confirmedRoute = routeDecision.route === 'state' ? 'State/US/Interstate' : 'County Route';
+      var confirmedCandidate = routeDecision.routeCandidate;
+      lines.push('Confirmed route: ' + confirmedRoute + ' — ' + confirmedCandidate.name + ', MP ' + confirmedCandidate.mp +
+        (confirmedCandidate.direction ? ', ' + confirmedCandidate.direction : '') +
+        ' (' + routeDistanceText(confirmedCandidate.distanceM) + ' from GPS center).');
+      lines.push('Route source: ' + (confirmedCandidate.source || 'NJDOT roadway geometry') + '.');
+    } else {
+      lines.push('No route selected: the page did not find a unique authoritative route match.');
+    }
+    return lines.join('\n');
+  }
+
+  if (copyReportBtn) copyReportBtn.addEventListener('click', function() {
+    var report = buildReport();
+    var defaultLabel = navigator.share ? 'Share report' : 'Copy report';
+    if (navigator.share) {
+      navigator.share({ title: 'Emergency location report', text: report }).then(function() {
+        flashButton(copyReportBtn, 'Shared', defaultLabel);
+        showActionFeedback('Report shared.');
+      }).catch(function(err) {
+        if (err && err.name === 'AbortError') return;
+        copyText(report, copyReportBtn, defaultLabel, 'Report copied after sharing was unavailable.');
+      });
+    } else {
+      copyText(report, copyReportBtn, defaultLabel, 'Report copied.');
+    }
+  });
+
+  function resultHTML(best, dirInfo, zoneClass, badgeClass, statClass) {
+    var routeTypes = window.MilepostLookup && MilepostLookup.routeTypes ? MilepostLookup.routeTypes :
+      (window.RoadwayLookup && RoadwayLookup.routeSubtypes ? RoadwayLookup.routeSubtypes : {});
+    var cleanSRI = window.MilepostLookup && typeof MilepostLookup.cleanSRI === 'function' ? MilepostLookup.cleanSRI : function(value) {
+      return String(value || '').replace(/_+$/g, '');
+    };
+    var routeName = best[5] || cleanSRI(best[3]) || 'Unknown Route';
+    var routeClass = best._routeClass || routeTypes[best[4]] || ('Type ' + best[4]);
+    var dirLabel = dirInfo && dirInfo.label ? dirInfo.label : '—';
+    var sri = cleanSRI(best[3]) || '—';
+    var crossStreet = best[6] || null;
+
+    return (
+      '<div class="r-header ' + zoneClass + '">' +
+        '<div class="r-title">' + esc(routeName) + '</div>' +
+        '<span class="r-sri-badge ' + badgeClass + '">' + esc(sri) + '</span>' +
+      '</div>' +
+      '<div class="r-summary">' +
+        '<div class="r-stat"><div class="r-stat-label">Milepost</div><div class="r-stat-val r-stat-primary ' + statClass + '">MP&nbsp;' + esc(String(best[2])) + '</div></div>' +
+        '<div class="r-stat"><div class="r-stat-label">Direction</div><div class="r-stat-val">' + esc(dirLabel) + '</div></div>' +
+        '<div class="r-stat"><div class="r-stat-label">Distance</div><div class="r-stat-val">' + esc(emergencyFormatDistance(best._dist)) + '</div></div>' +
+      '</div>' +
+      '<div class="r-grid">' +
+        '<div class="r-field r-field-wide"><div class="r-label">Route Class</div><div class="r-value">' + esc(routeClass) + '</div></div>' +
+        (crossStreet ? '<div class="r-field r-field-wide"><div class="r-label">Cross Street</div><div class="r-value">' + esc(crossStreet) + '</div></div>' : '') +
+      '</div>'
+    );
+  }
+
+  function renderResult(mode, best, dirInfo) {
+    document.getElementById('em-' + mode + '-empty').style.display = 'none';
+    var zoneClass = mode === 'state' ? 'zone-blue' : 'zone-teal';
+    var badgeClass = mode === 'state' ? 'badge-blue' : 'badge-teal';
+    var statClass = mode === 'state' ? 'stat-blue' : 'stat-teal';
+    var resultEl = document.getElementById('em-' + mode + '-result');
+    resultEl.innerHTML = resultHTML(best, dirInfo, zoneClass, badgeClass, statClass);
+    resultEl.classList.remove('is-stale');
+    resultEl.style.display = 'block';
+    lastResults[mode] = { best: best, dirInfo: dirInfo, fresh: true };
+  }
+
+  function renderEmpty(mode, msg) {
+    document.getElementById('em-' + mode + '-result').style.display = 'none';
+    var empty = document.getElementById('em-' + mode + '-empty');
+    empty.lastChild.textContent = msg;
+    empty.style.display = 'block';
+    lastResults[mode] = null;
+  }
+
+  function lookupMode(mode, lat, lon, accuracy) {
+    if (!window.MilepostLookup || typeof MilepostLookup.findNearest !== 'function') {
+      if (lastResults[mode]) markResultsStale();
+      else renderEmpty(mode, 'Milepost data is unavailable offline.');
+      return Promise.resolve(false);
+    }
+    return MilepostLookup.findNearest(lat, lon, mode, accuracy).then(function(result) {
+      if (!result || !result.best) {
+        renderEmpty(mode, 'No nearby match found.');
+        return false;
+      }
+      var currentDecision = getRouteDecision();
+      if (currentDecision.status === 'confirmed' && currentDecision.route === (mode === 'state' ? 'state' : 'county')) {
+        return true;
+      }
+      var dirInfo = MilepostLookup.nearestDirFromRoute(result.best, result.points || []);
+      renderResult(mode, result.best, dirInfo);
+      return true;
+    }).catch(function() {
+      if (lastResults[mode]) {
+        markResultsStale();
+      } else {
+        renderEmpty(mode, 'Milepost data could not be loaded.');
+      }
+      return false;
+    });
+  }
+
+  function lookupRoadway(lat, lon, accuracy) {
+    if (!window.RoadwayLookup || typeof RoadwayLookup.findMatch !== 'function') {
+      roadwayMatchPending = false;
+      roadwayMatchError = true;
+      lastRoadMatch = null;
+      renderRouteDecision();
+      return Promise.resolve(false);
+    }
+    roadwayMatchPending = true;
+    roadwayMatchError = false;
+    lastRoadMatch = null;
+    renderRouteDecision();
+    return RoadwayLookup.findMatch(lat, lon, accuracy).then(function(match) {
+      lastRoadMatch = match;
+      roadwayMatchPending = false;
+      roadwayMatchError = false;
+      renderRouteDecision();
+      return true;
+    }).catch(function() {
+      lastRoadMatch = null;
+      roadwayMatchPending = false;
+      roadwayMatchError = true;
+      renderRouteDecision();
+      return false;
+    });
+  }
+
+  function doLocate() {
+    setStatus('Getting GPS location…', 'active', 'Locating');
+    setStatusTime(lastFix ? 'Last updated ' + formatTime(lastFix.receivedAt) : 'Waiting for first GPS fix');
+    locateBtn.disabled = true;
+    roadwayMatchPending = true;
+    roadwayMatchError = false;
+    lastRoadMatch = null;
+    renderRouteDecision();
+    if (!lastFix) renderRouteDecision();
+    if (!lastFix) {
+      renderEmpty('state', 'Waiting for location…');
+      renderEmpty('local', 'Waiting for location…');
+    }
+    if (mapIsReady) {
+      setMapStatus(lastFix ? 'Updating' : 'Locating', 'loading');
+      setMapCopy(lastFix ? 'Refreshing your GPS position…' : 'Waiting for a GPS fix to place your marker.', 'The map will center automatically when location access is available.');
+    }
+
+    if (!navigator.geolocation) {
+      setStatus('This browser does not provide GPS access.', 'err', 'GPS unavailable');
+      setStatusTime('No successful GPS fix yet');
+      showLocationWarning('unknown');
+      if (mapIsReady) {
+      setMapStatus('Unavailable', 'error');
+        setMapCopy('This browser does not provide location access.', 'Use the coordinates and Open in Maps link above.');
+      }
+      roadwayMatchPending = false;
+      roadwayMatchError = false;
+      locateBtn.disabled = false;
+      renderRouteDecision();
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      var lat = pos.coords.latitude, lon = pos.coords.longitude;
+      var receivedAt = Date.now();
+      lastFix = {
+        lat: lat,
+        lon: lon,
+        accuracy: pos.coords.accuracy,
+        timestamp: pos.timestamp || receivedAt,
+        receivedAt: receivedAt,
+        stale: false
+      };
+      lastRoadMatch = null;
+      roadwayMatchPending = true;
+      roadwayMatchError = false;
+
+      coordsVal.textContent = lat.toFixed(6) + ', ' + lon.toFixed(6);
+      coordsAcc.textContent = pos.coords.accuracy ? ('±' + Math.round(pos.coords.accuracy) + 'm accuracy') : '';
+      if (locationUpdated) locationUpdated.textContent = 'Updated ' + formatTime(receivedAt);
+      locationLine.classList.add('show');
+      if (copyCoordsBtn) copyCoordsBtn.disabled = false;
+      setMapsLink(lat, lon);
+      renderUserLocation(lat, lon, pos.coords.accuracy);
+      if (mapIsReady) {
+        setMapStatus('Live GPS', 'ready');
+        setMapCopy('Centered on your position and surrounding roads.', 'GPS fix updated at ' + formatTime(receivedAt) + '.');
+        if (recenterBtn) recenterBtn.disabled = false;
+      }
+      setStatus('Searching nearby milepost data…', 'active', 'Live GPS');
+      setStatusTime('Updated ' + formatTime(receivedAt));
+      hideLocationWarning();
+      markResultsStale();
+      renderRouteDecision();
+
+      Promise.all([
+        lookupMode('state', lat, lon, pos.coords.accuracy),
+        lookupMode('local', lat, lon, pos.coords.accuracy),
+        lookupRoadway(lat, lon, pos.coords.accuracy)
+      ]).then(function(found) {
+        locateBtn.disabled = false;
+        var roadwayMatched = !!found[2];
+        var decision = getRouteDecision();
+        if (decision.status === 'confirmed') {
+          setStatus('Location and route geometry updated.', 'ok', 'Live GPS');
+        } else if (!roadwayMatched || decision.reason === 'roadway-data-unavailable') {
+          setStatus('GPS is live; authoritative route geometry is unavailable.', 'ok', 'Live GPS');
+        } else if (decision.status === 'uncertain') {
+          setStatus('GPS is live, but route identity could not be confirmed safely.', 'ok', 'Live GPS');
+        } else {
+          setStatus('GPS is live; route geometry did not produce a confirmed match.', 'ok', 'Live GPS');
+        }
+        renderRouteDecision();
+      });
+    }, function(err) {
+      locateBtn.disabled = false;
+      roadwayMatchPending = false;
+      roadwayMatchError = false;
+      lastRoadMatch = null;
+      var blocked = !!(err && err.code === 1);
+      if (mapIsReady) {
+        if (lastFix) {
+          setMapStatus(blocked ? 'Blocked' : 'Last known', blocked ? 'error' : 'stale');
+          setMapCopy(blocked ? 'Location access is blocked; showing your last position.' : 'Could not refresh your GPS position.', 'Showing the last successful map position from ' + formatTime(lastFix.receivedAt) + '.');
+        } else {
+          setMapStatus(blocked ? 'Blocked' : 'Unavailable', 'error');
+          setMapCopy(blocked ? 'Allow location access to place your marker on the map.' : 'Could not get a GPS fix.', 'No current location is available. Tap Refresh when ready.');
+        }
+      }
+      if (lastFix) {
+        lastFix.stale = true;
+        markResultsStale();
+        setStatus(blocked ? 'Location access is blocked. Showing your last successful position.' : 'Could not refresh GPS. Showing your last successful position.', blocked ? 'blocked' : 'last-known', blocked ? 'Location blocked' : 'Last known');
+        setStatusTime('Last updated ' + formatTime(lastFix.receivedAt));
+      } else {
+        setStatus(blocked ? 'Location access is blocked for this site. Enable it in site settings, then try again.' : 'GPS is unavailable right now. Tap Refresh to try again.', blocked ? 'blocked' : 'err', blocked ? 'Location blocked' : 'GPS unavailable');
+        setStatusTime('No successful GPS fix yet');
+      }
+      if (blocked) {
+        showLocationWarning('denied');
+      }
+      if (!lastFix) {
+        renderEmpty('state', 'Location unavailable.');
+        renderEmpty('local', 'Location unavailable.');
+      }
+      renderRouteDecision();
+    }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+  }
+
+  locateBtn.addEventListener('click', doLocate);
+  doLocate();
+})();
+
+window.addEventListener('pageshow', function(e) {
+  if (!e.persisted) return;
+  var d = document.documentElement;
+  d.setAttribute('data-transition-settled', '');
+  d.classList.remove('exiting-to-hub', 'entering-from-hub');
+  var body = document.body;
+  if (body) {
+    body.style.transition = '';
+    body.style.opacity = '';
+    body.style.transform = '';
+    body.style.willChange = '';
+    body.style.backfaceVisibility = '';
+  }
+});
+</script>
+</body>
+</html>

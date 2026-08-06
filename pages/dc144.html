@@ -19,13 +19,39 @@
   <style>html{background:#eaf0f8}html[data-dark]{background:#040c1a}</style>
   <!-- Hub entry animation — checks sessionStorage flag set by hub card click -->
   <script>
-    try {
-      if (sessionStorage.getItem('ft_opening_from_hub') === '1') {
-        sessionStorage.removeItem('ft_opening_from_hub');
-        document.documentElement.classList.add('entering-from-hub');
-        setTimeout(function () { document.documentElement.classList.remove('entering-from-hub'); }, 420);
+    (function () {
+      var d = document.documentElement, entering = false, fallbackTimer = 0;
+      function settle() {
+        if (!entering) return;
+        entering = false;
+        if (fallbackTimer) clearTimeout(fallbackTimer);
+        d.setAttribute('data-transition-settled', '');
+        d.classList.remove('entering-from-hub');
+        document.removeEventListener('animationend', onAnimationEnd);
+        document.removeEventListener('animationcancel', onAnimationEnd);
       }
-    } catch (_) {}
+      function onAnimationEnd(e) {
+        if (e.target === document.body && /^slideIn/.test(e.animationName || '')) settle();
+      }
+      try {
+        if (sessionStorage.getItem('ft_opening_from_hub') === '1') {
+          sessionStorage.removeItem('ft_opening_from_hub');
+          d.classList.add('entering-from-hub');
+          entering = true;
+        }
+      } catch (_) {}
+      if (entering) {
+        document.addEventListener('animationend', onAnimationEnd);
+        document.addEventListener('animationcancel', onAnimationEnd);
+        function armFallback() {
+          if (entering) fallbackTimer = setTimeout(settle, 400);
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', armFallback, { once: true });
+        else armFallback();
+      } else {
+        setTimeout(function () { d.setAttribute('data-transition-settled', ''); }, 420);
+      }
+    }());
   </script>
   <!-- Animation keyframes end with transform:none so fill-mode:both does not
        lock in a transform stacking context on body. The willChange cleanup
@@ -63,9 +89,9 @@
       --shadow: 0 8px 26px rgba(0,0,0,0.42);
       --shadow-hi: 0 16px 40px rgba(0,0,0,0.55);
     }
-    body {
+    html:not([data-transition-settled]) body {
       min-height: 100vh;
-      animation: pageFadeIn 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation: pageFadeIn 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
       background-color: var(--bg);
       background-image:
         linear-gradient(var(--grid-line) 1px, transparent 1px),
@@ -809,20 +835,19 @@
       display: flex; align-items: center; justify-content: center;
       opacity: 0; pointer-events: none;
       transition: opacity 220ms ease;
-      padding: 20px;
+      padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
       backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
     }
     .guide-overlay.open { opacity: 1; pointer-events: auto; }
     .guide-modal {
-      background: var(--surface); border-radius: 18px;
-      width: min(540px, calc(100vw - 24px));
-      max-height: min(720px, calc(100dvh - 40px));
+      background: var(--surface); font-family: var(--sans); border-radius: 18px;
+      width: min(520px, 100%);
+      max-height: min(680px, calc(100dvh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
       display: flex; flex-direction: column;
       box-shadow: 0 24px 64px rgba(0,0,0,0.3);
       transform: translateY(14px) scale(0.98);
       transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
       overflow: hidden;
-      border: 1.5px solid var(--border);
     }
     .guide-overlay.open .guide-modal { transform: none; }
     .guide-header {
@@ -830,24 +855,26 @@
       padding: 18px 20px 14px; border-bottom: 1.5px solid var(--border-lo);
       flex-shrink: 0;
     }
-    .guide-header-title { font-size: 16px; font-weight: 700; color: var(--text); }
+    .guide-header-title { font-family: var(--sans); font-size: 16px; font-weight: 700; line-height: 1.25; color: var(--text); }
     .guide-close {
       background: none; border: none; color: var(--muted);
-      font-size: 24px; line-height: 1; cursor: pointer; padding: 0 6px;
-      transition: color 0.14s;
+      font-family: var(--sans); font-size: 22px; line-height: 1; cursor: pointer; padding: 0 4px;
+      transition: color var(--transition);
     }
     .guide-close:hover { color: var(--text); }
     .guide-slides { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
     .guide-slide {
-      padding: 18px 20px; border-bottom: 1px solid var(--border-lo);
+      padding: 20px 22px; border-bottom: 1px solid var(--border-lo);
       display: flex; gap: 14px; align-items: flex-start;
     }
     .guide-slide:last-child { border-bottom: none; }
     .guide-icon {
       width: 40px; height: 40px; border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
+      font-size: 0;
       flex-shrink: 0; margin-top: 1px;
     }
+    .guide-icon svg { width: 20px; height: 20px; display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     .gi-indigo { background: rgba(67,56,202,0.10); color: #4338ca; }
     .gi-blue   { background: rgba(26,86,219,0.10); color: var(--accent); }
     .gi-green  { background: rgba(16,185,129,0.12); color: #059669; }
@@ -878,12 +905,31 @@
     .guide-done:hover { background: #1647b8; }
     .guide-done:active { transform: scale(0.97); }
     @media (max-width: 520px) {
-      .guide-overlay { padding: 10px; }
-      .guide-slide { padding: 16px 16px; gap: 12px; }
-      .guide-icon { width: 36px; height: 36px; border-radius: 10px; }
+      .guide-overlay { padding: calc(12px + env(safe-area-inset-top, 0px)) 12px calc(12px + env(safe-area-inset-bottom, 0px)); }
+      .guide-modal { width: 100%; max-height: calc(100dvh - 26px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); border-radius: 14px; }
+      .guide-header { padding: 15px 16px 12px; }
+      .guide-slide { padding: 16px; gap: 11px; }
+      .guide-icon { width: 34px; height: 34px; border-radius: 10px; }
+      .guide-icon svg { width: 18px; height: 18px; }
       .guide-header-title { font-size: 15px; }
+      .guide-slide-title { font-size: 13px; }
+      .guide-slide-text { font-size: 12px; line-height: 1.5; }
       .guide-footer { padding: 12px 16px; }
       .guide-footer-note { font-size: 10px; }
+    }
+    @media (max-width: 380px) {
+      .guide-overlay { padding: calc(9px + env(safe-area-inset-top, 0px)) 9px calc(9px + env(safe-area-inset-bottom, 0px)); }
+      .guide-modal { width: 100%; max-height: calc(100dvh - 18px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
+      .guide-slide { padding: 14px; gap: 9px; }
+      .guide-icon { width: 30px; height: 30px; }
+      .guide-icon svg { width: 16px; height: 16px; }
+      .guide-footer { align-items: stretch; flex-direction: column; }
+      .guide-done { width: 100%; }
+    }
+    @media (max-width: 330px) {
+      .guide-slide { display: block; }
+      .guide-icon { margin-bottom: 8px; }
+      .guide-header-title { font-size: 14px; }
     }
 
     /* ── Actionbar label structure (desktop: inline text; mobile: two-line) */
@@ -930,7 +976,7 @@
     /* ── Dropdown panel overlay (Drafts + Templates) ─────────────────────── */
     @keyframes dc144PanelSlide {
       from { transform: translateY(-8px); opacity: 0; }
-      to   { transform: translateY(0);    opacity: 1; }
+      to   { transform: none;    opacity: 1; }
     }
     .dc144-panel-overlay {
       position: fixed; top: var(--topbar-h); left: 0; right: 0; bottom: 0; z-index: 550;
@@ -1290,7 +1336,9 @@
 
     /* ── Reduced motion ──────────────────────────────────────────────────── */
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+      html.entering-from-hub body,
+      html.exiting-to-hub body { animation:none !important; opacity:1 !important; transform:none !important; will-change:auto !important; contain:none !important; }
     }
   </style>
 </head>
@@ -1474,7 +1522,7 @@
     style="display:none;" aria-hidden="true">
 
   <!-- ── Guide / Tutorial Modal ─────────────────────────────────────────── -->
-  <div class="guide-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="DC-144 Field Form Guide">
+  <div class="guide-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="DC-144 Field Form Guide" aria-hidden="true">
     <div class="guide-modal">
       <div class="guide-header">
         <div class="guide-header-title">How to Use DC-144 Field Form</div>
@@ -1574,8 +1622,12 @@
         document.documentElement.appendChild(overlay);
       }
       overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
     }
-    function closeGuide() { overlay.classList.remove('open'); }
+    function closeGuide() {
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
 
     openBtn.addEventListener('click', openGuide);
     if (closeBtn) closeBtn.addEventListener('click', closeGuide);

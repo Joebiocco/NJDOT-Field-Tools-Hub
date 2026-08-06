@@ -68,6 +68,19 @@
       background: var(--surface);
     }
     .search-area { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .mobile-results-controls { display: none; }
+    .mobile-results-toggle {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 5px 9px;
+      background: var(--bg);
+      color: var(--muted2);
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .mobile-results-label { color: var(--muted); font-size: 11px; font-weight: 600; }
     .search-label {
       display: block;
       font-size: 10px;
@@ -124,85 +137,6 @@
       gap: 6px;
       flex-shrink: 0;
     }
-    .map-marker-limit {
-      display: none;
-      position: absolute;
-      left: 52px;
-      top: 12px;
-      z-index: 450;
-      max-width: min(230px, calc(100% - 24px));
-      padding: 7px 8px;
-      border: 1px solid rgba(209,217,224,0.78);
-      border-radius: 999px;
-      background: rgba(255,255,255,0.94);
-      color: var(--muted2);
-      font-size: 11px;
-      line-height: 1.25;
-      box-shadow: 0 8px 22px rgba(15,23,42,0.12);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      animation: quietMapControlIn 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
-    .map-marker-limit.show {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-    }
-    .map-marker-limit strong {
-      color: var(--text);
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    .map-marker-limit .map-marker-limit-helper {
-      display: none;
-      position: absolute;
-      left: 0;
-      top: calc(100% + 6px);
-      width: max-content;
-      max-width: 210px;
-      padding: 6px 8px;
-      border: 1px solid rgba(209,217,224,0.78);
-      border-radius: var(--radius-sm);
-      background: rgba(255,255,255,0.96);
-      color: var(--muted2);
-      box-shadow: 0 8px 22px rgba(15,23,42,0.12);
-    }
-    .map-marker-limit:hover .map-marker-limit-helper,
-    .map-marker-limit:focus-within .map-marker-limit-helper {
-      display: block;
-    }
-    .map-marker-limit button {
-      border: 1px solid rgba(26,86,219,0.35);
-      border-radius: 999px;
-      background: rgba(26,86,219,0.09);
-      color: var(--accent);
-      font-family: var(--sans);
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 8px;
-      cursor: pointer;
-      transition: background var(--transition), border-color var(--transition), transform 80ms ease-out;
-      white-space: nowrap;
-    }
-    .map-marker-limit button:hover {
-      background: #f8fbff;
-      border-color: var(--accent);
-    }
-    html[data-dark] .map-marker-limit {
-      border-color: rgba(45,55,72,0.84);
-      background: rgba(28,30,38,0.94);
-      box-shadow: 0 10px 28px rgba(0,0,0,0.34);
-    }
-    html[data-dark] .map-marker-limit .map-marker-limit-helper {
-      border-color: rgba(45,55,72,0.84);
-      background: rgba(28,30,38,0.96);
-    }
-    html[data-dark] .map-marker-limit button:hover { background: #172033; }
-    @keyframes quietMapControlIn {
-      from { opacity: 0; transform: translateY(-4px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
     .bridge-data-state {
       display: flex;
       flex-direction: column;
@@ -294,10 +228,18 @@
       overflow: hidden;
       background: var(--bg);
     }
+    .map-shell {
+      position: relative;
+      display: flex;
+      min-width: 0;
+      flex: 0 0 46%;
+      min-height: 180px;
+    }
     #map {
       position: relative;
-      flex: 0 0 56%;
-      min-height: 180px;
+      min-width: 0;
+      min-height: 0;
+      flex: 1 1 auto;
       margin: 12px;
       overflow: hidden;
       border: 1px solid var(--border);
@@ -327,7 +269,7 @@
       overflow-y: auto;
       background: var(--surface);
       border-top: 1px solid var(--border);
-      padding: 18px 22px;
+      padding: 0 22px 18px;
     }
     .detail-panel::-webkit-scrollbar { width: 4px; }
     .detail-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
@@ -401,6 +343,43 @@
     /* Detail panel polish */
     .detail-header-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0 14px; }
     .detail-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px; margin-top: 2px; }
+    .detail-jump-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      margin: 0 -22px 14px;
+      padding: 8px 22px;
+      border-top: 1px solid var(--border-lo);
+      border-bottom: 1px solid var(--border-lo);
+      background: var(--surface);
+      scrollbar-width: thin;
+    }
+    .detail-jump-btn {
+      flex: 0 0 auto;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--muted2);
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .detail-jump-btn:hover,
+    .detail-jump-btn.active { border-color: var(--accent); background: var(--accent-lo); color: var(--accent); }
+    .detail-header-card.is-nav-focus,
+    .detail-zone.is-nav-focus { animation: detailSectionFocus 1.15s ease-out; }
+    @keyframes detailSectionFocus {
+      0% { box-shadow: 0 0 0 0 rgba(229,179,59,0); }
+      24% { box-shadow: 0 0 0 3px rgba(229,179,59,0.78), 0 0 28px rgba(229,179,59,0.28); }
+      100% { box-shadow: 0 0 0 0 rgba(229,179,59,0); }
+    }
     .summary-stat { background: var(--bg); border: 1px solid var(--border-lo); border-radius: var(--radius-sm); padding: 7px 10px; }
     .detail-title.copyable-field,
     .detail-field.copyable-field,
@@ -467,7 +446,7 @@
       0% { opacity: 0; transform: translateY(4px) scale(0.92); }
       18% { opacity: 1; transform: translateY(0) scale(1.03); }
       70% { opacity: 1; transform: translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateY(-3px) scale(0.98); }
+      100% { opacity: 0; transform: none; }
     }
     @keyframes copyTilePulse {
       0% { box-shadow: 0 0 0 0 rgba(26,86,219,0.24); }
@@ -494,13 +473,67 @@
     .cond-poor { background: #fee2e2; color: #991b1b; }
     .cond-na   { background: var(--bg); color: var(--muted); border: 1px solid var(--border-lo); }
     .money-val { font-family: monospace; font-size: 13px; font-weight: 600; color: #059669; }
+    .mobile-map-toolbar { display: none; }
 
     @media (max-width: 760px) {
       body { overflow: auto; height: auto; }
       .main-layout { flex-direction: column; overflow: visible; }
-      .left-panel { width: 100%; max-height: 45vh; border-right: none; border-bottom: 1px solid var(--border); }
-      #map { flex: 0 0 280px; margin: 10px; border-radius: 12px; }
-      .detail-panel { flex: none; }
+      .left-panel {
+        width: 100%;
+        max-height: 45vh;
+        overflow: hidden;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        transition: max-height 360ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .mobile-results-controls { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--border-lo); background: var(--surface-2); }
+      .search-form-content {
+        max-height: 280px;
+        overflow: hidden;
+        transition: max-height 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .left-panel.mobile-results-collapsed { max-height: 56px; }
+      .left-panel.mobile-results-collapsed .search-area { padding: 0; }
+      .left-panel.mobile-results-collapsed .search-form-content {
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(-8px);
+        pointer-events: none;
+      }
+      .results-list {
+        min-height: 0;
+        max-height: calc(45vh - 56px);
+        transition: max-height 360ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease;
+      }
+      .left-panel.mobile-results-collapsed .results-list {
+        max-height: 0;
+        opacity: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        pointer-events: none;
+      }
+      .right-panel { position: relative; overflow: visible; }
+      :root { --bridge-header-offset: 58px; }
+      html.bridge-header-hidden { --bridge-header-offset: 0px; }
+      .detail-panel { order: 1; flex: none; overflow: visible; padding-bottom: 70px; }
+      .right-panel.mobile-map-dock-expanded .detail-panel { padding-bottom: 340px; }
+      .right-panel.mobile-map-dock-large .detail-panel { padding-bottom: 440px; }
+      /* Keep the nav moving with the shared topbar reveal instead of jumping
+         into the old offset while the header is still animating. */
+      .detail-jump-nav {
+        top: var(--bridge-header-offset);
+        transition: top 460ms cubic-bezier(0.65, 0, 0.35, 1);
+      }
+      .mobile-map-toolbar { display: flex; align-items: center; justify-content: flex-start; gap: 8px; flex: 0 0 52px; min-height: 52px; padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--border); }
+      .mobile-map-toolbar-label { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+      .mobile-map-toolbar-actions { display: flex; align-items: center; gap: 8px; margin-left: 0; }
+      .mobile-map-toolbar .btn { flex-shrink: 0; }
+      .mobile-map-toolbar .btn:disabled { cursor: default; opacity: 0.48; }
+      .map-shell { order: 2; position: fixed; left: 0; right: 0; bottom: 0; z-index: 500; display: flex; flex: 0 0 52px; width: 100%; height: 52px; min-height: 52px; flex-direction: column; background: var(--surface); border-top: 1px solid var(--border); box-shadow: 0 -8px 24px rgba(15,23,42,0.16); }
+      #map { display: none; flex: 1 1 auto; width: auto; height: auto; min-height: 0; margin: 0 10px 10px; border-radius: 12px; }
+      .map-shell.mobile-map-expanded { flex-basis: 322px; height: 322px; min-height: 322px; }
+      .map-shell.mobile-map-expanded.mobile-map-large { flex-basis: 422px; height: 422px; min-height: 422px; }
+      .map-shell.mobile-map-expanded #map { display: block; flex: 1 1 auto; height: auto; min-height: 0; }
       .detail-summary { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 520px) {
@@ -514,14 +547,6 @@
       .search-toolbar { align-items: flex-start; flex-direction: column; }
       .search-filter-buttons { width: 100%; }
       .search-filter-buttons .bookmark-filter { flex: 1; justify-content: center; }
-      .map-marker-limit {
-        left: 48px;
-        top: 8px;
-        max-width: calc(100% - 16px);
-        font-size: 10px;
-        gap: 5px;
-      }
-      .map-marker-limit button { font-size: 10px; padding: 4px 7px; }
       .detail-summary { grid-template-columns: 1fr 1fr; }
     }
     .detail-title-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
@@ -546,7 +571,7 @@
     .public-notice strong { color: #F4D78A; }
     .detail-struct-id { font-size: 11px; color: var(--muted); font-weight: 500; letter-spacing: 0.03em; margin-bottom: 10px; }
     .result-muni { font-size: 11px; color: var(--muted); line-height: 1.55; }
-    .detail-header-card { background: var(--bg); border: 1px solid var(--border-lo); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 18px; }
+    .detail-header-card { background: var(--bg); border: 1px solid var(--border-lo); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 14px 16px; margin: 18px 0; }
 
     /* ── FIND MY BRIDGE PILL ───────────────────── */
     @keyframes locatePulse {
@@ -684,6 +709,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
       opacity: 0;
       pointer-events: none;
       transition: opacity 220ms ease;
@@ -691,9 +717,10 @@
     .guide-overlay.open { opacity: 1; pointer-events: auto; }
     .guide-modal {
       background: var(--surface);
+      font-family: var(--sans);
       border-radius: 18px;
-      width: min(520px, calc(100vw - 24px));
-      max-height: min(680px, calc(100dvh - 40px));
+      width: min(520px, 100%);
+      max-height: min(680px, calc(100dvh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
       display: flex;
       flex-direction: column;
       box-shadow: 0 24px 64px rgba(0,0,0,0.3);
@@ -710,7 +737,7 @@
       border-bottom: 1.5px solid var(--border-lo);
       flex-shrink: 0;
     }
-    .guide-header-title { font-size: 16px; font-weight: 700; }
+    .guide-header-title { font-family: var(--sans); font-size: 16px; font-weight: 700; line-height: 1.25; }
     .guide-close {
       background: none;
       border: none;
@@ -719,6 +746,8 @@
       line-height: 1;
       cursor: pointer;
       padding: 0 4px;
+      font-family: var(--sans);
+      transition: color var(--transition);
     }
     .guide-close:hover { color: var(--text); }
     .guide-slides { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
@@ -737,17 +766,21 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 17px;
+      font-size: 0;
       font-weight: 800;
       flex-shrink: 0;
       margin-top: 1px;
     }
-    .gi-blue { background: var(--accent-lo); }
-    .gi-green { background: rgba(16,185,129,0.12); }
-    .gi-orange { background: rgba(245,158,11,0.12); }
-    .gi-red { background: rgba(220,38,38,0.10); }
-    .gi-navy { background: rgba(30,41,57,0.08); }
-    html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
+    .guide-icon svg { width: 20px; height: 20px; display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .gi-blue { background: var(--accent-lo); color: var(--accent); }
+    .gi-green { background: rgba(16,185,129,0.12); color: #059669; }
+    .gi-orange { background: rgba(245,158,11,0.12); color: #b45309; }
+    .gi-red { background: rgba(220,38,38,0.10); color: #dc2626; }
+    .gi-navy { background: rgba(30,41,57,0.08); color: var(--muted2); }
+    html[data-dark] .gi-green { background: rgba(52,211,153,0.16); color: #6ee7b7; }
+    html[data-dark] .gi-orange { background: rgba(251,191,36,0.16); color: #fcd34d; }
+    html[data-dark] .gi-red { background: rgba(244,63,94,0.16); color: #fb7185; }
+    html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); color: var(--muted); }
     .guide-slide-body { flex: 1; min-width: 0; }
     .guide-slide-title { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
     .guide-slide-text { font-size: 13px; color: var(--muted2); line-height: 1.55; }
@@ -791,25 +824,27 @@
 
     @media (max-width: 520px) {
       .guide-modal {
-        width: calc(100vw - 18px);
-        max-height: calc(100dvh - 26px);
+        width: 100%;
+        max-height: calc(100dvh - 26px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         border-radius: 14px;
       }
       .guide-header { padding: 15px 16px 12px; }
       .guide-header-title { font-size: 15px; line-height: 1.25; }
       .guide-slide { padding: 16px; gap: 11px; }
-      .guide-icon { width: 34px; height: 34px; border-radius: 10px; font-size: 15px; }
+      .guide-icon { width: 34px; height: 34px; border-radius: 10px; }
+      .guide-icon svg { width: 18px; height: 18px; }
       .guide-slide-title { font-size: 13px; }
       .guide-slide-text { font-size: 12px; line-height: 1.5; }
       .guide-footer { padding: 12px 16px; }
     }
     @media (max-width: 380px) {
       .guide-modal {
-        width: calc(100vw - 12px);
-        max-height: calc(100dvh - 18px);
+        width: 100%;
+        max-height: calc(100dvh - 18px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
       }
       .guide-slide { padding: 14px; gap: 9px; }
-      .guide-icon { width: 30px; height: 30px; font-size: 14px; }
+      .guide-icon { width: 30px; height: 30px; }
+      .guide-icon svg { width: 16px; height: 16px; }
       .guide-pill { font-size: 10px; padding: 3px 8px; }
       .guide-footer { align-items: stretch; flex-direction: column; }
       .guide-done { width: 100%; }
@@ -835,7 +870,7 @@
     }
     /* Page fade-in on load */
     @keyframes pageFadeIn { from { opacity: 0; } to { opacity: 1; } }
-    html:not(.entering-from-hub):not(.exiting-to-hub) body { animation: pageFadeIn 360ms cubic-bezier(0.16, 1, 0.3, 1); }
+    html:not(.entering-from-hub):not(.exiting-to-hub):not([data-transition-settled]) body { animation: pageFadeIn 360ms cubic-bezier(0.16, 1, 0.3, 1); }
     /* Button tap scale (works on real buttons + anchor buttons) */
     button:active,
     .btn:active,
@@ -858,7 +893,7 @@
     @keyframes mapFade { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: none; } }
     #map { animation: mapFade 620ms cubic-bezier(0.16, 1, 0.3, 1); }
     /* Result item fade-in */
-    @keyframes resultFade { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes resultFade { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
     .result-item { animation: resultFade 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards; }
 
     /* Respect reduced-motion preference */
@@ -907,7 +942,7 @@
       0% { transform: scale(1); }
       40% { transform: scale(1.22); }
       70% { transform: scale(0.95); }
-      100% { transform: scale(1); }
+      100% { transform: none; }
     }
     .bookmark-btn.popping { animation: bookmarkPop 420ms cubic-bezier(0.16, 1, 0.3, 1); }
     .bookmark-filter {
@@ -1001,12 +1036,16 @@
       contain: paint style;
     }
     html.entering-from-hub { background: var(--bg); }
+    @media (prefers-reduced-motion: reduce) {
+      html.entering-from-hub body,
+      html.exiting-to-hub body { animation:none !important; opacity:1 !important; transform:none !important; will-change:auto !important; contain:none !important; }
+    }
 
   
     /* Invisible hover/tap zone at top of viewport — reveals header */
     .header-hover-zone {
       position: fixed; top: 0; left: 0; right: 0;
-      height: 18px; z-index: 99;
+      height: 18px; z-index: 15;
       background: transparent;
       pointer-events: auto;
     }
@@ -1027,7 +1066,41 @@
   </style>
   <script>if(localStorage.getItem("field_dark_mode")==="1")document.documentElement.setAttribute("data-dark","");</script>
   <style>html{background:#eef0f4}html[data-dark]{background:#0f1117}</style>
-  <script>try{if(sessionStorage.getItem('ft_opening_from_hub')==='1'){sessionStorage.removeItem('ft_opening_from_hub');document.documentElement.classList.add('entering-from-hub');setTimeout(function(){document.documentElement.classList.remove('entering-from-hub');},420);}}catch(_){}</script>
+  <script>
+  (function(){
+    var d=document.documentElement, entering=false, fallbackTimer=0;
+    function settle(){
+      if(!entering) return;
+      entering=false;
+      if(fallbackTimer) clearTimeout(fallbackTimer);
+      d.setAttribute('data-transition-settled','');
+      d.classList.remove('entering-from-hub');
+      document.removeEventListener('animationend',onAnimationEnd);
+      document.removeEventListener('animationcancel',onAnimationEnd);
+    }
+    function onAnimationEnd(e){
+      if(e.target===document.body && /^slideIn/.test(e.animationName||'')) settle();
+    }
+    try{
+      if(sessionStorage.getItem('ft_opening_from_hub')==='1'){
+        sessionStorage.removeItem('ft_opening_from_hub');
+        d.classList.add('entering-from-hub');
+        entering=true;
+      }
+    }catch(_){ }
+    if(entering){
+      document.addEventListener('animationend',onAnimationEnd);
+      document.addEventListener('animationcancel',onAnimationEnd);
+      function armFallback(){
+        if(entering) fallbackTimer=setTimeout(settle,400);
+      }
+      if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',armFallback,{once:true});
+      else armFallback();
+    }else{
+      setTimeout(function(){d.setAttribute('data-transition-settled','');},420);
+    }
+  })();
+  </script>
   <!-- Google Analytics 4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XZJ7XL4S34"></script>
   <script>
@@ -1059,26 +1132,32 @@
 
   <div class="left-panel">
     <div class="search-area">
-      <label class="search-label" for="search-input">Search bridges</label>
-      <div class="search-wrap">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input id="search-input" class="search-input" type="text" placeholder="Search #, name, county, route" autocomplete="off" spellcheck="false" />
-      </div>
-      <div class="search-helper">Examples: 1023-152, Mercer, Route 130</div>
-      <div class="search-toolbar">
-        <div id="result-count" class="result-count" style="margin-top:0;">Type to search...</div>
-        <div class="search-filter-buttons">
-          <button id="all-bridges-filter" class="bookmark-filter all-bridges-filter" title="Show all bridges statewide" aria-label="All Bridges">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
-            <span id="all-bridges-filter-label">All Bridges</span>
-          </button>
-          <button id="bookmark-filter" class="bookmark-filter" title="Show saved bridges" aria-label="Show Saved">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            <span id="bookmark-filter-label">Show Saved</span>
-          </button>
+      <div class="search-form-content">
+        <label class="search-label" for="search-input">Search bridges</label>
+        <div class="search-wrap">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input id="search-input" class="search-input" type="text" placeholder="Search #, name, county, route" autocomplete="off" spellcheck="false" />
         </div>
+        <div class="search-helper">Examples: 1023-152, Mercer, Route 130</div>
+        <div class="search-toolbar">
+          <div id="result-count" class="result-count" style="margin-top:0;">Type to search...</div>
+          <div class="search-filter-buttons">
+            <button id="all-bridges-filter" class="bookmark-filter all-bridges-filter" title="Show all bridges statewide" aria-label="All Bridges">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
+              <span id="all-bridges-filter-label">All Bridges</span>
+            </button>
+            <button id="bookmark-filter" class="bookmark-filter" title="Show saved bridges" aria-label="Show Saved">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span id="bookmark-filter-label">Show Saved</span>
+            </button>
+          </div>
+        </div>
+        <div class="ft-local-note" style="margin:10px 0 0;">Saved on this device only. Export a backup for long-term storage.</div>
       </div>
-      <div class="ft-local-note" style="margin:10px 0 0;">Saved on this device only. Export a backup for long-term storage.</div>
+      <div class="mobile-results-controls">
+        <span class="mobile-results-label" id="mobile-results-label">Search results</span>
+        <button id="mobile-results-toggle" class="mobile-results-toggle" type="button" aria-expanded="true">Hide Results</button>
+      </div>
     </div>
     <div id="results-list" class="results-list">
       <div class="list-empty">
@@ -1089,10 +1168,19 @@
   </div>
 
   <div class="right-panel">
-    <div id="map">
-      <div class="map-placeholder">
-        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-        <p>Map loads when a bridge is selected</p>
+    <div id="map-shell" class="map-shell">
+      <div class="mobile-map-toolbar">
+        <span class="mobile-map-toolbar-label">Bridge map</span>
+        <div class="mobile-map-toolbar-actions">
+          <button id="mobile-map-toggle" class="btn btn-secondary btn-sm" type="button" aria-controls="map" aria-expanded="false">Show Map</button>
+          <button id="mobile-map-expand" class="btn btn-secondary btn-sm" type="button" aria-controls="map" aria-expanded="false" disabled>Expand Map</button>
+        </div>
+      </div>
+      <div id="map">
+        <div class="map-placeholder">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <p>Map loads when a bridge is selected</p>
+        </div>
       </div>
     </div>
     <div id="detail-panel" class="detail-panel">
@@ -1144,29 +1232,29 @@
   </div>
 </div>
 
-<div class="guide-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="Bridge Navigator Guide">
+<div class="guide-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="Bridge Navigator Guide" aria-hidden="true">
   <div class="guide-modal">
     <div class="guide-header">
       <div class="guide-header-title">How to Use Bridge Navigator</div>
-      <button class="guide-close" id="guide-close" aria-label="Close">&times;</button>
+      <button class="guide-close" id="guide-close" type="button" aria-label="Close">&times;</button>
     </div>
     <div class="guide-slides">
       <div class="guide-slide">
-        <div class="guide-icon gi-blue">1</div>
+        <div class="guide-icon gi-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18M5 18V9h14v9M9 18V9M15 18V9M3 9c2.5-3 5.5-4.5 9-4.5S18.5 6 21 9"/></svg></div>
         <div class="guide-slide-body">
           <div class="guide-slide-title">Search by Bridge or Structure</div>
           <div class="guide-slide-text">Search by <strong>structure number</strong> or bridge name. Structure numbers display in the <strong>XXXX-XXX</strong> format, and searches work with or without the dash.</div>
         </div>
       </div>
       <div class="guide-slide">
-        <div class="guide-icon gi-green">2</div>
+        <div class="guide-icon gi-green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z"/><path d="M9 4v13.5M15 6.5V20"/></svg></div>
         <div class="guide-slide-body">
           <div class="guide-slide-title">Use the Map and Street View</div>
-          <div class="guide-slide-text">Selecting a bridge centers the map on its NBI location. Use <strong>Google Maps</strong> or <strong>Street View</strong> from the bridge header when you need to open the location outside this page.</div>
+          <div class="guide-slide-text">Selecting a bridge centers the map on its NBI location. Use <strong>Google Maps</strong> or <strong>Street View</strong> from the bridge header when you need to open the location outside this page. Street View uses the nearest available panorama; use Google Maps if imagery is unavailable.</div>
         </div>
       </div>
       <div class="guide-slide">
-        <div class="guide-icon gi-orange">3</div>
+        <div class="guide-icon gi-orange"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.6M8.2 13.2l7.6 4.6"/></svg></div>
         <div class="guide-slide-body">
           <div class="guide-slide-title">Share Bridge Details</div>
           <div class="guide-slide-text">Use <strong>Share</strong> to send the key bridge information. Desktop copies the structure number, bridge name, route, milepost, and Google Maps pin link. Mobile opens an SMS message with the same text ready to send.</div>
@@ -1178,14 +1266,14 @@
         </div>
       </div>
       <div class="guide-slide">
-        <div class="guide-icon gi-navy">4</div>
+        <div class="guide-icon gi-navy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></div>
         <div class="guide-slide-body">
           <div class="guide-slide-title">Copy Data Fields</div>
           <div class="guide-slide-text">Click or tap the bridge name or any detail field under the map to copy only the <strong>field value</strong>. For example, the Route field copies <strong>Route 202</strong>, not the field label.</div>
         </div>
       </div>
       <div class="guide-slide">
-        <div class="guide-icon gi-red">5</div>
+        <div class="guide-icon gi-red"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="2.5"/><path d="m19 3 .6 1.4L21 5l-1.4.6L19 7l-.6-1.4L17 5l1.4-.6z"/></svg></div>
         <div class="guide-slide-body">
           <div class="guide-slide-title">Find Near Me and Saved Items</div>
           <div class="guide-slide-text"><strong>Find Near Me</strong> uses your current GPS location to detect nearby structures. Save important bridges with the star button, then use <strong>Show Saved</strong> to bring them back quickly.</div>
@@ -1194,7 +1282,7 @@
     </div>
     <div class="guide-footer">
       <div class="guide-footer-note">Tap <strong>?</strong> in the header anytime to reopen this guide.</div>
-      <button class="guide-done" id="guide-done">Got it</button>
+      <button class="guide-done" id="guide-done" type="button">Got it</button>
     </div>
   </div>
 </div>
@@ -1205,7 +1293,9 @@
   // -- State --
   let map = null;
   let activeMarker = null;
-  let resultMarkersLayer = null;
+  let searchPointLayer = null;
+  let searchPointTooltip = null;
+  let searchPointTooltipIndex = -1;
   let activeItem = null;
   let debounceTimer = null;
   let allBridges = [];
@@ -1216,10 +1306,13 @@
   let bridgeDataMode = 'index';
   let activeSelectToken = 0;
   let muniCache = {};
-  let currentSearchMarkerResults = [];
-  let searchMarkersExpanded = false;
   let allBridgesViewOn = false;
-  var SEARCH_MARKER_AUTO_LIMIT = 50;
+  var ACTIVE_BRIDGE_PIN_COLOR = '#E5B33B';
+  var BRIDGE_DATA_REVISION = '2026-08-05-coordinate-review';
+
+  function bridgeDataUrl(url) {
+    return url + (url.indexOf('?') === -1 ? '?' : '&') + 'v=' + BRIDGE_DATA_REVISION;
+  }
 
   // -- Bridge data loads from a lightweight index; full records lazy-load by county. --
 
@@ -1350,7 +1443,7 @@
       return loadFullBridgeDataFallback('Bridge index fetch failure was simulated.');
     }
 
-    return fetch('../data/bridges/index.json', { cache: 'no-cache' })
+    return fetch(bridgeDataUrl('../data/bridges/index.json'), { cache: 'no-cache' })
       .then(function(resp) {
         if (!resp.ok) throw new Error('Bridge index request failed: ' + resp.status);
         return resp.json();
@@ -1370,7 +1463,7 @@
 
   function loadFullBridgeDataFallback(reason) {
     setBridgeDataState('loading', 'Using fallback bridge data.');
-    return fetch('../data/njstructures.json', { cache: 'no-cache' })
+    return fetch(bridgeDataUrl('../data/njstructures.json'), { cache: 'no-cache' })
       .then(function(resp) {
         if (!resp.ok) throw new Error('Fallback bridge data request failed: ' + resp.status);
         return resp.json();
@@ -1415,7 +1508,7 @@
   function loadBridgeChunk(chunkPath) {
     if (!chunkPath) return Promise.reject(new Error('Missing county chunk path'));
     if (bridgeChunkCache.has(chunkPath)) return bridgeChunkCache.get(chunkPath);
-    var p = fetch(chunkPath, { cache: 'no-cache' })
+    var p = fetch(bridgeDataUrl(chunkPath), { cache: 'no-cache' })
       .then(function(resp) {
         if (!resp.ok) {
           var offlineMsg = !navigator.onLine ? 'This bridge\'s full details are not available offline yet. Reconnect and try again.' : 'Could not load full bridge details.';
@@ -1553,83 +1646,394 @@
         maxZoom: 20
       }).addTo(map);
       L.control.layers({ 'Street': osmLayer, 'Satellite': satLayer }, null, { position: 'topright' }).addTo(map);
-      resultMarkersLayer = L.layerGroup().addTo(map);
+      var searchPointPane = map.createPane('bridge-search-points');
+      searchPointPane.style.zIndex = '400';
+      searchPointPane.style.pointerEvents = 'none';
+      searchPointLayer = createSearchPointLayer().addTo(map);
+      searchPointTooltip = L.tooltip({ direction: 'top', offset: [0, -8], opacity: 0.95 });
+      map.on('mousemove', handleSearchPointMouseMove);
+      map.on('mouseout', handleSearchPointMouseOut);
+      map.on('click', handleSearchPointClick);
       return true;
     } catch(e) {
       return false;
     }
   }
 
-  function clearSearchResultMarkers() {
-    var limitEl = getMapMarkerLimitControl(false);
-    if (limitEl) {
-      limitEl.classList.remove('show');
-      limitEl.innerHTML = '';
-    }
-    currentSearchMarkerResults = [];
-    searchMarkersExpanded = false;
-    if (resultMarkersLayer) resultMarkersLayer.clearLayers();
+  function focusMapOnBridge(lat, lng) {
+    if (!map) return;
+    map.invalidateSize({ pan: false });
+    map.setView([lat, lng], 17, { animate: false });
   }
 
-  function getMapMarkerLimitControl(createIfMissing) {
-    var limitEl = document.getElementById('map-marker-limit');
-    if (limitEl || !createIfMissing) return limitEl;
-    var mapEl = document.getElementById('map');
-    if (!mapEl) return null;
-    limitEl = document.createElement('div');
-    limitEl.id = 'map-marker-limit';
-    limitEl.className = 'map-marker-limit';
-    limitEl.setAttribute('aria-live', 'polite');
-    mapEl.appendChild(limitEl);
-    return limitEl;
+  window.addEventListener('resize', function() {
+    if (map) map.invalidateSize({ pan: false });
+  });
+
+  function syncMobileMapDockState(shell) {
+    var expanded = shell.classList.contains('mobile-map-expanded');
+    var large = expanded && shell.classList.contains('mobile-map-large');
+    var rightPanel = shell.closest('.right-panel');
+    if (rightPanel) {
+      rightPanel.classList.toggle('mobile-map-dock-expanded', expanded);
+      rightPanel.classList.toggle('mobile-map-dock-large', large);
+    }
+    var toggle = document.getElementById('mobile-map-toggle');
+    if (toggle) {
+      toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      toggle.textContent = expanded ? 'Hide Map' : 'Show Map';
+    }
+    var expandButton = document.getElementById('mobile-map-expand');
+    if (expandButton) {
+      expandButton.disabled = !expanded;
+      expandButton.setAttribute('aria-expanded', large ? 'true' : 'false');
+      expandButton.textContent = large ? 'Reduce Map' : 'Expand Map';
+    }
   }
 
-  function renderSearchResultMarkers(matches, expanded) {
-    currentSearchMarkerResults = matches || [];
-    searchMarkersExpanded = !!expanded;
-    var mapReady = initMap();
-    if (!mapReady || !map) return;
-    var limitEl = getMapMarkerLimitControl(true);
-    if (limitEl) {
-      limitEl.classList.remove('show');
-      limitEl.innerHTML = '';
+  function setMobileMapExpanded(expanded, shouldScroll, coords) {
+    var shell = document.getElementById('map-shell');
+    if (!shell) return;
+    shell.classList.toggle('mobile-map-expanded', !!expanded);
+    if (!expanded) shell.classList.remove('mobile-map-large');
+    syncMobileMapDockState(shell);
+    var refresh = function() {
+      if (map) {
+        map.invalidateSize({ pan: false });
+        if (coords) focusMapOnBridge(coords.lat, coords.lng);
+      }
+    };
+    if (window.requestAnimationFrame) window.requestAnimationFrame(refresh);
+    else setTimeout(refresh, 0);
+  }
+
+  function setMobileMapLarge(large) {
+    var shell = document.getElementById('map-shell');
+    if (!shell) return;
+    if (!shell.classList.contains('mobile-map-expanded')) {
+      setMobileMapExpanded(true, false, null);
     }
-    if (!resultMarkersLayer) resultMarkersLayer = L.layerGroup().addTo(map);
-    resultMarkersLayer.clearLayers();
+    shell.classList.toggle('mobile-map-large', !!large);
+    syncMobileMapDockState(shell);
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(function() { if (map) map.invalidateSize({ pan: false }); });
+    } else if (map) {
+      map.invalidateSize({ pan: false });
+    }
+  }
 
-    var markerRecords = (matches || []).filter(function(b) {
-      var lat = parseFloat(b.Latitude);
-      var lng = parseFloat(b.Longitude);
-      return !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
-    });
-    if (markerRecords.length === 0) return;
+  function setMobileResultsCollapsed(collapsed) {
+    var panel = document.querySelector('.left-panel');
+    var toggle = document.getElementById('mobile-results-toggle');
+    var label = document.getElementById('mobile-results-label');
+    if (!panel || !toggle) return;
+    panel.classList.toggle('mobile-results-collapsed', !!collapsed);
+    toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    toggle.textContent = collapsed ? 'Change Bridge' : 'Hide Results';
+    if (label) label.textContent = collapsed ? 'Bridge selected' : 'Search results';
+  }
 
-    var shouldCap = markerRecords.length > SEARCH_MARKER_AUTO_LIMIT && !searchMarkersExpanded;
-    var recordsToRender = shouldCap ? markerRecords.slice(0, SEARCH_MARKER_AUTO_LIMIT) : markerRecords;
-
-    recordsToRender.forEach(function(b) {
-      var lat = parseFloat(b.Latitude);
-      var lng = parseFloat(b.Longitude);
-      var marker = L.marker([lat, lng], { icon: makePinIcon('#1a56db', false) }).addTo(resultMarkersLayer);
-      marker.bindTooltip(
-        '<strong>' + escHtml(b.Structure_Name || 'Unnamed bridge') + '</strong><br>' + escHtml(b.structureNumberDisplay || formatStructureNumber(b.Structure_Number)),
-        { direction: 'top', offset: [0, -36], opacity: 0.95 }
-      );
-      marker.on('click', function() { selectBridge(b, null); });
-    });
-
-    if (shouldCap && limitEl) {
-      var helper = markerRecords.length > 200 ? '<span class="map-marker-limit-helper">Large result sets may slow the map.</span>' : '';
-      limitEl.innerHTML =
-        '<strong>Map: ' + SEARCH_MARKER_AUTO_LIMIT + ' of ' + markerRecords.length.toLocaleString() + '</strong>' +
-        '<button id="show-all-map-markers" type="button" aria-label="Show all ' + markerRecords.length.toLocaleString() + ' search results on map">Show all</button>' +
-        helper;
-      limitEl.classList.add('show');
-      var btn = document.getElementById('show-all-map-markers');
-      if (btn) btn.addEventListener('click', function() {
-        renderSearchResultMarkers(currentSearchMarkerResults, true);
+  (function wireMobileControls() {
+    var resultsToggle = document.getElementById('mobile-results-toggle');
+    if (resultsToggle) {
+      resultsToggle.addEventListener('click', function() {
+        var panel = document.querySelector('.left-panel');
+        var collapsed = !!(panel && panel.classList.contains('mobile-results-collapsed'));
+        setMobileResultsCollapsed(!collapsed);
+        if (collapsed) {
+          var input = document.getElementById('search-input');
+          if (input) input.focus();
+        }
+      });
+      setMobileResultsCollapsed(false);
+    }
+    var mapToggle = document.getElementById('mobile-map-toggle');
+    if (mapToggle) {
+      mapToggle.addEventListener('click', function() {
+        var shell = document.getElementById('map-shell');
+        var expanded = !!(shell && shell.classList.contains('mobile-map-expanded'));
+        setMobileMapExpanded(!expanded, false, null);
       });
     }
+    var mapExpand = document.getElementById('mobile-map-expand');
+    if (mapExpand) {
+      mapExpand.addEventListener('click', function() {
+        var shell = document.getElementById('map-shell');
+        var large = !!(shell && shell.classList.contains('mobile-map-large'));
+        setMobileMapLarge(!large);
+      });
+    }
+  })();
+
+  function clearSearchResultMarkers() {
+    hideSearchPointTooltip();
+    if (searchPointLayer) searchPointLayer.setRecords([]);
+  }
+
+  function createSearchPointLayer() {
+    var SearchPointLayer = L.Layer.extend({
+      initialize: function(records) {
+        this._records = records || [];
+        this._points = [];
+        this._grid = Object.create(null);
+        this._cellSize = 14;
+        this._hitRadius = 8;
+        this._canvasBounds = null;
+        this._canvasContainerOrigin = null;
+        this._renderedCenter = null;
+        this._renderedCenterContainer = null;
+        this._renderedZoom = null;
+        this._zoomAnimating = false;
+        this._zoomAnimationApplied = false;
+        this._redrawHandle = 0;
+      },
+      onAdd: function(mapInstance) {
+        this._map = mapInstance;
+        var pane = mapInstance.getPane('bridge-search-points') || mapInstance.getContainer();
+        this._canvas = L.DomUtil.create('canvas', 'bridge-search-points-canvas', pane);
+        L.DomUtil.addClass(this._canvas, 'leaflet-zoom-animated');
+        this._canvas.setAttribute('aria-hidden', 'true');
+        this._canvas.style.position = 'absolute';
+        this._canvas.style.left = '0';
+        this._canvas.style.top = '0';
+        this._canvas.style.width = '100%';
+        this._canvas.style.height = '100%';
+        this._canvas.style.zIndex = '0';
+        this._canvas.style.pointerEvents = 'none';
+        mapInstance.on('zoomstart', this._beginZoom, this);
+        mapInstance.on('zoomanim', this._animateZoom, this);
+        mapInstance.on('zoom', this._handleZoom, this);
+        mapInstance.on('moveend zoomend resize', this._scheduleRedraw, this);
+        this._scheduleRedraw();
+      },
+      onRemove: function(mapInstance) {
+        mapInstance.off('zoomstart', this._beginZoom, this);
+        mapInstance.off('zoomanim', this._animateZoom, this);
+        mapInstance.off('zoom', this._handleZoom, this);
+        mapInstance.off('moveend zoomend resize', this._scheduleRedraw, this);
+        if (this._redrawHandle) {
+          if (window.cancelAnimationFrame) window.cancelAnimationFrame(this._redrawHandle);
+          else window.clearTimeout(this._redrawHandle);
+          this._redrawHandle = 0;
+        }
+        if (this._canvas && this._canvas.parentNode) this._canvas.parentNode.removeChild(this._canvas);
+        this._canvas = null;
+        this._canvasBounds = null;
+        this._canvasContainerOrigin = null;
+        this._renderedCenter = null;
+        this._renderedCenterContainer = null;
+        this._renderedZoom = null;
+        this._zoomAnimating = false;
+        this._zoomAnimationApplied = false;
+        this._map = null;
+      },
+      setRecords: function(records) {
+        this._records = records || [];
+        this._scheduleRedraw();
+        return this;
+      },
+      hitTest: function(layerPoint) {
+        if (!layerPoint || !this._grid || this._zoomAnimating) return null;
+        var cellX = Math.floor(layerPoint.x / this._cellSize);
+        var cellY = Math.floor(layerPoint.y / this._cellSize);
+        var bestIndex = -1;
+        var bestDistance = this._hitRadius * this._hitRadius;
+        for (var offsetX = -1; offsetX <= 1; offsetX++) {
+          for (var offsetY = -1; offsetY <= 1; offsetY++) {
+            var bucket = this._grid[(cellX + offsetX) + ':' + (cellY + offsetY)];
+            if (!bucket) continue;
+            bucket.forEach(function(index) {
+              var point = this._points[index];
+              if (!point) return;
+              var dx = point.x - layerPoint.x;
+              var dy = point.y - layerPoint.y;
+              var distance = dx * dx + dy * dy;
+              if (distance <= bestDistance) {
+                bestDistance = distance;
+                bestIndex = index;
+              }
+            }, this);
+          }
+        }
+        if (bestIndex < 0 || !this._records[bestIndex]) return null;
+        var record = this._records[bestIndex];
+        return { index: bestIndex, record: record, bridge: record.bridge, lat: record.lat, lng: record.lng };
+      },
+      _scheduleRedraw: function() {
+        if (!this._map || this._redrawHandle) return;
+        var self = this;
+        var draw = function() {
+          self._redrawHandle = 0;
+          self._redraw();
+        };
+        this._redrawHandle = window.requestAnimationFrame
+          ? window.requestAnimationFrame(draw)
+          : window.setTimeout(draw, 16);
+      },
+      _beginZoom: function() {
+        this._zoomAnimating = true;
+        this._zoomAnimationApplied = false;
+        if (this._map && this._canvasBounds && this._renderedCenter) {
+          this._canvasContainerOrigin = this._map.layerPointToContainerPoint(this._canvasBounds.min);
+          this._renderedCenterContainer = this._map.latLngToContainerPoint(this._renderedCenter);
+        }
+      },
+      _animateZoom: function(event) {
+        if (!this._map || !this._canvas || !this._renderedCenter || this._renderedZoom == null || !this._canvasContainerOrigin) return;
+        var targetZoom = event && event.zoom != null ? event.zoom : this._map.getZoom();
+        var scale = this._map.getZoomScale(targetZoom, this._renderedZoom);
+        // Some touch gestures emit a zoom animation callback while only
+        // panning. Leave those to the map pane so they cannot double-shift.
+        if (!Number.isFinite(scale) || Math.abs(scale - 1) < 0.0001) return;
+
+        this._zoomAnimationApplied = true;
+        if (this._redrawHandle) {
+          if (window.cancelAnimationFrame) window.cancelAnimationFrame(this._redrawHandle);
+          else window.clearTimeout(this._redrawHandle);
+          this._redrawHandle = 0;
+        }
+
+        var size = this._map.getSize();
+        var viewportCenter = size.divideBy(2);
+        var targetCenter = event && event.center ? event.center : this._map.getCenter();
+        var renderedCenterAtTargetZoom = this._map.project(this._renderedCenter, targetZoom)
+          .subtract(this._map.project(targetCenter, targetZoom))
+          .add(viewportCenter);
+        var sourceCenter = this._renderedCenterContainer || viewportCenter;
+        var viewTranslate = renderedCenterAtTargetZoom.subtract(sourceCenter.multiplyBy(scale));
+        var targetCanvasOrigin = this._canvasContainerOrigin.multiplyBy(scale).add(viewTranslate);
+        var mapPaneOrigin = this._map.layerPointToContainerPoint([0, 0]);
+        L.DomUtil.setTransform(this._canvas, targetCanvasOrigin.subtract(mapPaneOrigin), scale);
+      },
+      _handleZoom: function() {
+        // Leaflet does not emit zoomanim when CSS zoom animation is disabled.
+        // Redraw in the next frame in that case instead of leaving stale dots
+        // in place until zoomend.
+        if (!this._zoomAnimationApplied) this._scheduleRedraw();
+      },
+      _redraw: function() {
+        if (!this._map || !this._canvas) return;
+        var size = this._map.getSize();
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        // Keep a generous buffer around the viewport. During a drag Leaflet
+        // moves the pane before moveend triggers the next redraw; without
+        // this buffer, the old canvas edge becomes a visible cut-off line.
+        var paddingX = Math.max(144, Math.ceil(size.x * 0.5));
+        var paddingY = Math.max(128, Math.ceil(size.y * 0.5));
+        var drawWidth = size.x + paddingX * 2;
+        var drawHeight = size.y + paddingY * 2;
+        var pixelWidth = Math.max(1, Math.round(drawWidth * dpr));
+        var pixelHeight = Math.max(1, Math.round(drawHeight * dpr));
+        if (this._canvas.width !== pixelWidth) this._canvas.width = pixelWidth;
+        if (this._canvas.height !== pixelHeight) this._canvas.height = pixelHeight;
+        this._canvas.style.width = drawWidth + 'px';
+        this._canvas.style.height = drawHeight + 'px';
+
+        // This canvas is inside Leaflet's moving map pane. Keep its own
+        // viewport aligned with the current layer bounds and include the
+        // buffer, otherwise a pan leaves a straight clipped edge.
+        var viewportMin = this._map.containerPointToLayerPoint([0, 0]);
+        var viewMin = viewportMin.subtract([paddingX, paddingY]);
+        var viewMax = viewMin.add([drawWidth, drawHeight]);
+        this._canvasBounds = { min: viewMin, max: viewMax };
+        L.DomUtil.setPosition(this._canvas, viewMin);
+        var currentCenter = this._map.getCenter();
+        this._renderedCenter = { lat: currentCenter.lat, lng: currentCenter.lng };
+        this._renderedZoom = this._map.getZoom();
+        this._canvasContainerOrigin = this._map.layerPointToContainerPoint(viewMin);
+        this._renderedCenterContainer = this._map.latLngToContainerPoint(this._renderedCenter);
+        this._zoomAnimating = false;
+        this._zoomAnimationApplied = false;
+
+        var context = this._canvas.getContext('2d');
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+        context.clearRect(0, 0, drawWidth, drawHeight);
+        context.translate(-viewMin.x, -viewMin.y);
+        this._points = [];
+        this._grid = Object.create(null);
+        if (!this._records.length || !size.x || !size.y) return;
+
+        var radius = 4;
+        var cellSize = this._cellSize;
+        var pointPath = context;
+        pointPath.beginPath();
+        this._records.forEach(function(record, index) {
+          var projected = this._map.latLngToLayerPoint([record.lat, record.lng]);
+          var point = { x: projected.x, y: projected.y };
+          this._points[index] = point;
+          var key = Math.floor(point.x / cellSize) + ':' + Math.floor(point.y / cellSize);
+          if (!this._grid[key]) this._grid[key] = [];
+          this._grid[key].push(index);
+          if (point.x < viewMin.x - radius || point.y < viewMin.y - radius || point.x > viewMax.x + radius || point.y > viewMax.y + radius) return;
+          pointPath.moveTo(point.x + radius, point.y);
+          pointPath.arc(point.x, point.y, radius, 0, Math.PI * 2);
+        }, this);
+        context.fillStyle = ACTIVE_BRIDGE_PIN_COLOR;
+        context.globalAlpha = 0.88;
+        context.fill();
+        context.strokeStyle = '#ffffff';
+        context.lineWidth = 1;
+        context.globalAlpha = 0.9;
+        context.stroke();
+        context.globalAlpha = 1;
+      }
+    });
+    return new SearchPointLayer();
+  }
+
+  function isSearchPointEventIgnored(event) {
+    var target = event && event.originalEvent && event.originalEvent.target;
+    return !!(target && target.closest && (target.closest('.leaflet-control') || target.closest('.leaflet-marker-icon') || target.closest('.leaflet-popup') || target.closest('.leaflet-tooltip')));
+  }
+
+  function showSearchPointTooltip(hit) {
+    if (!map || !searchPointTooltip || !hit) return;
+    if (searchPointTooltipIndex === hit.index && map.hasLayer(searchPointTooltip)) return;
+    searchPointTooltipIndex = hit.index;
+    searchPointTooltip
+      .setContent('<strong>' + escHtml(hit.bridge.Structure_Name || 'Unnamed bridge') + '</strong><br>' + escHtml(hit.bridge.structureNumberDisplay || formatStructureNumber(hit.bridge.Structure_Number)))
+      .setLatLng([hit.lat, hit.lng]);
+    if (!map.hasLayer(searchPointTooltip)) searchPointTooltip.addTo(map);
+  }
+
+  function hideSearchPointTooltip() {
+    searchPointTooltipIndex = -1;
+    if (map && searchPointTooltip && map.hasLayer(searchPointTooltip)) map.removeLayer(searchPointTooltip);
+  }
+
+  function handleSearchPointMouseMove(event) {
+    if (isSearchPointEventIgnored(event) || !searchPointLayer) {
+      hideSearchPointTooltip();
+      return;
+    }
+    var hit = searchPointLayer.hitTest(event.layerPoint);
+    if (hit) showSearchPointTooltip(hit);
+    else hideSearchPointTooltip();
+  }
+
+  function handleSearchPointMouseOut(event) {
+    var related = event && event.originalEvent && event.originalEvent.relatedTarget;
+    if (!related || !map || !map.getContainer().contains(related)) hideSearchPointTooltip();
+  }
+
+  function handleSearchPointClick(event) {
+    if (isSearchPointEventIgnored(event) || !searchPointLayer) return;
+    var hit = searchPointLayer.hitTest(event.layerPoint);
+    if (!hit) return;
+    hideSearchPointTooltip();
+    selectBridgeFromUser(hit.bridge, null);
+  }
+
+  function renderSearchResultMarkers(matches) {
+    var mapReady = initMap();
+    if (!mapReady || !map || !searchPointLayer) return;
+    var markerRecords = (matches || []).map(function(bridge) {
+      var lat = parseFloat(bridge.Latitude);
+      var lng = parseFloat(bridge.Longitude);
+      if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) return null;
+      return { bridge: bridge, lat: lat, lng: lng };
+    }).filter(Boolean);
+    searchPointLayer.setRecords(markerRecords);
   }
 
   // -- Helpers --
@@ -1684,17 +2088,36 @@
     return 'Route ' + (isNaN(n) ? String(value).trim() : String(n));
   }
 
+  function getBridgeCoordinates(bridge) {
+    if (!bridge) return null;
+    var lat = Number(bridge.Latitude);
+    var lng = Number(bridge.Longitude);
+    if (!isFinite(lat) || !isFinite(lng) || lat === 0 || lng === 0 || lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+    return { lat: lat, lng: lng };
+  }
+
+  function googleMapsCoordinateQuery(coords) {
+    return String(coords.lat) + ',' + String(coords.lng);
+  }
+
+  function buildGoogleMapsUrl(coords) {
+    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(googleMapsCoordinateQuery(coords));
+  }
+
+  function buildGoogleStreetViewUrl(coords) {
+    return 'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + encodeURIComponent(googleMapsCoordinateQuery(coords));
+  }
+
   function buildBridgeShareText(bridge) {
-    var lat = parseFloat(bridge.Latitude);
-    var lng = parseFloat(bridge.Longitude);
+    var coords = getBridgeCoordinates(bridge);
     var lines = [
       'Structure: ' + formatStructureNumber(bridge.Structure_Number),
       'Bridge: ' + String(bridge.Structure_Name || '').trim(),
       'Route: ' + formatRoute(bridge.Route_Number),
       'Milepost: ' + (bridge.Milepoint == null || String(bridge.Milepoint).trim() === '' ? 'N/A' : String(bridge.Milepoint).trim())
     ];
-    if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
-      lines.push('Google Maps: https://maps.google.com/?q=' + encodeURIComponent(lat + ',' + lng));
+    if (coords) {
+      lines.push('Google Maps: ' + buildGoogleMapsUrl(coords));
     }
     return lines.join('\n');
   }
@@ -1809,6 +2232,48 @@
     });
   }
 
+  function wireDetailJumpNav(root) {
+    if (!root) return;
+    var nav = root.querySelector('.detail-jump-nav');
+    if (!nav) return;
+    var buttons = root.querySelectorAll('.detail-jump-btn[data-detail-jump]');
+    var focusTimer = 0;
+    function focusTarget(target) {
+      if (focusTimer) clearTimeout(focusTimer);
+      root.querySelectorAll('.is-nav-focus').forEach(function(item) { item.classList.remove('is-nav-focus'); });
+      target.classList.remove('is-nav-focus');
+      void target.offsetWidth;
+      target.classList.add('is-nav-focus');
+      focusTimer = setTimeout(function() { target.classList.remove('is-nav-focus'); }, 1200);
+    }
+    buttons.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var target = document.getElementById(btn.getAttribute('data-detail-jump'));
+        if (!target) return;
+        buttons.forEach(function(item) {
+          var isCurrent = item === btn;
+          item.classList.toggle('active', isCurrent);
+          item.setAttribute('aria-current', isCurrent ? 'true' : 'false');
+        });
+        focusTarget(target);
+        var panelRect = root.getBoundingClientRect();
+        var targetRect = target.getBoundingClientRect();
+        var panelCanScroll = root.scrollHeight > root.clientHeight + 2;
+        if (panelCanScroll) {
+          var targetTop = root.scrollTop + (targetRect.top - panelRect.top) - nav.offsetHeight - 8;
+          root.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+        } else {
+          var topbar = document.getElementById('topbar');
+          var topbarHeight = topbar && !topbar.classList.contains('header-hidden')
+            ? topbar.getBoundingClientRect().height
+            : 0;
+          var documentTargetTop = window.scrollY + targetRect.top;
+          window.scrollTo({ top: Math.max(0, documentTargetTop - topbarHeight - nav.offsetHeight - 8), behavior: 'smooth' });
+        }
+      });
+    });
+  }
+
   var EMPTY_HTML = '<div class="list-empty"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>Search by structure number,<br>bridge name, county, or route</p></div>';
 
   // -- Search --
@@ -1907,12 +2372,11 @@
 
     var items = listEl.querySelectorAll('.result-item');
     items.forEach(function(el, i) {
-      el.addEventListener('click', function() { selectBridge(matches[i], el); });
-      el.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') selectBridge(matches[i], el); });
+      el.addEventListener('click', function() { selectBridgeFromUser(matches[i], el); });
+      el.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') selectBridgeFromUser(matches[i], el); });
     });
 
-    renderSearchResultMarkers(matches, false);
-    selectBridge(matches[0], items[0]);
+    renderSearchResultMarkers(matches);
   }
 
   function showBridgeDetailLoading(bridge) {
@@ -1936,24 +2400,34 @@
   }
 
   // -- Select bridge --
+  function selectBridgeFromUser(bridge, itemEl) {
+    setMobileResultsCollapsed(true);
+    selectBridge(bridge, itemEl);
+  }
+
   function selectBridge(bridge, itemEl, isFullRecord) {
     var selectToken = ++activeSelectToken;
+    hideSearchPointTooltip();
     if (activeItem) activeItem.classList.remove('active');
     if (itemEl) { itemEl.classList.add('active'); activeItem = itemEl; }
 
-    var lat = parseFloat(bridge.Latitude);
-    var lng = parseFloat(bridge.Longitude);
-    var hasCoords = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+    var coords = getBridgeCoordinates(bridge);
+    var lat = coords ? coords.lat : NaN;
+    var lng = coords ? coords.lng : NaN;
+    var hasCoords = !!coords;
+    setMobileMapExpanded(hasCoords, false, coords);
 
     if (hasCoords) {
       var mapReady = initMap();
       if (mapReady && map) {
-        map.setView([lat, lng], 17);
         if (activeMarker) map.removeLayer(activeMarker);
-        activeMarker = L.marker([lat, lng], { icon: makePinIcon('#E5B33B', true) })
+        activeMarker = L.marker([lat, lng], {
+          icon: makePinIcon(ACTIVE_BRIDGE_PIN_COLOR, true)
+        })
           .addTo(map)
           .bindPopup('<strong>' + escHtml(bridge.Structure_Name) + '</strong><br><span style="font-size:12px;color:#6b7280">' + escHtml(formatStructureNumber(bridge.Structure_Number)) + '</span>')
           .openPopup();
+        focusMapOnBridge(lat, lng);
       }
     }
 
@@ -1972,10 +2446,12 @@
       return;
     }
 
-    var latLng = lat + ',' + lng;
-    var gmUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(latLng);
-    var svUrl = 'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + encodeURIComponent(latLng);
-
+    var gmUrl = hasCoords ? buildGoogleMapsUrl(coords) : '';
+    var svUrl = hasCoords ? buildGoogleStreetViewUrl(coords) : '';
+    var locationActions = hasCoords
+      ? '<a class="btn btn-secondary btn-sm" href="' + gmUrl + '" target="_blank" rel="noopener noreferrer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> Google Maps</a>' +
+        '<a class="btn btn-secondary btn-sm" href="' + svUrl + '" target="_blank" rel="noopener noreferrer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg> Street View</a>'
+      : '<span class="btn btn-secondary btn-sm" aria-disabled="true">Location links unavailable</span>';
     function isEmpty(v) { return v == null || String(v).trim() === '' || String(v).trim() === 'null'; }
     function fv(v) { return isEmpty(v) ? null : v; }
     function valHtml(v) { return fv(v) == null ? '<span class="field-empty">N/A</span>' : escHtml(String(v)); }
@@ -2018,7 +2494,7 @@
 
     document.getElementById('detail-panel').innerHTML =
       // Header
-      '<div class="detail-header-card">' +
+      '<div id="detail-overview" class="detail-header-card">' +
       '<div class="detail-title">' + escHtml(bridge.Structure_Name) + '</div>' +
       '<div class="detail-struct-id">Structure No. ' + escHtml(formatStructureNumber(bridge.Structure_Number)) + '</div>' +
       '<div class="detail-header-row">' +
@@ -2030,8 +2506,7 @@
             : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
           return '<button class="bookmark-btn' + (bm ? ' bookmarked' : '') + '" data-struct="' + escHtml(bridge.Structure_Number) + '" title="' + (bm ? 'Saved' : 'Save') + '" aria-label="' + (bm ? 'Saved' : 'Save') + ' bridge">' + star + (bm ? 'Saved' : 'Save') + '</button>';
         })() +
-        '<a class="btn btn-secondary btn-sm" href="' + gmUrl + '" target="_blank" rel="noopener noreferrer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> Google Maps</a>' +
-        '<a class="btn btn-secondary btn-sm" href="' + svUrl + '" target="_blank" rel="noopener noreferrer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg> Street View</a>' +
+        locationActions +
         '<button class="btn btn-secondary btn-sm bridge-share-btn" id="bridge-share" type="button"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51 15.42 17.49"/><path d="M15.41 6.51 8.59 10.49"/></svg> Share</button>' +
       '</div>' +
       '</div>' +
@@ -2041,8 +2516,17 @@
         sumStat('County', bridge.County_Code) +
         sumStat('Route', formatRoute(bridge.Route_Number)) +
       '</div>' +
+      '<nav class="detail-jump-nav" aria-label="Jump to bridge detail sections">' +
+        '<button class="detail-jump-btn active" type="button" data-detail-jump="detail-overview" aria-current="true">Overview</button>' +
+        '<button class="detail-jump-btn" type="button" data-detail-jump="detail-zone-location" aria-current="false">Location</button>' +
+        '<button class="detail-jump-btn" type="button" data-detail-jump="detail-zone-geometry" aria-current="false">Dimensions</button>' +
+        '<button class="detail-jump-btn" type="button" data-detail-jump="detail-zone-traffic" aria-current="false">Traffic</button>' +
+        '<button class="detail-jump-btn" type="button" data-detail-jump="detail-zone-condition" aria-current="false">Condition</button>' +
+        '<button class="detail-jump-btn" type="button" data-detail-jump="detail-zone-materials" aria-current="false">Materials</button>' +
+        '<button class="detail-jump-btn" type="button" data-detail-jump="detail-zone-financials" aria-current="false">Financials</button>' +
+      '</nav>' +
       // Zone 1: ID & Location
-      '<div class="detail-zone zone-blue">' +
+      '<div id="detail-zone-location" class="detail-zone zone-blue">' +
       '<div class="zone-title">ID &amp; Location</div>' +
       '<div class="detail-grid">' +
       f('Route Number', formatRoute(bridge.Route_Number)) +
@@ -2056,7 +2540,7 @@
       '</div></div>' +
 
       // Zone 2: Physical Geometry
-      '<div class="detail-zone zone-gray">' +
+      '<div id="detail-zone-geometry" class="detail-zone zone-gray">' +
       '<div class="zone-title">Physical Geometry &amp; Dimensions</div>' +
       '<div class="detail-grid">' +
       f('Lanes On Structure', bridge.Lanes_On_Structure) +
@@ -2077,7 +2561,7 @@
       '</div></div>' +
 
       // Zone 3: Ownership & Traffic
-      '<div class="detail-zone zone-green">' +
+      '<div id="detail-zone-traffic" class="detail-zone zone-green">' +
       '<div class="zone-title">Ownership &amp; Traffic</div>' +
       '<div class="detail-grid">' +
       f('Owner', bridge.Owner) +
@@ -2091,7 +2575,7 @@
       '</div></div>' +
 
       // Zone 4: Condition & Inspection
-      '<div class="detail-zone zone-amber">' +
+      '<div id="detail-zone-condition" class="detail-zone zone-amber">' +
       '<div class="zone-title">Condition &amp; Inspection Ratings</div>' +
       '<div class="detail-grid">' +
       '<div class="detail-field"><div class="field-label">Deck Condition</div>' + condBadge(bridge.Deck_Condition) + '</div>' +
@@ -2106,7 +2590,7 @@
       '</div></div>' +
 
       // Zone 5: Materials & Safety
-      '<div class="detail-zone zone-purple">' +
+      '<div id="detail-zone-materials" class="detail-zone zone-purple">' +
       '<div class="zone-title">Structure Materials &amp; Safety Features</div>' +
       '<div class="detail-grid">' +
       f('Deck Structure Type', bridge.Deck_Structure_Type) +
@@ -2121,7 +2605,7 @@
       '</div></div>' +
 
       // Zone 6: Planning & Financials
-      '<div class="detail-zone zone-teal">' +
+      '<div id="detail-zone-financials" class="detail-zone zone-teal">' +
       '<div class="zone-title">Planning &amp; Financials</div>' +
       '<div class="detail-grid">' +
       fm('Bridge Improv. Cost', bridge.Bridge_Improvement_Cost) +
@@ -2167,10 +2651,11 @@
       });
     }
     wireDetailCopyFields(document.getElementById('detail-panel'));
+    wireDetailJumpNav(document.getElementById('detail-panel'));
 
     // Reverse geocode municipality
-    var cacheKey = lat.toFixed(5) + ',' + lng.toFixed(5);
-    if (muniCache[cacheKey]) {
+    var cacheKey = hasCoords ? lat.toFixed(5) + ',' + lng.toFixed(5) : '';
+    if (hasCoords && muniCache[cacheKey]) {
       var muniEl = document.getElementById('muni-val');
       if (muniEl) muniEl.textContent = muniCache[cacheKey];
       if (activeItem) { var sm = activeItem.querySelector('.result-muni'); if (sm) sm.textContent = '• ' + muniCache[cacheKey]; }
@@ -2249,9 +2734,11 @@
 
     function openGuide() {
       guideOverlay.classList.add('open');
+      guideOverlay.setAttribute('aria-hidden', 'false');
     }
     function closeGuide() {
       guideOverlay.classList.remove('open');
+      guideOverlay.setAttribute('aria-hidden', 'true');
     }
 
     openBtn.addEventListener('click', openGuide);
@@ -2368,7 +2855,7 @@
         var idx = parseInt(el.getAttribute('data-i'), 10);
         el.addEventListener('click', function() {
           closeSheet();
-          if (nearby && nearby[idx]) selectBridge(nearby[idx].bridge, null);
+          if (nearby && nearby[idx]) selectBridgeFromUser(nearby[idx].bridge, null);
         });
       });
 
@@ -2419,7 +2906,7 @@
           } else if (nearby.length === 1) {
             // Exactly one — jump straight to it
             if (typeof gtag !== 'undefined') gtag('event', 'bridge_located', {bridge_name: nearby[0].bridge.Structure_Name, structure_number: nearby[0].bridge.Structure_Number});
-            selectBridge(nearby[0].bridge, null);
+            selectBridgeFromUser(nearby[0].bridge, null);
             announceBridgeStatus('Nearest bridge found.', 'status');
           } else {
             // Multiple nearby — let user pick
@@ -2456,7 +2943,7 @@
       body.style.willChange = 'transform, opacity';
       body.style.backfaceVisibility = 'hidden';
       void body.offsetWidth;
-      body.style.transition = 'opacity 320ms cubic-bezier(0.65, 0, 0.35, 1), transform 320ms cubic-bezier(0.65, 0, 0.35, 1)';
+      body.style.transition = 'opacity 300ms cubic-bezier(0.65, 0, 0.35, 1), transform 300ms cubic-bezier(0.65, 0, 0.35, 1)';
       body.style.opacity = '0';
       body.style.transform = 'translate3d(-30vw, 0, 0) scale(0.97)';
       setTimeout(function() { window.location.href = link.href; }, 300);
@@ -2476,10 +2963,19 @@
     var THRESHOLD = 80;
     var mouseOverHeader = false;
 
+    function setHeaderHidden(hidden) {
+      topbar.classList.toggle('header-hidden', !!hidden);
+      document.documentElement.classList.toggle('bridge-header-hidden', !!hidden);
+    }
+
+    function isPointerOverDetailNav(target) {
+      return !!(target && target.closest && target.closest('.detail-jump-nav'));
+    }
+
     // Track hover over the header itself
     topbar.addEventListener('mouseenter', function() {
       mouseOverHeader = true;
-      topbar.classList.remove('header-hidden');
+      setHeaderHidden(false);
       if (hideTimeout) { clearTimeout(hideTimeout); hideTimeout = null; }
     });
     topbar.addEventListener('mouseleave', function() {
@@ -2494,17 +2990,17 @@
       if (dir !== lastDir) {
         lastDir = dir;
         if (dir === 'up') {
-          topbar.classList.remove('header-hidden');
+          setHeaderHidden(false);
           if (hideTimeout) { clearTimeout(hideTimeout); hideTimeout = null; }
         }
       }
       if (y < THRESHOLD || mouseOverHeader) {
-        topbar.classList.remove('header-hidden');
+        setHeaderHidden(false);
         if (hideTimeout) { clearTimeout(hideTimeout); hideTimeout = null; }
       } else if (dir === 'down' && !hideTimeout && !topbar.classList.contains('header-hidden')) {
         hideTimeout = setTimeout(function() {
           // Re-check at the moment of hiding — if the mouse is now on the header, abort
-          if (lastDir === 'down' && !mouseOverHeader) topbar.classList.add('header-hidden');
+          if (lastDir === 'down' && !mouseOverHeader) setHeaderHidden(true);
           hideTimeout = null;
         }, HIDE_DELAY);
       }
@@ -2515,11 +3011,15 @@
     // Hover zone (thin strip at top) reveals header when hidden
     var zone = document.querySelector('.header-hover-zone');
     if (zone) {
-      zone.addEventListener('mouseenter', function() { topbar.classList.remove('header-hidden'); });
+      zone.addEventListener('mouseenter', function(e) {
+        if (!isPointerOverDetailNav(e.target)) setHeaderHidden(false);
+      });
     }
     document.addEventListener('mousemove', function(e) {
-      if (e.clientY <= 14 && topbar.classList.contains('header-hidden')) {
-        topbar.classList.remove('header-hidden');
+      if (e.clientY <= 14 &&
+          topbar.classList.contains('header-hidden') &&
+          !isPointerOverDetailNav(e.target)) {
+        setHeaderHidden(false);
       }
     }, { passive: true });
 
@@ -2527,16 +3027,27 @@
     document.addEventListener('touchstart', function(e) {
       if (!topbar.classList.contains('header-hidden')) return;
       var t = e.touches && e.touches[0];
-      if (t && t.clientY <= 30) {
-        topbar.classList.remove('header-hidden');
+      if (t && t.clientY <= 30 && !isPointerOverDetailNav(e.target)) {
+        setHeaderHidden(false);
       }
     }, { passive: true });
   })();
 
 
   // Clean up stale transition classes on bfcache restore
-  window.addEventListener('pageshow', function() {
-    document.documentElement.classList.remove('exiting-to-tool', 'exiting-to-hub', 'entering-from-hub', 'returning-from-tool');
+  window.addEventListener('pageshow', function(e) {
+    if (!e.persisted) return;
+    var d = document.documentElement;
+    d.setAttribute('data-transition-settled', '');
+    d.classList.remove('exiting-to-tool', 'exiting-to-hub', 'entering-from-hub', 'returning-from-tool');
+    var body = document.body;
+    if (body) {
+      body.style.transition = '';
+      body.style.opacity = '';
+      body.style.transform = '';
+      body.style.willChange = '';
+      body.style.backfaceVisibility = '';
+    }
   });
 
   // Intercept browser back button to play Hub-return animation
@@ -2558,12 +3069,12 @@
       body.style.willChange = 'transform, opacity';
       body.style.backfaceVisibility = 'hidden';
       void body.offsetWidth;
-      body.style.transition = 'opacity 320ms cubic-bezier(0.65, 0, 0.35, 1), transform 320ms cubic-bezier(0.65, 0, 0.35, 1)';
+      body.style.transition = 'opacity 300ms cubic-bezier(0.65, 0, 0.35, 1), transform 300ms cubic-bezier(0.65, 0, 0.35, 1)';
       body.style.opacity = '0';
       body.style.transform = 'translate3d(-30vw, 0, 0) scale(0.97)';
       setTimeout(function() {
         window.location.href = '../index.html';
-      }, 340);
+      }, 300);
     });
     // Re-add the dummy state if the page is restored from bfcache (after navigating back)
     window.addEventListener('pageshow', function(e) {

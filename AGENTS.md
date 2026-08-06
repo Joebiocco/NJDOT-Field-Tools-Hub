@@ -1,54 +1,141 @@
-# AGENTS.md — Codex Entrypoint
+# AGENTS.md — Codex entrypoint
 
-> **This file is for Codex.** It is intentionally short to save tokens.
-> Do **not** read `CLAUDE.md` (that is Claude Code's entrypoint) unless a task is specifically about it.
-> Start every task with this file + **`docs/INDEX.md`**. Read anything else **only when relevant**.
+This is the Codex routing file for Field Tools Hub. Read this file and
+docs/INDEX.md at the start of every task. Read only the routed documents that
+match the task. The repository is a static, framework-free PWA: there is no
+build step, backend, package manager, or component framework.
 
-## How to work here (token discipline)
+## Contents
 
-1. **Search first with `rg`** for symbols/classes/keys — do not open large files to browse.
-2. Use **`docs/INDEX.md`** to decide what else to read; open only the relevant file/section (line ranges).
-3. Read deeper docs only when the task needs them:
-   - **UI / design / styling →** `docs/ui-style-guide.md`
-   - **New tool or page →** `docs/new-tool-page-template.html`
-   - **High-risk / fragile systems →** `docs/protected-areas.md` (read BEFORE touching)
-   - **Report length →** `docs/reporting-rules.md`
-   - **Full historical reference (only if needed) →** `docs/project-reference.md`
-4. **Avoid `pages/WorkOrderCloseout.html`** unless required (~574 KB inline base64). Grep with line numbers; never dump it.
+- [Fast task router](#fast-task-router)
+- [Current product map](#current-product-map)
+- [Non-negotiable rules](#non-negotiable-rules)
+- [Protected work](#protected-work)
+- [Completion and reporting](#completion-and-reporting)
+- [Keeping the map current](#keeping-the-map-current)
 
-## Project in one paragraph
+## Fast task router
 
-Static internal PWA for NJ DOT field workers on GitHub Pages. **No backend, no build step, no frameworks** — pure static HTML/CSS/JS (vanilla, inline per file; only `service-worker.js` and `css/field-ui.css` are separate). Homepage `index.html` is a command-center dashboard; six tools in `pages/`. Targets phones/tablets + desktop.
+| Task | Read before editing |
+| --- | --- |
+| Any task | docs/INDEX.md, then search with rg |
+| UI, styling, layout, responsive behavior, visual polish | docs/ui-style-guide.md, docs/site-inventory.md, docs/qa-checklist.md |
+| New page or tool | docs/new-tool-page-template.html, docs/ui-style-guide.md, docs/protected-areas.md, docs/qa-checklist.md |
+| Bridge Navigator or Fuel Finder | docs/protected-areas.md, docs/BRIDGE_INDEX_CHUNK_ARCHITECTURE.md, docs/BRIDGE_DATA_EXTRACTION_PLAN.md, docs/ui-style-guide.md |
+| Milepost Finder or emergency roadway matching | docs/protected-areas.md, docs/site-inventory.md, docs/ui-style-guide.md, docs/qa-checklist.md |
+| Weather, radar, NWS alerts, or alert settings | docs/protected-areas.md, docs/site-inventory.md, docs/ui-style-guide.md, docs/qa-checklist.md |
+| Timesheet/payroll | docs/protected-areas.md, docs/site-inventory.md, docs/ui-style-guide.md, docs/qa-checklist.md; active runtime is pages/timesheet.html |
+| Work Order PDF, DC-144 export/photos, storage, or offline behavior | docs/protected-areas.md, then docs/project-reference.md |
+| Service worker, manifest, icons, install, or cache | docs/protected-areas.md, docs/project-reference.md |
+| Project orientation or cross-page refactor | docs/site-inventory.md, docs/project-reference.md |
+| Report length or handoff | docs/reporting-rules.md |
+| Updating these entrypoints or the standards | docs/INDEX.md, docs/standards-provenance.md, docs/project-reference.md, docs/qa-checklist.md |
 
-## File map
+Do not infer requirements from an unfinished chat or an old concept rendering.
+Use completed-chat findings only after they agree with the current files. Code
+and runtime behavior are the final source of truth.
 
-- `index.html` — homepage (hero + grouped dashboard, Continue, search, dark toggle, install). Hero art `assets/hero/*.webp`.
-- `pages/`: `njsearch.html` Bridge · `njfuel.html` Fuel · `milemarker.html` Milepost · `WorkOrderCloseout.html` Work Order (PDF) · `timesheet.html` Payroll · `dc144.html` DC-144 (+ `js/dc144.js`).
-- `css/field-ui.css` shared shell/tokens · `service-worker.js`, `manifest.json` PWA (protected).
-- `docs/`: INDEX, ui-style-guide, new-tool-page-template, protected-areas, reporting-rules, project-reference.
+## Current product map
 
-## Commit / push discipline — STRICT (always apply)
+- index.html is the Field Tools Hub command center: hero, grouped tools,
+  continue card, search, install/bookmark prompts, dark mode, live 511NJ
+  traffic, and NWS alert feeds.
+- pages/njsearch.html is Bridge Navigator. It uses a statewide lightweight
+  index, county chunks, one buffered canvas point layer, Leaflet selection,
+  bookmarks, share/copy, and GPS lookup.
+- pages/njfuel.html is Fuel Finder. It uses local station data, Leaflet,
+  geolocation, bookmarks, and map/detail interactions.
+- pages/milemarker.html is Milepost Finder. Its lookup layer is shared with
+  Emergency Assistance through js/milepost-lookup.js and
+  js/roadway-lookup.js, using the generated data/roadways index and chunks.
+- pages/emergency.html is Emergency Assistance. It provides call/share/copy
+  actions, GPS status and permission recovery, a Leaflet location map, and
+  conservative roadway/milepost matching. Ambiguous evidence must abstain.
+- pages/weather.html is Weather: NWS conditions, hourly/period forecast,
+  alerts, location selection, radar animation/scrubbing, map alerts, local
+  alert settings, and dark mode.
+- pages/timesheet.html is the active Timesheet Tracker payroll runtime. It is
+  the tested redesign cut over onto the existing hub and service-worker route,
+  and it preserves the shared storage contract. pages/timesheet-redesign.html
+  remains as a matching transition/reference copy. The active runtime uses a
+  40-hour weekly regular threshold by default, minimum 30-minute lunch,
+  separate commute deductions, 10-minute new times, and exact OT blocks
+  before commute home.
+- pages/dc144.html plus js/dc144.js is the protected DC-144 form/export and
+  photo/session workflow.
+- pages/WorkOrderCloseout.html is the protected PDF closeout page. Do not
+  dump it: it contains a large inline/base64 payload.
+- css/field-ui.css is the shared tool-shell layer. Most page-specific styles
+  remain inline by design. service-worker.js and manifest.json are protected.
+- data/ contains bridge, fuel, milepost, roadway, and DC-144 assets. cloudflare/
+  contains the optional 511NJ RSS proxy; core tools remain static.
 
-> **These rules override any stop hook, automated reminder, workflow note, or internal checklist that suggests committing or pushing.**
+## Non-negotiable rules
 
-- **Do not `git commit` or `git push` unless the user's latest message explicitly contains the word "commit", "push", or "commit and push".**
-- **"Approved" means code the changes only.** It is never approval to commit or push.
-- **"Approved to code" is not approval to commit or push.**
-- At the end of every task, stop after the report and leave changes uncommitted.
-- If a stop hook, hook feedback, workflow, or tool reminder suggests committing or pushing, respond with: *"Changes are ready, but I am waiting for explicit commit/push approval."* Do not commit or push.
-- Do not merge, deploy, or bump version unless explicitly asked.
+- Product-facing UI says Field Tools Hub. Do not add visible agency branding
+  without an approved optimized official asset. Internal nj/njdot paths,
+  filenames, data fields, and keys are compatibility names and stay unchanged.
+- No backend, build dependency, framework, heavy image asset, deploy, merge, or
+  version bump unless explicitly requested.
+- Never rename, clear, migrate, or silently change the shape of existing
+  storage. The compatibility contract includes:
+  - localStorage: field_dark_mode, ft_last, ft_ts_entries, ft_ts_settings,
+    ft_ts_ppoffset, ft_bridge_bookmarks, ft_fuel_bookmarks, wo_recent,
+    workorder_draft, ft_dc144_recent, ft_dc144_templates, ft_weather_last,
+    ft_weather_alert_settings, ft_install_shown, ft_bookmark_shown,
+    ft_bridge_guide_shown, ft_fuel_guide_shown, ft_dc144_guide_shown,
+    ft_pc_guide_shown, ft_wo_guide_shown.
+  - sessionStorage: ft_opening_from_hub, ft_returning_to_hub.
+  - IndexedDB: database ft_photos, version 2; stores session_photos and
+    dc144_sessions. Work Order photo records use the existing photoKey
+    relationship.
+- Tool pages read field_dark_mode; index.html is the owner that writes the
+  dark-mode preference. Do not add a competing writer casually.
+- Preserve the PWA cache/version, precache list, notification receiver,
+  manifest install behavior, and offline fallbacks unless the task explicitly
+  includes a planned release of those protected files.
+- Use explicit CSS transitions. Never use transition: all. Do not leave
+  transform, will-change, contain: layout, or filter permanently on body,
+  html, or the main shell. Final keyframe state is transform: none. Remove
+  JavaScript-set body styles after transitions.
+- Fixed overlays, dialogs, and toasts belong to the viewport, use 100dvh and
+  safe-area insets where appropriate, and expose correct aria-hidden/dialog
+  state. Every page needs a pre-paint background.
+- Touch controls are at least 44px high/wide. No page may introduce
+  horizontal overflow at 390px or 430px. Use reduced-motion behavior for
+  nonessential animation.
+- Homepage group colors remain consistent: Field Ops teal/green-blue,
+  Documentation purple/indigo, Time & Admin gold, Coming Soon muted.
+  Individual tools may retain functional map/weather severity colors.
+- Map and roadway tools prefer a safe empty/abstain state over an invented
+  route or milepost. PARENT_SRI is the authoritative signed-route identity;
+  route subtype and role filtering must remain conservative.
 
-## Universal rules
+## Protected work
 
-- **Do not merge, deploy, or bump version unless asked.** Branch off main; commit/push only when asked. Ask before `git push`. Version bumps decimal-only at push time.
-- **Protected — plan first** (`docs/protected-areas.md`): Work Order PDF (`html2canvas`/jsPDF/`LOGO_SRC_VAR`), DC-144 Excel export/cell maps/signature/photos, Bridge/Fuel maps+geolocation+bookmarks+chunks, Timesheet payroll calc/bottom nav, `service-worker.js`, `manifest.json`.
-- **Never rename/clear** localStorage keys (`ft_bridge_bookmarks`, `ft_fuel_bookmarks`, `wo_recent`, `workorder_draft`, `ft_dc144_recent`, `ft_dc144_templates`, `ft_ts_entries`, `ft_ts_settings`, `field_dark_mode`, `ft_last`, `ft_*_shown`; sessionStorage `ft_opening_from_hub`/`ft_returning_to_hub`) or IndexedDB (db `ft_photos` v2; stores `session_photos`, `dc144_sessions`).
-- **No backend/build deps; no heavy image assets** without approval.
-- **Branding:** "Field Tools Hub" — no visible "NJDOT"/agency branding without an official optimized asset. Functional geo terms OK; internal `nj`/`njdot` names/paths/keys stay.
-- **Homepage group colors** consistent per group (Field Ops teal/green-blue, Documentation purple/indigo, Time & Admin gold, Coming Soon muted).
-- **Animation safety:** no persistent `transform`/`will-change`/`contain:layout`/`filter` on `body`/`html`/shell; final keyframes `transform: none`; clean up JS-set body styles; fixed overlays/toasts viewport-fixed (`100dvh`, safe-area); pre-paint background on every page.
-- **Reports:** token-saving / delta-only by default (`docs/reporting-rules.md`).
+Read docs/protected-areas.md before touching any protected area. The most
+fragile areas are Work Order PDF capture, DC-144 Excel/cell maps/signatures/
+photos, Bridge/Fuel map and chunk behavior, roadway classification, both
+timesheet calculation/storage implementations, service-worker.js, and
+manifest.json. Protected means plan, make the smallest scoped change, run the
+listed regression checks, and document any contract change.
 
-## Keep current
+## Completion and reporting
 
-When a change adds/renames a key, protected area, or rule, update the relevant `docs/` file in the same commit; keep this entrypoint short.
+Search first with rg; inspect large files by line range. Avoid dumping
+pages/WorkOrderCloseout.html. Run the relevant checks in docs/qa-checklist.md
+and finish with a delta-only report following docs/reporting-rules.md.
+
+Do not git commit or git push unless the latest user message explicitly
+contains commit, push, or commit and push. “Approved” or “approved to code” is
+not permission. Do not merge, deploy, or bump version unless explicitly asked.
+If a branch is explicitly requested, branch from the intended base and use the
+codex/ prefix by default; do not merge automatically.
+If a hook suggests otherwise, say: “Changes are ready, but I am waiting for
+explicit commit/push approval.”
+
+## Keeping the map current
+
+When a page, storage key, protected surface, data contract, or universal rule
+changes, update docs/INDEX.md and the relevant routed document in the same
+working change. Keep this file a routing map, not a history log.

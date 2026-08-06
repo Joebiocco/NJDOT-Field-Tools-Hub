@@ -378,7 +378,7 @@ textarea { resize: vertical; line-height: 1.6; }
   border-radius: var(--radius-sm);
   padding: 4px 10px;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: color var(--transition), border-color var(--transition), background-color var(--transition);
 }
 .page-remove-btn:hover { color: var(--red); border-color: #fca5a5; background: rgba(220,38,38,0.05); }
 
@@ -626,7 +626,7 @@ textarea.notes-field {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: color var(--transition), border-color var(--transition), background-color var(--transition);
 }
 .add-page-cta:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-lo); }
 
@@ -664,7 +664,7 @@ textarea.notes-field {
 }
 @keyframes recentSlide {
   from { transform: translateY(-8px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+  to   { transform: none;    opacity: 1; }
 }
 .recent-panel-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -797,6 +797,7 @@ html[data-dark] .recent-chip:hover { border-color: #93b4f5; }
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
   opacity: 0;
   pointer-events: none;
   transition: opacity 220ms ease;
@@ -804,9 +805,10 @@ html[data-dark] .recent-chip:hover { border-color: #93b4f5; }
 .guide-overlay.open { opacity: 1; pointer-events: auto; }
 .guide-modal {
   background: var(--surface);
+  font-family: var(--sans);
   border-radius: 18px;
-  width: min(520px, calc(100vw - 24px));
-  max-height: min(680px, calc(100dvh - 40px));
+  width: min(520px, 100%);
+  max-height: min(680px, calc(100dvh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
   display: flex;
   flex-direction: column;
   box-shadow: 0 24px 64px rgba(0,0,0,0.3);
@@ -823,7 +825,7 @@ html[data-dark] .recent-chip:hover { border-color: #93b4f5; }
   border-bottom: 1.5px solid var(--border-lo);
   flex-shrink: 0;
 }
-.guide-header-title { font-size: 16px; font-weight: 700; }
+.guide-header-title { font-family: var(--sans); font-size: 16px; font-weight: 700; line-height: 1.25; }
 .guide-close {
   background: none;
   border: none;
@@ -832,6 +834,8 @@ html[data-dark] .recent-chip:hover { border-color: #93b4f5; }
   line-height: 1;
   cursor: pointer;
   padding: 0 4px;
+  font-family: var(--sans);
+  transition: color var(--transition);
 }
 .guide-close:hover { color: var(--text); }
 .guide-slides { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
@@ -850,16 +854,20 @@ html[data-dark] .recent-chip:hover { border-color: #93b4f5; }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 0;
   flex-shrink: 0;
   margin-top: 1px;
 }
-.gi-blue { background: var(--accent-lo); }
-.gi-green { background: rgba(16,185,129,0.12); }
-.gi-orange { background: rgba(245,158,11,0.12); }
-.gi-red { background: rgba(220,38,38,0.10); }
-.gi-navy { background: rgba(30,41,57,0.08); }
-html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
+.guide-icon svg { width: 20px; height: 20px; display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.gi-blue { background: var(--accent-lo); color: var(--accent); }
+.gi-green { background: rgba(16,185,129,0.12); color: #059669; }
+.gi-orange { background: rgba(245,158,11,0.12); color: #b45309; }
+.gi-red { background: rgba(220,38,38,0.10); color: #dc2626; }
+.gi-navy { background: rgba(30,41,57,0.08); color: var(--muted2); }
+html[data-dark] .gi-green { background: rgba(52,211,153,0.16); color: #6ee7b7; }
+html[data-dark] .gi-orange { background: rgba(251,191,36,0.16); color: #fcd34d; }
+html[data-dark] .gi-red { background: rgba(244,63,94,0.16); color: #fb7185; }
+html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); color: var(--muted); }
 .guide-slide-body { flex: 1; min-width: 0; }
 .guide-slide-title { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
 .guide-slide-text { font-size: 13px; color: var(--muted2); line-height: 1.55; }
@@ -926,8 +934,8 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
     height: 30px;
   }
   .guide-modal {
-    width: calc(100vw - 18px);
-    max-height: calc(100dvh - 26px);
+    width: 100%;
+    max-height: calc(100dvh - 26px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
     border-radius: 14px;
   }
   .guide-header {
@@ -945,8 +953,8 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
     width: 34px;
     height: 34px;
     border-radius: 10px;
-    font-size: 17px;
   }
+  .guide-icon svg { width: 18px; height: 18px; }
   .guide-slide-title { font-size: 13px; }
   .guide-slide-text {
     font-size: 12px;
@@ -979,8 +987,8 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
     padding: 5px 8px;
   }
   .guide-modal {
-    width: calc(100vw - 12px);
-    max-height: calc(100dvh - 18px);
+    width: 100%;
+    max-height: calc(100dvh - 18px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   }
   .guide-slide {
     padding: 14px;
@@ -989,8 +997,8 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
   .guide-icon {
     width: 30px;
     height: 30px;
-    font-size: 15px;
   }
+  .guide-icon svg { width: 16px; height: 16px; }
   .guide-pill {
     font-size: 10px;
     padding: 3px 8px;
@@ -1032,7 +1040,7 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
     }
     /* Page fade-in on load */
     @keyframes pageFadeIn { from { opacity: 0; } to { opacity: 1; } }
-    html:not(.entering-from-hub):not(.exiting-to-hub) body { animation: pageFadeIn 360ms cubic-bezier(0.16, 1, 0.3, 1); }
+    html:not(.entering-from-hub):not(.exiting-to-hub):not([data-transition-settled]) body { animation: pageFadeIn 360ms cubic-bezier(0.16, 1, 0.3, 1); }
     /* Button tap scale (works on real buttons + anchor buttons) */
     button:active,
     .btn:active,
@@ -1052,13 +1060,13 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
     }
 
     /* Photo preview fade-in when uploaded */
-    @keyframes photoPop { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+    @keyframes photoPop { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
     .drop-preview.active { animation: photoPop 420ms cubic-bezier(0.16, 1, 0.3, 1); }
     /* Recent chip slide-in */
-    @keyframes chipSlide { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes chipSlide { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
     .recent-chip { animation: chipSlide 420ms cubic-bezier(0.16, 1, 0.3, 1) backwards; }
     /* Page block fade-in when added */
-    @keyframes blockFadeIn { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes blockFadeIn { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
     .page-block { animation: blockFadeIn 520ms cubic-bezier(0.16, 1, 0.3, 1); }
     /* Page block removal: fade + scale, height collapse handled in JS */
     @keyframes pageRemoveFade {
@@ -1165,6 +1173,10 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
       contain: paint style;
     }
     html.entering-from-hub { background: var(--bg); }
+    @media (prefers-reduced-motion: reduce) {
+      html.entering-from-hub body,
+      html.exiting-to-hub body { animation:none !important; opacity:1 !important; transform:none !important; will-change:auto !important; contain:none !important; }
+    }
 
   
     /* Invisible top-of-viewport hover zone to reveal hidden header */
@@ -1182,7 +1194,41 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
   </style>
   <script>if(localStorage.getItem("field_dark_mode")==="1")document.documentElement.setAttribute("data-dark","");</script>
   <style>html{background:#eaf0f8}html[data-dark]{background:#040c1a}</style>
-  <script>try{if(sessionStorage.getItem('ft_opening_from_hub')==='1'){sessionStorage.removeItem('ft_opening_from_hub');document.documentElement.classList.add('entering-from-hub');setTimeout(function(){document.documentElement.classList.remove('entering-from-hub');},420);}}catch(_){}</script>
+  <script>
+  (function(){
+    var d=document.documentElement, entering=false, fallbackTimer=0;
+    function settle(){
+      if(!entering) return;
+      entering=false;
+      if(fallbackTimer) clearTimeout(fallbackTimer);
+      d.setAttribute('data-transition-settled','');
+      d.classList.remove('entering-from-hub');
+      document.removeEventListener('animationend',onAnimationEnd);
+      document.removeEventListener('animationcancel',onAnimationEnd);
+    }
+    function onAnimationEnd(e){
+      if(e.target===document.body && /^slideIn/.test(e.animationName||'')) settle();
+    }
+    try{
+      if(sessionStorage.getItem('ft_opening_from_hub')==='1'){
+        sessionStorage.removeItem('ft_opening_from_hub');
+        d.classList.add('entering-from-hub');
+        entering=true;
+      }
+    }catch(_){ }
+    if(entering){
+      document.addEventListener('animationend',onAnimationEnd);
+      document.addEventListener('animationcancel',onAnimationEnd);
+      function armFallback(){
+        if(entering) fallbackTimer=setTimeout(settle,400);
+      }
+      if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',armFallback,{once:true});
+      else armFallback();
+    }else{
+      setTimeout(function(){d.setAttribute('data-transition-settled','');},420);
+    }
+  })();
+  </script>
   <!-- Google Analytics 4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XZJ7XL4S34"></script>
   <script>
@@ -1355,16 +1401,16 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <!-- ── GUIDE MODAL ─────────────────────────── -->
-  <div class="guide-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="Work Order Closeout Guide">
+  <div class="guide-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="Work Order Closeout Guide" aria-hidden="true">
     <div class="guide-modal">
       <div class="guide-header">
         <div class="guide-header-title">How to Use Work Order Closeout</div>
-        <button class="guide-close" id="guide-close" aria-label="Close">&times;</button>
+        <button class="guide-close" id="guide-close" type="button" aria-label="Close">&times;</button>
       </div>
       <div class="guide-slides">
 
         <div class="guide-slide">
-          <div class="guide-icon gi-blue">1</div>
+          <div class="guide-icon gi-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg></div>
           <div class="guide-slide-body">
             <div class="guide-slide-title">Enter Work Order Details</div>
             <div class="guide-slide-text">Fill in the <strong>work order, structure, route, direction, milepost, dates, and priority</strong> before adding documentation pages. These fields become the header information in the PDF.</div>
@@ -1372,7 +1418,7 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
         </div>
 
         <div class="guide-slide">
-          <div class="guide-icon gi-green">2</div>
+          <div class="guide-icon gi-green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l1.5-2h7L17 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
           <div class="guide-slide-body">
             <div class="guide-slide-title">Add Photos and Notes</div>
             <div class="guide-slide-text">Use <strong>Camera</strong> or <strong>Gallery</strong> on each photo card, then enter the location and description. Add pages when the closeout needs more photos.</div>
@@ -1385,7 +1431,7 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
         </div>
 
         <div class="guide-slide">
-          <div class="guide-icon gi-orange">3</div>
+          <div class="guide-icon gi-orange"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4M8 12h8M8 16h6"/></svg></div>
           <div class="guide-slide-body">
             <div class="guide-slide-title">Save the Editable Session</div>
             <div class="guide-slide-text">Tap <strong>Save Session</strong> to download the HTML session file. That saved HTML becomes the editable copy of the work order, so keep it with the job files if anyone may need to change text, add photos, or regenerate the PDF later.</div>
@@ -1393,7 +1439,7 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
         </div>
 
         <div class="guide-slide">
-          <div class="guide-icon gi-navy">4</div>
+          <div class="guide-icon gi-navy"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
           <div class="guide-slide-body">
             <div class="guide-slide-title">Only Five Recent Sessions</div>
             <div class="guide-slide-text"><strong>Recent</strong> is temporary device storage and only keeps the latest <strong>five</strong> sessions. Older sessions can be replaced automatically, so do not rely on Recent as the permanent record. Always keep the downloaded HTML session file.</div>
@@ -1401,7 +1447,7 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
         </div>
 
         <div class="guide-slide">
-          <div class="guide-icon gi-red">5</div>
+          <div class="guide-icon gi-red"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg></div>
           <div class="guide-slide-body">
             <div class="guide-slide-title">Save Both Files</div>
             <div class="guide-slide-text">Tap <strong>Export PDF</strong> for the final closeout document, and also keep the <strong>HTML session file</strong>. The PDF is basically a flat image for sharing/records; the HTML file is the editor that lets you reopen, revise, and export again.</div>
@@ -1411,7 +1457,7 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); }
       </div>
       <div class="guide-footer">
         <div class="guide-footer-note">Tap <strong>?</strong> in the header anytime to reopen this guide.</div>
-        <button class="guide-done" id="guide-done">Got it</button>
+        <button class="guide-done" id="guide-done" type="button">Got it</button>
       </div>
     </div>
   </div>
@@ -3109,9 +3155,11 @@ document.getElementById('clearForm').addEventListener('click', function() {
 
   function openGuide() {
     guideOverlay.classList.add('open');
+    guideOverlay.setAttribute('aria-hidden', 'false');
   }
   function closeGuide() {
     guideOverlay.classList.remove('open');
+    guideOverlay.setAttribute('aria-hidden', 'true');
   }
 
   openBtn.addEventListener('click', openGuide);
@@ -3180,7 +3228,7 @@ renderRecent(); // prime the counter badge on page load
       body.style.willChange = 'transform, opacity';
       body.style.backfaceVisibility = 'hidden';
       void body.offsetWidth;
-      body.style.transition = 'opacity 320ms cubic-bezier(0.65, 0, 0.35, 1), transform 320ms cubic-bezier(0.65, 0, 0.35, 1)';
+      body.style.transition = 'opacity 300ms cubic-bezier(0.65, 0, 0.35, 1), transform 300ms cubic-bezier(0.65, 0, 0.35, 1)';
       body.style.opacity = '0';
       body.style.transform = 'translate3d(-30vw, 0, 0) scale(0.97)';
       setTimeout(function() { window.location.href = link.href; }, 300);
@@ -3287,8 +3335,19 @@ renderRecent(); // prime the counter badge on page load
 
 
   // Clean up stale transition classes on bfcache restore
-  window.addEventListener('pageshow', function() {
-    document.documentElement.classList.remove('exiting-to-tool', 'exiting-to-hub', 'entering-from-hub', 'returning-from-tool');
+  window.addEventListener('pageshow', function(e) {
+    if (!e.persisted) return;
+    var d = document.documentElement;
+    d.setAttribute('data-transition-settled', '');
+    d.classList.remove('exiting-to-tool', 'exiting-to-hub', 'entering-from-hub', 'returning-from-tool');
+    var body = document.body;
+    if (body) {
+      body.style.transition = '';
+      body.style.opacity = '';
+      body.style.transform = '';
+      body.style.willChange = '';
+      body.style.backfaceVisibility = '';
+    }
   });
 
   // Intercept browser back button to play Hub-return animation
@@ -3310,12 +3369,12 @@ renderRecent(); // prime the counter badge on page load
       body.style.willChange = 'transform, opacity';
       body.style.backfaceVisibility = 'hidden';
       void body.offsetWidth;
-      body.style.transition = 'opacity 320ms cubic-bezier(0.65, 0, 0.35, 1), transform 320ms cubic-bezier(0.65, 0, 0.35, 1)';
+      body.style.transition = 'opacity 300ms cubic-bezier(0.65, 0, 0.35, 1), transform 300ms cubic-bezier(0.65, 0, 0.35, 1)';
       body.style.opacity = '0';
       body.style.transform = 'translate3d(-30vw, 0, 0) scale(0.97)';
       setTimeout(function() {
         window.location.href = '../index.html';
-      }, 340);
+      }, 300);
     });
     // Re-add the dummy state if the page is restored from bfcache (after navigating back)
     window.addEventListener('pageshow', function(e) {

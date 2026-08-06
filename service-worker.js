@@ -30,13 +30,18 @@ const LOCAL_ASSETS = [
   './pages/njfuel.html',
   './pages/WorkOrderCloseout.html',
   './data/njfuel.json',
-  './data/bridges/index.json',
+  './data/bridges/index.json?v=2026-08-05-coordinate-review',
   './pages/timesheet.html',
   './pages/milemarker.html',
   './data/mileposts/index.json',
   './pages/dc144.html',
   './js/dc144.js',
   './data/dc144-template.xlsx',
+  './pages/emergency.html',
+  './js/milepost-lookup.js',
+  './js/roadway-lookup.js',
+  './data/roadways/index.json',
+  './pages/weather.html',
   './assets/hero/bridge-dark.webp',
   './assets/hero/bridge-light.webp',
   './assets/hero/nj-dark.webp',
@@ -82,6 +87,56 @@ self.addEventListener('message', function(e) {
       client.postMessage({ type: 'RELOAD' });
     });
   });
+});
+
+// Weather notifications opened from the installed app or desktop browser
+// should return to the weather tool when the user taps them.
+self.addEventListener('notificationclick', function(e) {
+  var target = (e.notification && e.notification.data && e.notification.data.url) || './pages/weather.html';
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clients) {
+      for (var i = 0; i < clients.length; i += 1) {
+        var client = clients[i];
+        if (client.url && client.url.indexOf('/pages/weather.html') !== -1 && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(target);
+      return undefined;
+    })
+  );
+});
+
+// A configured Web Push sender can wake this worker while the page is closed.
+// The static app still needs a server to create subscriptions and send signed
+// payloads; this handler is the receiving half of that flow.
+self.addEventListener('push', function(e) {
+  var payload = {};
+  try {
+    if (e.data) payload = e.data.json();
+  } catch(_) {
+    try { payload = { body: e.data && e.data.text ? e.data.text() : '' }; } catch(__) {}
+  }
+  payload = payload && typeof payload === 'object' ? payload : {};
+  var nested = payload.data && typeof payload.data === 'object' ? payload.data : {};
+  var notification = payload.notification && typeof payload.notification === 'object' ? payload.notification : {};
+  var title = String(nested.title || notification.title || payload.title || 'Weather alert');
+  var body = String(nested.body || notification.body || payload.body || 'A weather alert is ready to review.');
+  var target = nested.url || notification.url || payload.url || './pages/weather.html';
+  var tag = String(nested.tag || notification.tag || payload.tag || 'field-tools-weather-alert');
+  var options = {
+    body: body,
+    icon: nested.icon || notification.icon || payload.icon || './assets/icons/icon-192.png',
+    badge: nested.badge || notification.badge || payload.badge || './assets/icons/icon-192.png',
+    tag: tag,
+    renotify: true,
+    data: {
+      url: target,
+      alertKey: nested.alertKey || notification.alertKey || payload.alertKey || ''
+    }
+  };
+  e.waitUntil(self.registration.showNotification(title, options));
 });
 
 // Heuristic: is this an HTML/document request?

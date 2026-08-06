@@ -1,421 +1,488 @@
-# Field Tools UI Style Guide
-
-## Overview
-
-Bridge Navigator (`njsearch.html`) and Fuel Finder (`njfuel.html`) are the **visual reference** for the shared app shell. When in doubt about spacing, color, topbar layout, card style, or button hierarchy — match those two pages.
-
----
-
-## Shared CSS file
-
-`css/field-ui.css` — loaded **before** each page's local `<style>` block:
-
-```html
-<!-- index.html (root) -->
-<link rel="stylesheet" href="css/field-ui.css">
-
-<!-- pages/*.html -->
-<link rel="stylesheet" href="../css/field-ui.css">
-```
-
-Page-local `<style>` comes after the `<link>`, so page CSS wins on equal specificity. This is intentional — shared styles are defaults, per-page styles are overrides.
-
----
-
-## ft-* class system (currently in field-ui.css)
-
-| Class | Purpose | Status |
-|---|---|---|
-| `.ft-topbar` | Topbar shell (navy bg, gold border) — alias for `#topbar`/`.topbar` | Active |
-| `.ft-back-link` / `.ft-home-link` | Gold pill back/home navigation — alias for `.topbar-back`/`.hub-back` | Active |
-| `.ft-topbar-div` | 1px vertical topbar divider — alias for `.topbar-div` | Active |
-| `.ft-topbar-spacer` | Flex spacer pushing right-side controls right — alias for `.topbar-spacer` | Active |
-| `.ft-badge` | Gold pill label badge (topbar) — alias for `.state-badge` | Active |
-| `.ft-help-btn` | 32px circle help button (topbar) — alias for `.topbar-help` | Active |
-| `.ft-btn` | Base button (flex, padding, radius, weight, transition) | Active |
-| `.ft-btn-primary` | Blue accent bg, white text | Active |
-| `.ft-notice-local` | Amber left-border notice: "Saved on this device only…" | Active |
-| `.ft-modal-backdrop` | Fixed full-screen modal overlay — add `.open` class to show | Active |
-| `.ft-modal-box` | Centered modal content box with entrance animation | Active |
-| `.ft-modal-title` | Modal heading (1.05rem, bold) | Active |
-| `.ft-modal-actions` | Modal button row (right-aligned flex) | Active |
-
-**Deferred classes (not in field-ui.css yet — add when first needed):**
-`ft-btn-secondary`, `ft-btn-ghost`, `ft-btn-danger`, `ft-card`, `ft-section-card`, `ft-notice`, `ft-empty-state`, `ft-toast`, `ft-status-pill`. When you need one of these, add it to `css/field-ui.css` with a comment, then use it — do not define it locally in a page.
-
----
-
-## Design tokens (from field-ui.css :root)
-
-```css
---bg:        #eef0f4;   /* page background */
---surface:   #ffffff;   /* cards/panels */
---border:    #d1d9e0;
---border-lo: #e8ecf0;   /* subtle borders */
---accent:    #1a56db;   /* primary blue — buttons, links, focus */
---accent-lo: rgba(26,86,219,0.08);
---red:       #dc2626;
---text:      #111827;
---muted:     #6b7280;
---muted2:    #4b5563;
---radius-sm: 5px;
---radius:    8px;
---radius-lg: 10px;      /* pages may override locally — index/dc144 use 12px */
---sans:      'Inter', system-ui, -apple-system, Arial, sans-serif;
---transition: 0.14s ease;
-```
-
-Dark mode is toggled via `html[data-dark]` attribute on `<html>`. Dark mode token overrides are in `field-ui.css`. The global state key is `field_dark_mode` in localStorage (read-only on tool pages — only index.html writes it).
-
-**Dark mode text color note:** Most pages use `--text: #FEE9A1` (gold) in dark mode. Milepost and Payroll Calculator override locally to `#f1f5f9` (neutral grey). Do not assume the default is grey.
-
----
-
-## Brand colors (hardcoded, not in tokens)
-
-| Role | Hex | Notes |
-|---|---|---|
-| Topbar background | `#1e2939` | Dark navy, always dark regardless of theme |
-| Header accent / gold | `#E5B33B` | Topbar border, back pill, badges, help button |
-| Back pill hover (light) | `#C9971A` | Darker gold on hover |
-| Back pill hover (dark) | `#FEE9A1` | Light gold on dark background |
-| Bookmark star | `#f59e0b` | Amber-500 — NEVER change to header accent gold |
-
----
-
-## Action hierarchy
-
-| Level | Purpose | Class |
-|---|---|---|
-| Primary | Search / Find Near Me / Export PDF or XLSX | `.ft-btn .ft-btn-primary` |
-| Secondary | Save Draft / Refresh / Add Page | `.ft-btn` (plain) or local `.btn-secondary` |
-| Danger | Clear Form / Delete Draft / Remove Page | local `.btn-danger` or `ft-btn-danger` when added |
-
-Primary action must be visually strongest. Danger actions must be separated from primary actions.
-
----
-
-## Local-storage notice
-
-Add `.ft-notice-local` wherever the page saves user data to localStorage or IndexedDB:
-
-```html
-<div class="ft-notice-local">Saved on this device only. Export a backup for long-term storage.</div>
-```
-
-**Currently used on:** `njsearch.html` (bookmarks), `njfuel.html` (bookmarks), `dc144.html` (drafts/templates/photos), `timesheet.html` (entries/settings), `WorkOrderCloseout.html` (existing `.local-storage-note`).
-
-**Do not add to:** `index.html` homepage tiles, `milemarker.html` (saves no user data).
-
----
-
-## Modal pattern
-
-Use `.ft-modal-backdrop` + `.ft-modal-box` for new help/confirmation modals. Toggle visibility with the `.open` class:
-
-```html
-<div class="ft-modal-backdrop" id="my-modal">
-  <div class="ft-modal-box">
-    <div class="ft-modal-title">How to Use This Tool</div>
-    <p>Short help text.</p>
-    <div class="ft-modal-actions">
-      <button class="ft-btn ft-btn-primary" id="my-modal-close">Got it</button>
-    </div>
-  </div>
-</div>
-```
-
-```js
-document.getElementById('help-btn').addEventListener('click', function() {
-  document.getElementById('my-modal').classList.add('open');
-});
-document.getElementById('my-modal-close').addEventListener('click', function() {
-  document.getElementById('my-modal').classList.remove('open');
-});
-document.getElementById('my-modal').addEventListener('click', function(e) {
-  if (e.target === this) this.classList.remove('open');
-});
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') document.getElementById('my-modal').classList.remove('open');
-});
-```
-
-Existing pages use their own modal classes (`dc-modal-*`, `guide-overlay`, `guide-modal`) — do not rename those for styling reasons.
-
-**z-index above Leaflet:** `.ft-modal-backdrop` is set to `z-index: 1050` in `field-ui.css` — above Leaflet's default `z-index: 1000` for `.leaflet-top`/`.leaflet-bottom` controls. Do not reduce map-control z-indexes as a workaround.
-
----
-
-## How to Build a New Tool Page
-
-### Required link
-
-```html
-<link rel="stylesheet" href="../css/field-ui.css">
-```
-
-Place this **before** the page-local `<style>` block, after the Google Fonts link.
-
-### Basic page shell
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Tool Name — NJDOT Field Tools</title>
-  <meta name="theme-color" content="#E5B33B">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/field-ui.css">
-  <style>
-    /* Tool-specific CSS only — shared tokens, topbar, buttons, modals are in field-ui.css */
-    body { min-height: 100vh; }
-    /* ... */
-  </style>
-</head>
-<body>
-
-<!-- Topbar -->
-<div id="topbar">
-  <a class="topbar-back" href="../index.html">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-    Home
-  </a>
-  <div class="topbar-div"></div>
-  <span id="topbar-title">Tool Name</span>
-  <div class="topbar-spacer"></div>
-  <span class="state-badge">NJ</span>
-  <button class="topbar-help" id="tool-help-btn" type="button" aria-label="Open help">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-  </button>
-</div>
-
-<!-- Help modal -->
-<div class="ft-modal-backdrop" id="tool-help-modal">
-  <div class="ft-modal-box">
-    <div class="ft-modal-title">How to Use</div>
-    <ol style="padding-left:18px;line-height:1.7;font-size:14px;color:var(--text);">
-      <li>Step one.</li>
-      <li>Step two.</li>
-      <li>Step three.</li>
-    </ol>
-    <div class="ft-modal-actions">
-      <button class="ft-btn ft-btn-primary" id="tool-help-close">Got it</button>
-    </div>
-  </div>
-</div>
-
-<!-- Main content -->
-<div class="wrap">
-
-  <!-- Local-only notice — include ONLY if this page saves user data -->
-  <!-- <div class="ft-notice-local">Saved on this device only. Export a backup for long-term storage.</div> -->
-
-  <!-- Primary action -->
-  <button class="ft-btn ft-btn-primary" id="primary-action-btn">Primary Action</button>
-
-  <!-- Result / content area -->
-  <div id="result-area"></div>
-
-</div>
-
-<script>
-// Dark mode — read global state, never write it
-if (localStorage.getItem('field_dark_mode') === '1') {
-  document.documentElement.setAttribute('data-dark', '');
-}
-
-// Set last visited tool
-try { localStorage.setItem('ft_last', 'toolname'); } catch(_) {}
-
-// Help modal
-(function() {
-  var overlay = document.getElementById('tool-help-modal');
-  var openBtn = document.getElementById('tool-help-btn');
-  var closeBtn = document.getElementById('tool-help-close');
-  if (openBtn && overlay) {
-    openBtn.addEventListener('click', function() { overlay.classList.add('open'); });
-    closeBtn.addEventListener('click', function() { overlay.classList.remove('open'); });
-    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.classList.remove('open'); });
-    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') overlay.classList.remove('open'); });
-  }
-})();
-
-// Smart header hide-on-scroll (copy from njfuel.html initSmartHeader if needed)
-
-// Tool-specific JS only below this line
-</script>
-</body>
-</html>
-```
-
-### Button hierarchy
-
-```html
-<button class="ft-btn ft-btn-primary">Primary Action</button>
-<!-- When ft-btn-secondary is added to field-ui.css: -->
-<!-- <button class="ft-btn ft-btn-secondary">Secondary Action</button> -->
-<!-- <button class="ft-btn ft-btn-ghost">Quiet Action</button> -->
-<!-- <button class="ft-btn ft-btn-danger">Danger Action</button> -->
-```
-
-Note: only `ft-btn` and `ft-btn-primary` are currently defined in `field-ui.css`. Add variants to that file when first needed — do not define them locally.
-
----
-
-## Pre-flight checklist
-
-Before finishing any new or modified page, verify:
-
-- [ ] `css/field-ui.css` is linked before page-local `<style>`
-- [ ] Topbar matches Bridge/Fuel visual pattern (navy, gold border, back pill, state badge, help button)
-- [ ] Does not re-define shared tokens (`:root`), topbar shell, back pill, divider, badge, or focus ring
-- [ ] New CSS is tool-specific only — no duplicated shared patterns
-- [ ] Primary action is visually strongest on the page
-- [ ] Danger actions are visually separated from primary actions
-- [ ] Help button in topbar if the tool needs guidance (see milemarker for minimal example)
-- [ ] `.ft-notice-local` present only if page actually saves user data to localStorage or IndexedDB
-- [ ] No localStorage or IndexedDB keys renamed or cleared
-- [ ] No export logic changed without explicit approval
-- [ ] Mobile 390px and 430px layouts checked
-- [ ] Desktop 1440px layout checked
-- [ ] Dark mode checked (topbar always navy, text gold on most pages)
-- [ ] `service-worker.js` `LOCAL_ASSETS` updated if new static files were added
-- [ ] `CLAUDE.md` and `AGENTS.md` updated if new storage keys, classes, or behavior was added
-
----
-
-## Rules
-
-- Use `ft-*` classes before writing new CSS
-- Do not create new one-off button/card/modal/topbar styles when a shared class exists
-- If a new style is genuinely necessary, document why in this file
-- Do not rename JavaScript IDs or classes for styling purposes
-- Do not touch export layouts (`html2canvas` PDF area, ExcelJS template layout) for styling cleanup
-- Link `css/field-ui.css` BEFORE page-local `<style>` so page CSS wins on equal specificity
-- Animation / anti-flicker CSS stays **inline per-page** — NOT in `field-ui.css`
-- Mobile zoom restriction (`user-scalable=no` in viewport meta) must stay in every page
-- **50-line rule:** If adding more than 50 lines of new page-specific CSS, check whether it belongs in `css/field-ui.css` instead
-
----
-
-## Overlay & Toast Rules (permanent — do not violate)
-
-These rules prevent `position: fixed` overlays and toasts from breaking when the page is navigated to from the hub.
-
-### Root cause
-
-CSS animations with `animation-fill-mode: both` lock the final keyframe value at a higher cascade layer than inline styles. If the final keyframe is `transform: translate3d(0,0,0) scale(1)` (the identity), the browser still creates a **CSS containing block** for `position: fixed` descendants. All fixed children resolve relative to the body instead of the viewport during and after the animation. `transform: none` (the identity value written as the keyword) does **not** create a containing block.
-
-`contain: layout` has the same effect — it creates a containing block for fixed children. `contain: paint style` does not.
-
-### Rules
-
-1. **Final animation keyframes must use `transform: none`** — not `translate3d(0,0,0) scale(1)` or `scale(1)`. This applies to every entrance animation on every page (`slideInFromLeft`, `slideInFromRight`, `slideInLeft`, etc.).
-
-2. **Do not use `contain: layout` on `body`** — use `contain: paint style` instead. The `layout` value creates a containing block for `position: fixed` children.
-
-3. **JS back-navigation handlers: clear with `''` not identity** — when initializing the body position for a JS-driven exit animation, set `body.style.transform = ''` (empty string) not `'translate3d(0,0,0) scale(1)'`. The empty string removes any inline transform without creating a stacking context.
-
-4. **New overlays must be viewport-safe** — use `position: fixed` with explicit `top`/`bottom`/`left`/`right` (not `inset`) when safe-area-inset adjustments are needed. Prefer `inset: 0` only when no safe-area offset is required.
-
-5. **Prefer `100dvh` over `100vh`** — dynamic viewport height accounts for mobile browser chrome (address bar collapsing). Use `100dvh` for any modal max-height, overlay height, or full-screen container. Use `100vh` only for desktop-only rules where the distinction doesn't matter.
-
-6. **Toast containers: use `left: 50%` + `translateX(-50%)`** — never `right: Xpx`. This keeps toasts horizontally centered at any viewport width, including narrow phones and wide desktops.
-
-7. **Safe-area insets for toasts and modals** — bottom toasts must account for the home indicator on notched devices. Use `var(--ft-toast-bottom)` (defined in `field-ui.css`) instead of a raw `bottom: Npx` value. Override the variable locally if the page has a bottom nav (e.g. timesheet adds `--ft-toast-bottom: calc(var(--nav-h) + 14px)`).
-
-### Toast container shared CSS
-
-`css/field-ui.css` Section 7 provides shared `#toast-ct` / `.toast-ct` / `.ft-toast-container` positioning. Individual pages do not need to redeclare `position`, `left`, `bottom`, `transform`, `z-index`, or `width` for their toast container. Pages may override `align-items`, `gap`, or `--ft-toast-bottom` locally.
-
-### Pre-flight checklist for new pages
-
-Before shipping any new tool page, test at viewport widths **390px**, **430px**, and **1440px**:
-
-- [ ] Navigate from hub → page → back to hub. Do fixed-position toasts/overlays stay centered at the viewport during and after navigation?
-- [ ] Open a modal/overlay while scrolled halfway down the page. Does it center on the visible viewport (not the document)?
-- [ ] Show a toast while scrolled to the bottom of the page. Does it appear above the home indicator (or bottom nav)?
-- [ ] Trigger the back-navigation exit animation. Do any fixed elements jump or shift during the 320–360ms exit?
-- [ ] Test in both light and dark mode.
-- [ ] Test with the mobile browser address bar both expanded and collapsed (`100dvh` correctness).
-
----
-
-## Homepage command-center pattern (`index.html`)
-
-The homepage is the one **command-center dashboard** in the app. It is the visual exception to "match Bridge/Fuel" — tool pages still follow the standard shell, but the homepage has its own richer identity. Both themes are the **same command-center concept**, just light vs. navy:
-
-- **Light mode** = white / light navy-gray command center: subtle blueprint grid, softer navy/blue Pulaski Skyway wireframe, lighter NJ outline/network with a soft blue/cyan node glow, white/glass cards with navy text, soft blue-gray shadows + thin borders. Premium — **not** a plain white site.
-- **Dark mode** = deep navy command center (approved mockup): cyan blueprint grid + radar rings, brighter cyan-glowing NJ nodes, translucent dark glass cards, blue/cyan/gold/purple accents.
-
-Driven by the existing `html[data-dark]` / `field_dark_mode` toggle. The homepage **overrides all its tokens locally** in `index.html` (`:root` light, `html[data-dark]` dark) — it does not inherit field-ui's gold-on-near-black dark tokens. Do not let the toggle feel broken: both modes must look finished.
-
-**Homepage-specific visuals stay inline in `index.html`** (not in `field-ui.css`) unless they become reusable across pages:
-- **Pulaski Skyway wireframe** — inline `<svg>` (cantilever-truss linework), thin `currentColor` strokes at low-alpha tokens, `aria-hidden`. Labels must read **"PULASKI SKYWAY" / "STRUCTURE NO. 0901-150" / "CANTILEVER TRUSS BRIDGE"**.
-- **NJ outline/network** — inline `<svg>`: `.nj-outline-path`, `.nj-link` connectors, `.nj-node` circles (+ `.is-major`). Micro-labels: compass N, LAT/LON.
-- **Glowing nodes** — SVG `drop-shadow()` (`--node-glow`: subtle blue in light, stronger cyan in dark) + `@keyframes njPulse` (opacity only) on `.nj-node`, staggered, restrained; static under `prefers-reduced-motion`.
-- **Blueprint grid / hero glow / radar rings** — pure CSS gradients + bordered circles.
-- **No heavy image assets.** The old 440 KB base64 PNG wordmark was removed and replaced by a themed inline SVG bridge mark.
-
-**Grouped color system (homepage-only, 2026-05-29):** each dashboard group uses one accent family — **Field Operations** teal/green-blue (`card-icon-teal`/`tag-teal`, green, `card-icon-cyan`/`tag-cyan`), **Documentation** purple/indigo (`card-icon-purple`/`tag-violet`, indigo), **Time & Admin** gold (`card-icon-gold`/`tag-gold`), **Coming Soon** muted (`.grp-soon .card-icon` forces neutral). The Continue panel's `ICLASS` map mirrors these so recent-tool cards match their group. This intentionally diverges from per-tool brand colors (see CLAUDE.md §4) until Phase 2 — do not revert it as a "fix".
-
-**Content rules:**
-- **Continue** uses real existing local data only (`ft_last`, `ft_dc144_recent`, `wo_recent`, `ft_ts_entries`), read-only, **no new storage keys, no fabricated recent activity**. Empty → graceful message + clearly labeled "Open" shortcuts.
-- **No fake links.** Resources with no destination render as disabled `.util-soon` placeholders; Coming Soon tools stay disabled `.is-soon` cards with no `href`.
-- **Search** reuses `#tool-filter` / `.tool-card` / `#tools-empty` — no "no results" before typing.
-- **Tool card structure:** Active tool cards use icon + title together in `.card-top` (`display:flex; align-items:center; gap:10px`). `.card-desc` and `.card-foot` follow as separate flex children of the card. `.card-foot` groups tags on the left; `.card-arrow` pins right via `margin-left:auto`. The RECENT pill prepends to `.card-foot` without displacing the arrow.
-
-**Animation safety** (same as Overlay & Toast Rules): final keyframes end `transform: none`; never put `transform`/`contain: layout`/`will-change`/`filter`/`perspective` on `body`/`html`/main shell; fixed overlays must resolve to the viewport.
-
----
-
-## One-off style exceptions (documented)
-
-| Page | Class | Reason not in field-ui.css |
-|---|---|---|
-| `index.html` | command-center visuals (`.hero-*`, `.nj-*`, `.hero-bridge`, `.tool-card` glass, `.continue-*`, `.util-*`) | Homepage-only command-center identity + local light/dark token overrides; not reused by tool pages |
-| `njsearch.html` | `.btn-primary` | Slightly different padding/gap from ft-btn; bridge-specific hover variants |
-| `njfuel.html` | `.btn-primary` | Uses `:not(:disabled):hover` to handle disabled locate button |
-| `timesheet.html` | `.hub-back` | Uses local CSS vars `var(--gold)` for consistency with bottom-nav gold palette |
-| `dc144.html` | `.btn-export` | Green `#166534` specific to Excel export action |
-| `dc144.html` | `.dc-modal-*` | Predates ft-modal-* system; renaming would require JS changes |
-| `njsearch.html` / `njfuel.html` | `.guide-overlay` / `.guide-modal` | Predates ft-modal-* system; identical across both pages but renaming requires JS changes in both |
-
----
-
-## Group icon color rules
-
-Homepage section icons, homepage tool card icons, Continue/recent icons, and individual tool-page main/hero/header icons must use group-based colors. Do not use random accent colors within a group.
-
-| Group | Color | Tools |
-|---|---|---|
-| Field Operations | teal/green (`card-icon-teal`) | Bridge Navigator, Fuel Finder, Milepost Finder |
-| Documentation | purple/indigo (`card-icon-purple`) | Work Order Closeout, DC-144 Field Form |
-| Time & Admin | amber/gold (`card-icon-gold`) | Payroll Calculator |
-| Coming Soon | muted (overridden by `.grp-soon .card-icon`) | Drainage Finder, Emergency Assistance |
-
-**Scope:** icon color alignment only. Do not broadly recolor controls, toggles, buttons, status dots, map styles, form sections, card borders, or page backgrounds to match icon colors.
-
----
-
-## Topbar safety rules
-
-**No permanent `will-change`:** Never set `will-change: transform` permanently on `#topbar`/`.topbar`/`.ft-topbar`. The shared `field-ui.css` rule sets only `transition` — no `will-change`. Permanent `will-change` on a sticky element creates a GPU compositing stacking context that clips child content on mobile.
-
-**No absolute title centering with action buttons:** Do not use `position:absolute; left:50%; transform:translateX(-50%)` to center a tool-page topbar title when the topbar contains right-side action buttons — they overlap at desktop widths. Use flex static layout instead.
-
----
-
-## Map dark mode backing
-
-In `html[data-dark]`, map containers need an explicit dark navy background (e.g. `background: #0c1a30`) to avoid pale/white rounded-corner halos where transparent areas show through. Apply on the outer container (`#map` or `.map-panel`), not on Leaflet internals. Do not alter tile behavior or disable tiles to work around this.
-
----
-
-## Blueprint grid + dense UI surfaces
-
-Dense UI areas — calendars, pay-period summaries, data tables, dense form sections — need an opaque or near-opaque panel surface when the blueprint grid background is active. Wrap the area in a container with a solid background token (light: `var(--surface-2)`; dark: hardcoded `#0d1c38`) rather than removing the page grid globally. Grid lines must not bleed behind calendar weekday rows, pill labels, or data cells.
+# Field Tools Hub UI style guide
+
+This is the canonical visual and interaction language for the entire local
+website. It records the design patterns that have repeatedly required repair:
+hub/tool transition flashes, inconsistent topbars, weak mobile controls,
+cropped map canvases, unsafe fixed overlays, ambiguous route cards, duplicate
+alert language, and the legacy payroll page being treated as the design
+reference. Read this guide for every UI, layout, styling, accessibility, or
+new-page task.
+
+## Contents
+
+- [Authority and design intent](#authority-and-design-intent)
+- [Visual foundations](#visual-foundations)
+- [Shells and navigation](#shells-and-navigation)
+- [Component language](#component-language)
+- [Page families and exceptions](#page-families-and-exceptions)
+- [Responsive rules](#responsive-rules)
+- [State, data, and copy language](#state-data-and-copy-language)
+- [Accessibility](#accessibility)
+- [Animation and transition safety](#animation-and-transition-safety)
+- [Assets and branding](#assets-and-branding)
+- [Design preflight](#design-preflight)
+- [Anti-patterns](#anti-patterns)
+
+## Authority and design intent
+
+Field Tools Hub is a calm, field-first utility suite. A worker should be
+able to recognize the page, understand what is live or saved, perform the
+primary action with one hand, and recover safely when GPS, network, map tiles,
+or an external feed is unavailable.
+
+The visual tone is structured, credible, compact, and generous where a user
+needs to decide. It is not an editorial marketing site. Concept renderings
+are references only; the checked-out page and its rendered behavior are the
+implementation truth. When a new design conflicts with a protected behavior,
+keep the behavior and adapt the presentation.
+
+Shared design rules live in css/field-ui.css. Page-local inline styles are
+normal for specialized maps, weather, forms, and the payroll transition. Do
+not copy a token into a new page without deciding whether it belongs in the
+shared layer or is a documented page-family exception.
+
+## Visual foundations
+
+### Typography
+
+- Primary family: Inter, with system-ui, -apple-system, Arial, sans-serif
+  fallbacks. If a page cannot load the web font, metrics must remain usable.
+- Use sentence case for labels and actions. Reserve all caps for compact
+  metadata, route badges, or small section eyebrows.
+- Use a clear type hierarchy: page title, section title, card title, body,
+  metadata. Do not make every label bold or uppercase.
+- Line height should support scanning: approximately 1.4–1.55 for body copy,
+  1.1–1.25 for large titles, and at least 1.25 for compact labels.
+- Numeric field data is tabular in spirit. Keep units visible and align
+  comparable values. Do not rely on color alone to communicate a number or
+  status.
+
+### Shared tool-shell tokens
+
+These are the current css/field-ui.css light tokens. Use the variables rather
+than hard-coding replacements in standard tool pages.
+
+| Token | Value | Role |
+| --- | --- | --- |
+| --bg | #eef0f4 | Standard tool canvas |
+| --surface | #ffffff | Cards, panels, dialogs |
+| --border | #d1d9e0 | Main edge |
+| --border-lo | #e8ecf0 | Low-contrast divider |
+| --accent | #1a56db | Primary action/focus link |
+| --accent-lo | rgba(26,86,219,.08) | Soft selection surface |
+| --red | #dc2626 | Destructive/emergency state |
+| --text | #111827 | Primary text |
+| --muted | #6b7280 | Supporting text |
+| --muted2 | #4b5563 | Stronger secondary text |
+| --radius-sm | 5px | Small controls |
+| --radius | 8px | Standard cards/inputs |
+| --radius-lg | 10px | Larger panels |
+| --transition | .14s ease | Small explicit state transitions |
+
+The shared topbar is normally 58px tall, #1e2939, with a subtle gold bottom
+edge. The gold back/home pill uses #E5B33B, with #C9971A for the pressed or
+hover state. Standard buttons and controls use a minimum 44px target on coarse
+pointer devices. Shared dialogs and toasts already include safe-area and
+viewport sizing; extend those patterns rather than making a new fixed system.
+
+### Shared dark-mode rules
+
+Tool pages read html[data-dark] from the field_dark_mode preference. The
+shared dark values are:
+
+- --bg #0f1117
+- --surface #1c1e26
+- --border #2d3748
+- --border-lo #1f2937
+- --text #FEE9A1
+- --muted #C9971A
+- --muted2 #E5B33B
+- --accent-lo rgba(26,86,219,.15)
+
+Dark mode must preserve contrast and hierarchy, not simply invert every
+surface. Map tile backings, focus rings, badges, dialogs, and status colors
+need explicit dark treatment. Never flash a white page before the theme
+pre-paint script runs.
+
+### Homepage command-center tokens
+
+index.html is a distinct command-center family. Its light canvas is
+#eaf0f8 with #0f1d36 text, #5a6b85 muted text, #1a56db primary blue,
+#0e7fb8 secondary blue, and #b4861a gold. Its surfaces use #ffffff and
+#f5f8fc, with 7px, 10px, and 14px radii. The hero uses existing bridge/NJ
+art and blueprint/grid treatments; do not add heavy new imagery.
+
+The dark hub uses a deep navy canvas (#040c1a), light text (#e9effb), muted
+#93a7c4, blue #3b82f6, cyan #38bdf8, and gold #e5b33b. Keep the hub's
+group accents stable:
+
+| Hub group | Accent language |
+| --- | --- |
+| Field Operations | teal / green-blue |
+| Documentation | purple / indigo |
+| Time & Admin | gold |
+| Coming Soon | muted slate |
+
+These group colors are intentionally different from page-specific map or
+weather colors. Individual tool accents must not recolor the hub taxonomy.
+
+### Timesheet transition tokens
+
+The page used for new payroll design work is pages/timesheet-redesign.html,
+not the legacy pages/timesheet.html. The redesign uses a paper-like light
+canvas #f5f7fb, white cards, ink #10213b/#203553, blue #1a56db, gold
+#d99f1f, green #087f68, coral #c7463f, and border #dce4ef. Its larger cards
+use an 18px radius and smaller controls use a 12px radius. The desktop
+navigation rail is intentionally wider and more spacious than the standard
+tool shell; mobile uses a fixed bottom navigation treatment.
+
+Its dark palette is #071326 canvas, #0f213b card, #eef5ff ink, #d4e2f4
+secondary ink, #6ba2ff blue, #f2c65b gold, #50d3b0 green, #ff867a coral,
+and a low-opacity blue border. Keep the redesign's timeline vocabulary:
+commute in, lunch, regular work, overtime, commute home. The visual may
+evolve while the shared storage and payroll calculation contract remains
+protected. The visible copy should explain that lunch/commute are excluded,
+Normal overtime begins after 40 regular worked hours in the workweek, and
+exact overtime blocks end before commute home. Summary Sheet is an overview
+for copying those exact blocks, not a second calculator. New times use
+10-minute steps; the old page is not the visual reference during transition.
+
+## Shells and navigation
+
+### Standard tool shell
+
+- Use the shared topbar in field-ui.css where the page belongs to the
+  standard tool family.
+- Keep the home/back control, page identity, contextual status, and help
+  control in the same logical order.
+- Use a restrained navy header and gold action edge. Do not introduce a
+  different global header color for one tool.
+- The main canvas starts with the correct pre-paint background, not white.
+- Standard content is a centered, readable column or a deliberate split
+  layout. Do not let a card become an arbitrary full-bleed desktop slab.
+
+### Hub shell
+
+The hub topbar is a command center, not a copy of the tool topbar. Its
+desktop navigation order is Home, Field Ops, Documentation, Time & Admin,
+Resources, Alerts & Updates. Resources must remain before Alerts & Updates.
+On mobile, the navigation may condense visually, but destinations, active
+state, and keyboard order remain correct.
+
+Active navigation is based on the destination section's document coordinates,
+not just the nearest clicked element. When two panels share a row, pin the
+clicked destination through the scroll animation and restore coordinate-based
+tracking after the motion ends. Keep aria-current=location synchronized.
+Section underlines and highlights must not jump because of a side-by-side
+panel.
+
+The hub keeps Coming Soon at the bottom. Utility links are action cards with
+section accents, visible hover/focus states, and clear external-link icons.
+
+### Tool-to-hub transitions
+
+The transition must feel like one application. Use an explicit exit/reveal
+contract:
+
+1. Set the outgoing page to its transition state.
+2. Navigate or reveal the destination.
+3. Wait for the animation/transition end, with a guarded timeout fallback.
+4. Remove all transition classes and inline styles.
+5. Leave opacity 1, transform none, and no active transition state.
+
+Handle bfcache/page-show restoration and stale inline styles. Never leave a
+body transform that traps a fixed modal or toast. Respect reduced motion by
+skipping or shortening nonessential movement.
+
+## Component language
+
+### Action hierarchy
+
+- Primary: one clear filled blue or gold action for the page's main task.
+- Secondary: outlined or low-emphasis action for a related task.
+- Tertiary: text/icon action for navigation, refresh, copy, or help.
+- Destructive: red only when the action is destructive or emergency-specific;
+  pair it with explicit copy.
+
+Do not put two competing primary buttons next to each other. A field user
+should know which action commits, shares, calls, searches, or centers the map.
+Every button needs a visible disabled/loading state that explains why it
+cannot be used.
+
+### Cards, panels, and density
+
+- Use a surface, border, radius, and spacing system consistently within a
+  page family.
+- Separate sections with spacing and hierarchy before adding more borders.
+- Keep dense information scannable with short labels, aligned values, and
+  predictable rows.
+- Avoid nested white cards on a white card unless the nested surface conveys
+  a real state or grouping.
+- Do not use large empty gaps to compensate for an uncertain layout. Check
+  the actual grid/flex sizing at mobile and desktop widths.
+
+### Forms and inputs
+
+- Labels remain visible; placeholders are not labels.
+- Keep input, select, and button heights aligned.
+- Provide an error or empty state adjacent to the affected control.
+- Validate without erasing user input. Preserve draft data through expected
+  local interactions.
+- Use clear units and examples for coordinates, minutes, dates, rates, and
+  mileposts.
+
+### Modals, drawers, and toasts
+
+- A modal or drawer has an accessible role/name, synchronized aria-hidden,
+  visible close action, Escape support where appropriate, and focus handling.
+- The backdrop is viewport-fixed with safe-area padding. Its panel is bounded
+  by 100dvh, not only vh.
+- A drawer must not be hidden visually while exposed to assistive technology.
+- Toasts are short, actionable confirmations. Place the shared container
+  above fixed navigation and above safe-area insets. Do not make a toast the
+  only place an error is explained.
+- The payroll redesign uses a higher bottom offset because its mobile bottom
+  navigation is fixed. Preserve that offset when changing toast behavior.
+
+### Loading, empty, and failure states
+
+Every data-dependent panel needs intentional states:
+
+- Loading: say what is loading; use a restrained spinner or skeleton.
+- Empty: say what the user can do next.
+- Offline/network error: distinguish recoverable retry from unavailable
+  source.
+- Permission blocked: explain how to fix the permission, offer retry, and
+  provide a safe non-GPS path where possible.
+- Stale data: show the last-known time and do not imply it is live.
+
+Do not reflash or hide the full page on a small alert/feed update. Update the
+affected card in place and preserve scroll/focus.
+
+### Map frames
+
+- Map tiles sit inside a page-colored or white surface with deliberate
+  border/radius/shadow. Do not introduce a gray box inside a rounded map
+  without purpose.
+- Keep Leaflet controls reachable and visually integrated.
+- Recenter and map-view controls are overlaid only when their hit area stays
+  clear of the map key and important content.
+- On mobile, map docks may be fixed or collapsible, but the detail/result
+  content must remain discoverable first and the dock must not cover it.
+- Canvas point layers require a buffered drawing area and a redraw on
+  resize/move/zoom end. Do not create a second visual marker for the selected
+  point unless the selected state is deliberately distinct.
+- A failed map library must not crash a result or GPS workflow if the
+  underlying data can still be used.
+
+### Alert and feed cards
+
+511NJ and NWS feeds are separate panels with separate source labels. Use
+expand/collapse, full-message access, refresh status, and a clear empty/error
+state. NWS severity uses stable meaning:
+
+| Severity | Light accent | Meaning |
+| --- | --- | --- |
+| Extreme | deep red | Immediate extreme risk |
+| Severe | orange | Serious risk |
+| Moderate | amber | Meaningful risk |
+| Minor | blue | Limited risk |
+| Unknown | gray/slate | Source did not provide a known level |
+
+An NWS card should keep affected area, severity, timing, impact, and
+recommended action separate. Do not repeat the alert title as a second
+headline. Preserve the full official link.
+
+## Page families and exceptions
+
+### Hub: index.html
+
+Use the command-center tokens and group colors. Keep the hero useful, not
+decorative only. Continue/search/install/bookmark helpers are utilities, not
+competing hero calls to action. Traffic and weather feeds remain full-width
+scannable panels below the grouped dashboard. Dark mode and scroll state must
+not change the semantic order.
+
+### Standard maps: Bridge and Fuel
+
+Use the standard shell and shared map frame. Bridge search is statewide and
+chunked; do not reintroduce arbitrary result caps or duplicate canvas/Leaflet
+markers. Partial search must not auto-select the first result. Collapse the
+search only after an actual selection, and make Change bridge reopen it.
+Keep map, details, bookmarks, share/copy, and GPS actions discoverable.
+
+Fuel uses the same map confidence and bookmark language but keeps its local
+station data and navigation behavior. Do not couple the two data schemas.
+
+### Milepost and Emergency
+
+These pages share the roadway/milepost language. Show route family, signed
+route identity, milepost, distance, accuracy, and freshness only when
+supported. A nearby candidate is not automatically a confirmed route.
+Ambiguous, stale, broad-accuracy, excluded-local, ramp, or missing-data
+states must abstain or clearly request verification.
+
+Emergency keeps immediate actions prominent: Call 911, share/copy report, and
+open in maps. Location states distinguish live GPS, last known, blocked, and
+unavailable. Permission warning content must be centered, retryable, and
+aria-hidden while closed. The user marker and accuracy circle need clear
+visual and text labels.
+
+### Weather
+
+Weather may use a specialized dashboard shell, but the shared typography,
+focus, safe-area, and state rules still apply. Keep location controls,
+forecast, alerts, and radar timeline distinct. Desktop can use a sidebar/third
+radar pane; mobile can stack chips and radar below the details. Preserve:
+
+- NWS as the source of current/forecast/alert data.
+- Local time and DST-aware labels.
+- Radar time controls with a clear current/observed/forecast distinction.
+- Area-specific alert settings saved locally.
+- No duplicate map alert toggle or duplicate status/tagline/product control.
+- Alert updates that modify cards in place instead of flashing the page.
+
+The static PWA contains a push receiver and notification click handler but no
+subscription sender or backend. Do not promise closed-app notification
+delivery or claim that battery optimization can be bypassed.
+
+### Forms and exports
+
+DC-144 and Work Order have their own protected presentation details. Use the
+shared focus, overlay, error, and mobile rules, but do not flatten their form
+or export structure into a generic card system. Read
+docs/protected-areas.md first.
+
+### Timesheet
+
+All new payroll UI work targets pages/timesheet-redesign.html. It is a
+purposeful workspace with a spacious desktop rail, summary/period/log
+navigation, a mobile bottom nav, shift timeline vocabulary, and a clear
+calculation breakdown. The legacy pages/timesheet.html remains a compatibility
+surface until explicit cutover. Preserve both pages' current data keys and
+the calculation rules recorded in protected-areas.md.
+
+## Responsive rules
+
+Design against these widths: 390px, 430px, 768px, 900px, 1024px, 1240px,
+and 1440px. At minimum, manually inspect 390px and 1440px for a UI change.
+
+- Mobile is not a shrunken desktop. Reorder for task priority; content before
+  secondary maps, details before docks, and primary actions before metadata.
+- The page width must never exceed the viewport horizontally. Check
+  document scrollWidth against clientWidth.
+- Use fluid padding with a small minimum. Do not let a fixed desktop width
+  push controls off-screen.
+- Segmented controls may wrap or scroll horizontally as a group, never
+  create page-level overflow.
+- Tables can scroll within a labeled container; do not shrink critical
+  numbers into unreadable columns.
+- Fixed bottom navigation needs bottom padding in the page and in toast/modal
+  offsets. Respect env(safe-area-inset-bottom).
+- Map heights should be explicit at each meaningful breakpoint and should
+  follow the actual available footprint. Do not leave an old wrapper padding
+  around a full map.
+- At desktop, split panels need stable minimum widths and a graceful
+  single-column fallback before content becomes cramped.
+
+## State, data, and copy language
+
+Use factual, calm copy:
+
+- “Live GPS” means a recent successful fix; include time/accuracy where useful.
+- “Last known location” means it may be stale; show when it was captured.
+- “Location blocked” means the browser permission must be changed; explain
+  the action.
+- “No decision” or “Verify route” is safer than inventing a route.
+- “Refresh” says what source will be queried and preserves the current view.
+- “Saved locally” distinguishes local preferences from server-backed data.
+
+Avoid:
+
+- “Guaranteed” for GPS, routing, weather, or external feed results.
+- Silent fallback from live to stale data.
+- Vague “Something went wrong” without retry or next step.
+- Product-facing NJDOT/agency branding without an approved asset.
+- Duplicate titles, duplicate alert status, or repeated control labels.
+
+## Accessibility
+
+- Use semantic headings in order and landmark regions.
+- Every icon-only control has an accessible name. Decorative SVGs use
+  aria-hidden=true.
+- Keep visible focus rings, with gold/blue contrast against light and dark
+  surfaces.
+- Synchronize aria-expanded, aria-current, aria-pressed, aria-hidden, and
+  disabled state with the actual UI.
+- Dialogs/drawers close predictably and do not expose hidden content to screen
+  readers. Do not rely on opacity alone.
+- Touch targets are at least 44px. Do not place tiny map controls adjacent to
+  a primary action.
+- Color is supplementary. Pair severity, selected, error, and success colors
+  with text, shape, or icon.
+- Respect prefers-reduced-motion and avoid pulsing as the only indicator.
+- Announce asynchronous GPS/feed/alert status changes in a polite live region
+  when the user needs to know.
+- Ensure keyboard order follows the visual task order, especially in split
+  map/details layouts and fixed bottom navigation.
+
+## Animation and transition safety
+
+- Prefer opacity, background-color, border-color, and small explicit
+  transforms on local components.
+- Never use transition: all.
+- Never leave transform, will-change, contain: layout, or filter on body,
+  html, or the main shell.
+- Final keyframe state must be transform: none. JavaScript transition cleanup
+  must remove inline styles/classes after completion and after a timeout
+  fallback.
+- Fixed overlays must be positioned against the viewport with 100dvh and
+  safe-area insets. Body transforms can break this.
+- Header hide/reveal must not create a blank strip, push content unexpectedly,
+  or fight quick-nav synchronization.
+- Smooth scroll must be canceled or simplified for reduced motion.
+- Rapid radar/map layer changes must cancel stale requests and remove stale
+  layers/animation frames.
+
+## Assets and branding
+
+Reuse existing icons and hero art. Do not add a large raster asset for a UI
+problem that CSS or an inline SVG can solve. Existing manifest/file names may
+contain NJDOT for compatibility; visible product copy remains Field Tools Hub.
+Map/weather source labels may use functional geographic terms.
+
+## Design preflight
+
+Before handing off a UI change:
+
+- [ ] The page family and routed docs were read.
+- [ ] Light and dark surfaces, text, borders, focus, and status colors were
+      checked.
+- [ ] Primary/secondary action hierarchy is obvious.
+- [ ] 390px and 1440px show no horizontal overflow or clipped controls.
+- [ ] 430px, 768px, and the page's critical breakpoint were checked if layout
+      changes.
+- [ ] Touch targets are at least 44px and keyboard focus is visible.
+- [ ] Dialog/drawer/toast aria state and safe-area offsets are correct.
+- [ ] No transition: all or persistent shell transform/will-change/filter/
+      contain: layout remains.
+- [ ] Hub/tool transition settles at opacity 1 and transform none.
+- [ ] Loading, empty, error, stale, and permission states have usable copy.
+- [ ] Maps redraw after resize/zoom and do not duplicate selected markers.
+- [ ] The final diff does not change protected storage or PWA contracts
+      accidentally.
+
+## Anti-patterns
+
+Do not reintroduce:
+
+- A white flash during hub/tool navigation.
+- A permanent body transform used as a page animation.
+- A fixed overlay sized with only 100vh or missing safe-area padding.
+- A map wrapper with unexplained gray/white inset or a cropped canvas edge.
+- Auto-selecting the first partial Bridge result.
+- A result card that calls a GPS-nearest route definitive without evidence.
+- A “Show 50” cap that hides statewide Bridge records.
+- Full-page reflash when a single alert/feed item updates.
+- Two different payroll designs competing as the current design reference.
+- A new one-off global header, toast, modal, or dark-mode writer.

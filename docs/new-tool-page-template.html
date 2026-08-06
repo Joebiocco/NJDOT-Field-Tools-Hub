@@ -1,258 +1,261 @@
-<!DOCTYPE html>
 <!--
-  new-tool-page-template.html — Field Tools starter page
-  -------------------------------------------------------
-  Copy this file to pages/yourtoolname.html and follow the
-  comments. Read docs/ui-style-guide.md before editing.
+  Field Tools Hub new-page template
 
-  Required changes before this page is usable:
-    1. Update <title> and #topbar-title
-    2. Replace "toolname" with your ft_last key
-    3. Fill in help modal steps
-    4. Uncomment ft-notice-local ONLY if this page saves user data
-    5. Remove placeholder buttons and implement real primary action
-    6. Add tool-specific CSS in the <style> block
-    7. Add tool-specific JS after the boilerplate JS section
-    8. Add this page to service-worker.js LOCAL_ASSETS
-    9. Add a tile to index.html
-   10. Update CLAUDE.md and AGENTS.md with any new storage keys or behaviors
+  Contents
+  1. Copy/use rules
+  2. Required head and pre-paint theme
+  3. Shared shell markup
+  4. Page content scaffold
+  5. Accessible dialog and toast
+  6. Transition cleanup and page script
+
+  This is a documentation template. Copy it to pages/<tool>.html and replace
+  every TODO. Read docs/ui-style-guide.md, docs/protected-areas.md, and
+  docs/qa-checklist.md before using it.
 -->
+<!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- 1. Required metadata and shared shell -->
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Tool Name — NJDOT Field Tools</title>
-  <meta name="theme-color" content="#E5B33B">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1e2939">
+  <title>TODO — Field Tools Hub</title>
   <link rel="manifest" href="../manifest.json">
-
-  <!-- Fonts — must be before field-ui.css -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- Shared design system — MUST come before page <style> -->
   <link rel="stylesheet" href="../css/field-ui.css">
-
-  <!-- Dark mode before first paint — reads global state, never writes it -->
   <script>
-    if (localStorage.getItem('field_dark_mode') === '1') {
-      document.documentElement.setAttribute('data-dark', '');
-    }
+    /* 2. Pre-paint theme: read only; index.html owns the preference. */
+    try {
+      if (localStorage.getItem('field_dark_mode') === '1') {
+        document.documentElement.setAttribute('data-dark', '');
+      }
+    } catch (_) {}
   </script>
-
   <style>
-    /* ── Tool-specific CSS only ──────────────────────────────────────────── */
     /*
-       Shared tokens, topbar, back pill, badges, buttons, notices, and
-       modals are already in css/field-ui.css. Do not redefine them here.
-
-       If you find yourself writing more than ~50 lines of CSS that could
-       apply to other tools, consider adding it to field-ui.css instead.
+      3. Page-local tokens only. Keep the shared shell in field-ui.css.
+      Do not add transition: all or persistent body transforms.
     */
-
+    :root {
+      --page-bg: var(--bg, #eef0f4);
+      --page-surface: var(--surface, #fff);
+      --page-text: var(--text, #111827);
+      --page-muted: var(--muted, #6b7280);
+      --page-border: var(--border, #d1d9e0);
+    }
+    html { background: var(--page-bg); }
     body {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      margin: 0;
+      background: var(--page-bg);
+      color: var(--page-text);
+      font-family: Inter, system-ui, -apple-system, Arial, sans-serif;
     }
-
-    /* Page layout */
-    .wrap {
-      flex: 1;
-      max-width: 900px;
-      width: 100%;
+    .page-wrap {
+      width: min(1120px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 24px 16px 48px;
+      padding: 24px 0 48px;
     }
-
-    /* Entry animation — keep inline, do not move to field-ui.css */
-    @keyframes pageFadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
+    .page-intro {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
     }
-    body { animation: pageFadeIn 380ms cubic-bezier(0.16, 1, 0.3, 1) both; }
-
-    /* Page transition — anti-flicker (keep inline) */
-    @keyframes slideInFromLeft {
-      0%   { opacity: 0; transform: translate3d(-18vw, 0, 0) scale(0.98); }
-      100% { opacity: 1; transform: none; }
+    .page-intro h1 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.2rem); }
+    .page-intro p { margin: 8px 0 0; color: var(--page-muted); }
+    .ft-eyebrow {
+      margin: 0 0 6px;
+      color: var(--page-muted);
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
     }
-    @keyframes slideOutLeft {
-      0%   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
-      50%  { opacity: 0; transform: translate3d(-30vw, 0, 0) scale(0.98); }
-      100% { opacity: 0; transform: translate3d(-40vw, 0, 0) scale(0.97); }
+    .surface {
+      background: var(--page-surface);
+      border: 1px solid var(--page-border);
+      border-radius: 10px;
+      padding: 20px;
     }
-    html.entering-from-hub body {
-      opacity: 0;
-      transform: translate3d(-18vw, 0, 0) scale(0.98);
-      animation: slideInFromLeft 380ms cubic-bezier(0.22, 1, 0.36, 1) both !important;
-      will-change: transform, opacity;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-      contain: paint style;  /* NO layout — layout creates containing block for position:fixed */
+    .surface + .surface { margin-top: 16px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .button {
+      min-height: 44px;
+      padding: 0 16px;
+      border: 1px solid var(--page-border);
+      border-radius: 8px;
+      background: var(--page-surface);
+      color: var(--page-text);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
     }
-    html.exiting-to-hub body {
-      animation: slideOutLeft 360ms cubic-bezier(0.65, 0, 0.35, 1) both !important;
-      overflow: hidden;
-      will-change: transform, opacity;
+    .button-primary {
+      border-color: #1a56db;
+      background: #1a56db;
+      color: #fff;
     }
-
-    /* Topbar — shared shell from field-ui.css; override only what differs */
-    #topbar {
-      position: sticky;
-      top: 0;
-      z-index: 600;
+    .button:focus-visible {
+      outline: 3px solid #e5b33b;
+      outline-offset: 2px;
+      box-shadow: 0 0 0 3px rgba(26,86,219,.25);
     }
-
-    /* Focus ring — only redefine if this page adds extra interactive elements */
-    /* Example: :where(.my-special-element):focus-visible { ... } */
-
-    /* ── OVERLAY / TOAST PERMANENT RULES ────────────────────────────────── */
-    /*
-       CRITICAL — do not violate these or fixed/absolute overlays will break:
-
-       1. Final animation keyframes MUST end with `transform: none` (not the
-          identity `translate3d(0,0,0) scale(1)`). The identity value retains
-          a CSS containing block for position:fixed children even after the
-          animation ends. `transform: none` does not.
-
-       2. Do NOT use `contain: layout` on body. `contain: paint style` is safe.
-          `contain: layout` creates a containing block for position:fixed.
-
-       3. When clearing body.style.transform in JS back-navigation handlers,
-          set it to '' (empty) not 'translate3d(0,0,0) scale(1)'.
-
-       4. New overlays (modals, toasts, panels) must use position:fixed with
-          viewport-safe coordinates. Prefer top/bottom/left/right over
-          inset shorthand when you need safe-area-inset adjustments.
-
-       5. Prefer `100dvh` over `100vh` for any max-height or height that
-          must fit within the visible viewport on mobile browsers.
-
-       See docs/ui-style-guide.md §Overlay & Toast Rules for full details.
-    */
-
-    /* ── Add tool-specific rules below this line ─────────────────────────── */
-
+    .field { display: grid; gap: 6px; max-width: 520px; }
+    .field label { font-weight: 700; }
+    .field input, .field select, .field textarea {
+      min-height: 44px;
+      box-sizing: border-box;
+      width: 100%;
+      padding: 9px 11px;
+      border: 1px solid var(--page-border);
+      border-radius: 8px;
+      background: var(--page-surface);
+      color: var(--page-text);
+      font: inherit;
+    }
+    .field textarea { min-height: 110px; resize: vertical; }
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 1050;
+      display: grid;
+      place-items: center;
+      padding: calc(24px + env(safe-area-inset-top, 0px))
+               calc(16px + env(safe-area-inset-right, 0px))
+               calc(24px + env(safe-area-inset-bottom, 0px))
+               calc(16px + env(safe-area-inset-left, 0px));
+      background: rgba(4, 12, 26, .58);
+    }
+    .dialog-backdrop[aria-hidden="true"] { display: none; }
+    .dialog {
+      width: min(520px, 100%);
+      max-height: calc(100dvh - 48px - env(safe-area-inset-top, 0px)
+        - env(safe-area-inset-bottom, 0px));
+      overflow: auto;
+      padding: 22px;
+      border: 1px solid var(--page-border);
+      border-radius: 12px;
+      background: var(--page-surface);
+      color: var(--page-text);
+    }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      z-index: 9000;
+      width: min(420px, calc(100vw - 24px));
+      padding: 12px 14px;
+      border: 1px solid var(--page-border);
+      border-radius: 8px;
+      background: var(--page-surface);
+      color: var(--page-text);
+      box-shadow: 0 8px 24px rgba(15, 29, 54, .18);
+      transform: translateX(-50%);
+    }
+    .toast[hidden] { display: none; }
+    @media (max-width: 640px) {
+      .page-wrap { width: min(100% - 24px, 560px); padding-top: 16px; }
+      .page-intro { display: block; }
+      .page-intro .actions { margin-top: 14px; }
+      .surface { padding: 16px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; }
+    }
   </style>
 </head>
 <body>
+  <!-- 3. Shared shell: keep the home link and page identity predictable. -->
+  <header class="topbar" id="topbar">
+    <a class="ft-back-link" href="../index.html" aria-label="Back to Field Tools Hub">Home</a>
+    <span class="ft-topbar-div" aria-hidden="true"></span>
+    <strong>TODO TOOL NAME</strong>
+    <span class="ft-topbar-spacer" aria-hidden="true"></span>
+    <button class="ft-help-btn" id="help-button" type="button" aria-label="How to use TODO TOOL NAME">?</button>
+  </header>
 
-<!-- ── Topbar ─────────────────────────────────────────────────────────────── -->
-<div id="topbar">
-  <a class="topbar-back" href="../index.html" id="back-link">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="15 18 9 12 15 6"/>
-    </svg>
-    Home
-  </a>
-  <div class="topbar-div"></div>
-  <span id="topbar-title">Tool Name</span>
-  <div class="topbar-spacer"></div>
-  <span class="state-badge">NJ</span>
-  <button class="topbar-help" id="tool-help-btn" type="button" aria-label="Open help">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-         stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-      <line x1="12" y1="17" x2="12.01" y2="17"/>
-    </svg>
-  </button>
-</div>
+  <main class="page-wrap">
+    <!-- 4. Page content: replace the TODO content without changing the shell contracts. -->
+    <section class="page-intro" aria-labelledby="page-title">
+      <div>
+        <p class="ft-eyebrow">TODO CATEGORY</p>
+        <h1 id="page-title">TODO Page title</h1>
+        <p>TODO One-sentence task explanation and important source/status note.</p>
+      </div>
+      <div class="actions">
+        <button class="button button-primary" type="button" id="primary-action">TODO Primary action</button>
+        <button class="button" type="button" id="secondary-action">TODO Secondary</button>
+      </div>
+    </section>
 
-<!-- ── Help modal — uses ft-modal-* from field-ui.css ────────────────────── -->
-<div class="ft-modal-backdrop" id="tool-help-modal" role="dialog"
-     aria-modal="true" aria-label="How to use Tool Name">
-  <div class="ft-modal-box">
-    <div class="ft-modal-title">How to Use</div>
-    <ol style="padding-left:18px; line-height:1.7; font-size:14px; color:var(--text);">
-      <!-- Fill in tool-specific steps -->
-      <li>Step one — what the user selects or enters first.</li>
-      <li>Step two — the main action (e.g. tap Find Near Me).</li>
-      <li>Step three — what to do with the result.</li>
-    </ol>
-    <div class="ft-modal-actions">
-      <button class="ft-btn ft-btn-primary" id="tool-help-close">Got it</button>
-    </div>
+    <section class="surface" aria-labelledby="content-heading">
+      <h2 id="content-heading">TODO Main section</h2>
+      <p id="status" role="status">TODO Loading, empty, success, or current-state copy.</p>
+      <div class="field">
+        <label for="todo-input">TODO Field label</label>
+        <input id="todo-input" type="text" autocomplete="off">
+      </div>
+    </section>
+  </main>
+
+  <!-- 5. Accessible help dialog. Keep aria-hidden synchronized with visibility. -->
+  <div class="dialog-backdrop" id="help-dialog" role="dialog" aria-modal="true"
+       aria-labelledby="help-dialog-title" aria-hidden="true">
+    <section class="dialog">
+      <h2 id="help-dialog-title">How to use TODO TOOL NAME</h2>
+      <p>TODO Short, field-oriented instructions and limitations.</p>
+      <button class="button button-primary" id="close-help" type="button">Got it</button>
+    </section>
   </div>
-</div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<!-- ── Main content ───────────────────────────────────────────────────────── -->
-<div class="wrap">
+  <script>
+    /* 6. Minimal page behavior and safe transition cleanup. */
+    (function () {
+      'use strict';
+      var helpButton = document.getElementById('help-button');
+      var helpDialog = document.getElementById('help-dialog');
+      var closeHelp = document.getElementById('close-help');
+      var toast = document.getElementById('toast');
+      var toastTimer = null;
+      var lastFocused = null;
 
-  <!-- Local-only notice — UNCOMMENT only if this page saves user data locally -->
-  <!--
-  <div class="ft-notice-local">Saved on this device only. Export a backup for long-term storage.</div>
-  -->
+      function openHelp() {
+        lastFocused = document.activeElement;
+        helpDialog.setAttribute('aria-hidden', 'false');
+        closeHelp.focus();
+      }
+      function closeHelpDialog() {
+        helpDialog.setAttribute('aria-hidden', 'true');
+        if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+      }
+      function showToast(message) {
+        toast.textContent = message;
+        toast.hidden = false;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.hidden = true; }, 3200);
+      }
+      helpButton.addEventListener('click', openHelp);
+      closeHelp.addEventListener('click', closeHelpDialog);
+      helpDialog.addEventListener('click', function (event) {
+        if (event.target === helpDialog) closeHelpDialog();
+      });
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && helpDialog.getAttribute('aria-hidden') === 'false') {
+          closeHelpDialog();
+        }
+      });
+      document.getElementById('primary-action').addEventListener('click', function () {
+        showToast('TODO Replace this confirmation with the real result.');
+      });
 
-  <!-- Primary action — make this the visually strongest element on the page -->
-  <button class="ft-btn ft-btn-primary" id="primary-action-btn" type="button">
-    Primary Action
-  </button>
-
-  <!-- Result area — replace with actual tool UI -->
-  <div id="result-area" style="margin-top:20px;"></div>
-
-</div><!-- /.wrap -->
-
-
-<!-- ── Scripts ────────────────────────────────────────────────────────────── -->
-<script>
-/* ── Boilerplate — do not modify ──────────────────────────────────────────── */
-
-// Page-transition flags (read sessionStorage set by index.html)
-(function() {
-  try {
-    if (sessionStorage.getItem('ft_opening_from_hub')) {
-      document.documentElement.classList.add('entering-from-hub');
-      sessionStorage.removeItem('ft_opening_from_hub');
-    }
-  } catch(_) {}
-  setTimeout(function() {
-    document.documentElement.classList.remove('entering-from-hub');
-  }, 420);
-})();
-
-// Record last visited tool (update 'toolname' to match ft_last key convention)
-try { localStorage.setItem('ft_last', 'toolname'); } catch(_) {}
-
-// Back navigation — trigger hub return animation
-document.getElementById('back-link').addEventListener('click', function(e) {
-  e.preventDefault();
-  var href = this.getAttribute('href');
-  document.documentElement.classList.add('exiting-to-hub');
-  try { sessionStorage.setItem('ft_returning_to_hub', '1'); } catch(_) {}
-  setTimeout(function() { window.location.href = href; }, 280);
-});
-
-// Help modal open/close
-(function() {
-  var overlay = document.getElementById('tool-help-modal');
-  var openBtn = document.getElementById('tool-help-btn');
-  var closeBtn = document.getElementById('tool-help-close');
-  if (!overlay || !openBtn) return;
-  openBtn.addEventListener('click', function() { overlay.classList.add('open'); });
-  closeBtn.addEventListener('click', function() { overlay.classList.remove('open'); });
-  overlay.addEventListener('click', function(e) {
-    if (e.target === overlay) overlay.classList.remove('open');
-  });
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') overlay.classList.remove('open');
-  });
-})();
-
-// Service worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('message', function(e) {
-    if (e.data && e.data.type === 'RELOAD') window.location.reload();
-  });
-}
-
-/* ── Tool-specific JS — add below this line ──────────────────────────────── */
-
-
-
-</script>
+      window.addEventListener('pageshow', function () {
+        document.documentElement.classList.remove('is-exiting', 'is-entering');
+        document.body.style.removeProperty('opacity');
+        document.body.style.removeProperty('transform');
+      });
+    }());
+  </script>
 </body>
 </html>

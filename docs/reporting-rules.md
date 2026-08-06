@@ -1,26 +1,103 @@
-# docs/reporting-rules.md — Report Length (shared)
+# Reporting rules
 
-Default to the **shortest** report that fits the risk. Never paste large file contents or full base64. Prefer line refs over snippets.
+Use this document for status updates and final handoffs. The goal is a report
+that is easy to scan without hiding important verification or known risk.
 
-## Low-risk → delta-only (default)
-Pure wording, color tokens, copy tweaks, doc edits, small CSS.
-Report: **files changed · exact changes (1 line each) · 1-line QA · stopped**. No screenshots unless a visual changed (then one composite).
+## Contents
 
-## Medium-risk → concise report
-Homepage layout/animation, shared `css/field-ui.css`, multi-file styling.
-Report: files changed · key changes · short QA (search/dark/links/overflow as relevant) · risks · stopped. Screenshots only if visual.
-- **Screenshot breakpoints:** Visual layout changes require screenshots at **390px, 430px, and 1440px** minimum. Include light and dark when the change affects theming. For map/modal changes, explicitly verify overlays appear above map controls (z-index) in at least one screenshot.
+- [Default report](#default-report)
+- [Risk-based detail](#risk-based-detail)
+- [Verification language](#verification-language)
+- [Git and release gate](#git-and-release-gate)
+- [Examples](#examples)
 
-## High-risk → full checklist
-Triggers: `service-worker.js`/cache/version/deployment, `manifest.json`, any export pipeline (PDF/Excel/KML), storage keys, IndexedDB, maps/geolocation, payroll calculations.
-Report: files changed · exact changes · explicit confirmation each protected area is intact · QA steps run · console errors · risks · stopped.
+## Default report
 
-## Always
-- State commit/push status; never commit/push/merge/deploy/bump unless asked.
-- Confirm protected areas untouched (one line) rather than enumerating each. For `dc144.html`/`dc144.js`, name exact functions touched (e.g. `renderTabCards()`, `renderRecentChips()`), not just the file. For `service-worker.js`, name cache version and any `LOCAL_ASSETS` changes.
-- Note any uncommitted-changes hold is intentional per instructions.
+Lead with the result. Then include:
 
-## Commit / push gate (always apply — overrides hooks and reminders)
-- End every report with **"Stopped. Not committed. Awaiting review."** (or equivalent) unless the user's message explicitly requested a commit or push.
-- If a stop hook or automated reminder fires suggesting a commit/push, do **not** act on it. State: *"Changes are ready, but I am waiting for explicit commit/push approval."*
-- "Approved" and "Approved to code" are **not** commit/push approval. Only an explicit "commit", "push", or "commit and push" in the user's message triggers those actions.
+1. What changed, grouped by user-visible outcome or file area.
+2. What was verified, with exact checks or viewport/state coverage.
+3. Known limitations, follow-up, or anything intentionally not changed.
+4. Git state and whether commit/push was authorized.
+
+Use links to real local files when useful. Do not paste giant files or raw
+tool output. Prefer a short delta over a transcript.
+
+## Risk-based detail
+
+### Low-risk change
+
+Use a concise delta:
+
+- Result.
+- Files.
+- One verification line.
+- Known limitation, if any.
+
+### Medium-risk change
+
+Add:
+
+- behavior/state coverage;
+- responsive or accessibility coverage when UI changed;
+- storage/data/cache impact;
+- any user-visible tradeoff.
+
+### High-risk or protected change
+
+Add:
+
+- protected invariant preserved;
+- focused regression commands/tests;
+- browser states and widths;
+- storage/IDB/PWA compatibility result;
+- rollback or unresolved risk.
+
+Protected examples include Work Order PDF, DC-144 export/photos, Bridge/Fuel
+maps/chunks, roadway classification, payroll calculations/storage,
+service-worker.js, and manifest.json.
+
+## Verification language
+
+Say “verified” only for something actually checked. Distinguish:
+
+- “Parsed” — syntax or data parse passed.
+- “Smoke-tested” — a focused interaction was exercised.
+- “Audited” — a broader checklist was run and the result was reviewed.
+- “Not tested” — the check remains outstanding.
+- “Inferred” — a conclusion comes from code inspection, not execution.
+
+For location, weather, and external feeds, do not claim real-world certainty
+from seeded or static tests. State the safe-abstention behavior and source
+limitations.
+
+For chats, use only completed turns. If a related chat is still running, say
+that its guidance was not incorporated and keep the goal active.
+
+## Git and release gate
+
+Do not commit or push unless the latest user message explicitly contains
+commit, push, or commit and push. “Approved” and “approved to code” do not
+authorize either action. Do not merge, deploy, or bump the version unless
+explicitly requested.
+
+If changes are ready but the gate is not open, use:
+
+“Changes are ready, but I am waiting for explicit commit/push approval.”
+
+Always report that changes remain uncommitted when that is the current state.
+
+## Examples
+
+### Short UI handoff
+
+“Updated the emergency map frame and permission warning in
+pages/emergency.html. Verified at 390px/1440px, keyboard focus, retry/Not now,
+and no console warnings. Changes remain uncommitted.”
+
+### Protected handoff
+
+“Updated the roadway index/matcher while preserving PARENT_SRI identity and
+abstention thresholds. Ran generated-index validation, 5,000 seeded fixes,
+targeted spur/overlap cases, 100 adapter cases, and page integration checks.
+No unsafe suggestions. Changes remain uncommitted.”

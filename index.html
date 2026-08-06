@@ -85,18 +85,22 @@
       height:60px; padding:0 24px; background:var(--topbar-bg);
       border-bottom:1px solid rgba(229,179,59,0.28);
       box-shadow:0 1px 0 rgba(255,255,255,0.04) inset,0 6px 22px rgba(0,0,0,0.20);
-      transition:transform 460ms cubic-bezier(0.65,0,0.35,1),opacity 460ms cubic-bezier(0.65,0,0.35,1);
+      transition:transform 460ms cubic-bezier(0.65,0,0.35,1),opacity 460ms cubic-bezier(0.65,0,0.35,1),box-shadow 260ms ease,border-color 260ms ease;
     }
     #topbar.header-hidden{transform:translateY(-100%);opacity:0;pointer-events:none;}
+    #topbar.is-scrolled{border-bottom-color:rgba(229,179,59,0.45);box-shadow:0 1px 0 rgba(255,255,255,0.05) inset,0 9px 28px rgba(0,0,0,0.28);}
     .brand{display:flex;align-items:center;gap:11px;text-decoration:none;flex-shrink:0;}
     .brand-seal{width:36px;height:36px;flex-shrink:0;display:block;border-radius:8px;border:1px solid rgba(229,179,59,0.45);}
     .brand-text{color:#f2f6fc;font-size:15.5px;font-weight:600;letter-spacing:.01em;white-space:nowrap;}
     .brand-text strong{font-weight:800;color:#fff;}
     .topnav{display:flex;align-items:center;gap:2px;margin-left:6px;}
-    .topnav a{color:#aebdd2;text-decoration:none;font-size:13px;font-weight:600;padding:8px 12px;border-radius:7px;transition:background .14s,color .14s;}
-    .topnav a:hover{color:#fff;background:rgba(255,255,255,0.06);}
+    .topnav a{position:relative;display:inline-flex;align-items:center;height:36px;color:#aebdd2;text-decoration:none;font-size:13px;font-weight:600;padding:0 12px;border-radius:7px;transition:background .18s ease,color .18s ease,transform .18s ease;}
+    .topnav a::after{content:"";position:absolute;left:12px;right:12px;bottom:3px;height:2px;border-radius:2px;background:#E5B33B;transform:scaleX(0);transform-origin:center;transition:transform .22s cubic-bezier(.22,1,.36,1);}
+    .topnav a:hover{color:#fff;background:rgba(255,255,255,0.06);transform:translateY(-1px);}
     .topnav a.is-active{color:#fff;}
-    .topnav a.is-active::after{content:"";display:block;height:2px;border-radius:2px;background:#E5B33B;margin-top:5px;}
+    .topnav a.is-active::after{transform:scaleX(1);}
+    .is-nav-focus{animation:navPanelFocus 1.15s ease-out;}
+    @keyframes navPanelFocus{0%{box-shadow:var(--shadow);}24%{box-shadow:0 0 0 3px rgba(229,179,59,0.78),0 0 28px rgba(229,179,59,0.28);}100%{box-shadow:var(--shadow);}}
     .topbar-spacer{flex:1;}
     .status-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,0.8);}
     .dark-toggle{display:inline-flex;align-items:center;gap:7px;background:rgba(229,179,59,0.12);border:1px solid rgba(229,179,59,0.34);border-radius:8px;height:34px;padding:0 11px;cursor:pointer;color:#E5B33B;font:inherit;font-size:12.5px;font-weight:700;flex-shrink:0;transition:background .2s,color .2s,border-color .2s;}
@@ -117,8 +121,33 @@
     .install-dropdown-note{font-size:11px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border-lo);line-height:1.5;}
     html[data-dark] .install-dropdown{box-shadow:0 12px 36px rgba(0,0,0,0.6);}
 
+    /* One-time release notes dialog */
+    .index-whats-new-layer{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;overflow:auto;padding:calc(18px + env(safe-area-inset-top,0px)) 18px calc(18px + env(safe-area-inset-bottom,0px));background:rgba(9,21,39,.58);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,visibility .18s ease;}
+    .index-whats-new-layer.is-open{opacity:1;visibility:visible;pointer-events:auto;}
+    .index-whats-new-dialog{width:min(650px,100%);max-height:min(86dvh,720px);overflow:auto;padding:25px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:0 28px 90px rgba(16,33,59,.30);transform:translateY(8px) scale(.98);transition:transform .18s ease;}
+    .index-whats-new-layer.is-open .index-whats-new-dialog{transform:none;}
+    .index-whats-new-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding-bottom:17px;border-bottom:1px solid var(--border);}
+    .index-whats-new-head h2{margin-top:3px;font-size:24px;letter-spacing:-.04em;}
+    .index-whats-new-head p{margin-top:6px;color:var(--muted);font-size:12px;line-height:1.45;}
+    .index-whats-new-close{display:grid;place-items:center;flex:none;width:38px;height:38px;border:1px solid var(--border);border-radius:11px;color:var(--muted);background:var(--surface-2);cursor:pointer;font-size:21px;line-height:1;transition:color .16s ease,border-color .16s ease,background-color .16s ease;}
+    .index-whats-new-close:hover{color:var(--text);border-color:rgba(26,86,219,.35);background:var(--chip-bg);}
+    .index-whats-new-close:focus-visible{outline:3px solid rgba(26,86,219,.42);outline-offset:3px;}
+    .index-whats-new-list{display:grid;gap:9px;margin:18px 0 0;padding:0;list-style:none;}
+    .index-whats-new-list li{display:grid;grid-template-columns:10px minmax(0,1fr);gap:10px;padding:11px 12px;border:1px solid var(--border);border-radius:11px;background:var(--surface-2);}
+    .index-whats-new-list li::before{content:"";width:7px;height:7px;margin-top:4px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(229,179,59,.14);}
+    .index-whats-new-list strong{display:block;color:var(--text);font-size:12px;}
+    .index-whats-new-list p{margin-top:3px;color:var(--muted);font-size:11px;line-height:1.48;}
+    .index-whats-new-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border);}
+    .index-whats-new-foot span{color:var(--muted);font-size:11px;line-height:1.4;}
+    .index-whats-new-foot button{min-width:88px;min-height:40px;padding:0 16px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:linear-gradient(180deg,#2f74e6,#1a56db);color:#fff;cursor:pointer;font:inherit;font-size:12px;font-weight:700;box-shadow:0 4px 14px rgba(26,86,219,.32);transition:filter .14s ease,transform .08s ease,box-shadow .14s ease;}
+    .index-whats-new-foot button:hover{filter:brightness(1.08);box-shadow:0 6px 18px rgba(26,86,219,.38);}
+    .index-whats-new-foot button:active{transform:scale(.97);}
+    .index-whats-new-foot button:focus-visible{outline:3px solid rgba(26,86,219,.42);outline-offset:3px;}
+    body.index-whats-new-open{overflow:hidden;}
+
     /* ── Shell ── */
     .content{flex:1;width:100%;max-width:1320px;margin:0 auto;padding:0 22px 56px;}
+    #top,#tools,#documentation,#time-admin,#alerts,#resources{scroll-margin-top:78px;}
     .section-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
 
     /* ── HERO ── */
@@ -173,6 +202,15 @@
     .panel-viewall.is-link{color:var(--accent-2);text-decoration:none;}
     .panel-viewall.is-link:hover{text-decoration:underline;}
 
+    /* ── Emergency Assistance banner ── */
+    .emergency-banner{display:flex;align-items:center;gap:9px;margin-bottom:16px;padding:9px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--border);text-decoration:none;transition:box-shadow .14s,border-color .14s;width:fit-content;}
+    .emergency-banner:hover{box-shadow:inset 0 0 0 999px rgba(225,29,72,0.08);border-color:rgba(225,29,72,0.35);}
+    html[data-dark] .emergency-banner:hover{box-shadow:inset 0 0 0 999px rgba(244,63,94,0.12);}
+    .emergency-banner-ic{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#be123c;}
+    html[data-dark] .emergency-banner-ic{color:#fb7185;}
+    .emergency-banner-title{font-size:13px;font-weight:700;color:var(--text);letter-spacing:.01em;white-space:nowrap;}
+    .emergency-banner-arrow{flex-shrink:0;color:var(--muted);}
+
     /* ── CONTINUE panel ── */
     .continue-panel{margin-bottom:18px;}
     .continue-track{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;padding:16px 18px;}
@@ -198,7 +236,7 @@
     /* ── DASHBOARD MODULES (side-by-side) ── */
     .dashboard-grid{display:grid;grid-template-columns:1.5fr 1.1fr 0.85fr;gap:16px;align-items:start;}
     .module{display:flex;flex-direction:column;}
-    .module-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:12px;padding:16px 18px;}
+    .module-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;padding:16px 18px;}
     .grp-field .panel-ic{background:rgba(13,148,136,0.14);color:#0d9488;}
     html[data-dark] .grp-field .panel-ic{background:rgba(45,212,191,0.16);color:#2dd4bf;}
     .grp-doc .panel-ic{background:rgba(124,58,237,0.14);color:#7c3aed;}
@@ -318,16 +356,16 @@
     html[data-dark] .util-event.nws-event.severity-moderate{--util-accent:#fbbf24;--util-accent-soft:rgba(251,191,36,0.17);}
     html[data-dark] .util-event.nws-event.severity-minor{--util-accent:#60a5fa;--util-accent-soft:rgba(96,165,250,0.17);}
     html[data-dark] .util-event.nws-event.severity-unknown{--util-accent:#94a3b8;--util-accent-soft:rgba(148,163,184,0.17);}
-    .util-event.nws-event[open] .util-event-title{display:block;-webkit-line-clamp:initial;overflow:visible;}
+    .util-event[open] .util-event-title{display:block;-webkit-line-clamp:initial;overflow:visible;}
     .util-event-detail{padding:0 12px 12px 49px;border-top:1px solid var(--border-lo);}
-    .util-event-detail-title{padding-top:10px;font-size:12px;font-weight:750;line-height:1.4;color:var(--text);}
-    .util-event-desc{font-size:11px;line-height:1.5;color:var(--muted);margin:7px 0 0;white-space:pre-line;}
-    .util-event-instruction{font-size:11px;line-height:1.5;color:var(--muted2);margin:8px 0 0;padding-top:8px;border-top:1px solid var(--border-lo);white-space:pre-line;}
-    .util-event-meta{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:9px;font-size:10px;color:var(--muted);}
     .util-alert-overview{display:flex;align-items:stretch;gap:8px;padding-top:10px;}
     .util-alert-area{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:9px 10px;border:1px solid var(--util-accent-soft);border-left:3px solid var(--util-accent);border-radius:8px;background:var(--util-accent-soft);}
-    .util-alert-area-label,.util-alert-fact-label,.util-alert-block-label,.util-alert-instruction-label{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--util-accent);}
+    .util-alert-area-label,.util-alert-fact-label{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--util-accent);}
+    .util-alert-block-label,.util-alert-instruction-label{font-size:9px;font-weight:800;letter-spacing:.04em;color:var(--util-accent);}
     .util-alert-area-value{font-size:12px;font-weight:750;line-height:1.35;color:var(--text);overflow-wrap:anywhere;}
+    .util-traffic-event{min-width:120px;max-width:42%;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:9px 10px;border:1px solid var(--util-accent-soft);border-radius:8px;background:var(--util-accent-soft);}
+    .util-traffic-event-label{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--util-accent);}
+    .util-traffic-event-value{font-size:12px;font-weight:750;line-height:1.35;color:var(--text);overflow-wrap:anywhere;}
     .util-alert-severity{display:inline-flex;align-items:center;align-self:flex-start;gap:5px;flex-shrink:0;padding:6px 8px;border:1px solid var(--util-accent-soft);border-radius:999px;background:var(--util-accent-soft);color:var(--util-accent);font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;}
     .util-alert-severity::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px var(--util-accent-soft);}
     .util-alert-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:8px;}
@@ -342,6 +380,10 @@
     .util-alert-list li+li{margin-top:5px;}
     .util-alert-instruction{margin-top:10px;padding:9px 10px;border:1px solid var(--util-accent-soft);border-left:3px solid var(--util-accent);border-radius:8px;background:var(--util-accent-soft);}
     .util-alert-instruction-copy{margin:4px 0 0;font-size:11px;line-height:1.5;color:var(--text);}
+    .util-alert-note{margin-top:10px;padding:9px 10px;border:1px solid var(--border-lo);border-left:3px solid var(--muted2);border-radius:8px;background:var(--surface-2);}
+    .util-alert-note .util-alert-instruction-label{color:var(--muted2);}
+    .util-alert-response{margin-top:10px;padding:9px 10px;border:1px solid var(--util-accent-soft);border-left:3px solid var(--util-accent);border-radius:8px;background:var(--util-accent-soft);}
+    .util-traffic-facts{grid-template-columns:repeat(3,minmax(0,1fr));}
     .util-event-link{display:inline-flex;margin-top:10px;color:var(--util-accent);font-size:10.5px;font-weight:750;text-decoration:none;}
     .util-event-link:hover{text-decoration:underline;}
     .util-event-time{font-size:9.5px;color:var(--muted);white-space:nowrap;padding-top:1px;}
@@ -362,23 +404,26 @@
     .page-footer{text-align:center;font-size:12px;color:var(--muted);padding:20px;}
     .version-stamp{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;color:var(--muted);opacity:.7;}
 
-    /* ── Animations ──
-       Whole page is present immediately; one quick page fade + a single short
-       hero rise. No staggered per-section/per-card delays (avoids the
-       "hero first, dashboard later" piecemeal feel). */
+    /* ── Animations ── */
+    @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth;}}
     @keyframes pageFadeIn{from{opacity:0;}to{opacity:1;}}
-    body{animation:pageFadeIn 220ms ease-out;}
+    html:not([data-transition-settled]) body{animation:pageFadeIn 220ms ease-out;}
     @keyframes heroRise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
     .hero-inner{animation:heroRise 360ms cubic-bezier(0.16,1,0.3,1) both;}
+    @keyframes dashboardCardIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+    .module-tiles .tool-card,.coming-tiles .tool-card,.continue-track .continue-card,.continue-extra .continue-card{animation:dashboardCardIn 360ms cubic-bezier(0.16,1,0.3,1) var(--card-reveal-delay,0ms) both;}
+    .module-tiles .tool-card:nth-child(2),.coming-tiles .tool-card:nth-child(2){--card-reveal-delay:45ms;}
+    .module-tiles .tool-card:nth-child(3),.coming-tiles .tool-card:nth-child(3){--card-reveal-delay:90ms;}
+    .module-tiles .tool-card:nth-child(4),.coming-tiles .tool-card:nth-child(4){--card-reveal-delay:135ms;}
     html.theme-transitioning,html.theme-transitioning *,html.theme-transitioning *::before,html.theme-transitioning *::after{transition:background-color 300ms ease,color 300ms ease,border-color 300ms ease,fill 300ms ease,stroke 300ms ease,box-shadow 300ms ease !important;}
     /* Large hero images swap instantly on theme toggle — never transition filter/opacity (avoids jank) */
     html.theme-transitioning .hero-bridge,html.theme-transitioning .hero-nj{transition:none !important;}
     button:active,.tool-card:active,.continue-card:active,.install-btn:active,.install-trigger:active,.dark-toggle:active{transform:scale(.97)!important;transition:transform 80ms ease-out!important;}
-    @keyframes pageOutRight{0%{opacity:1;transform:translate3d(0,0,0) scale(1);}50%{opacity:0;transform:translate3d(15vw,0,0) scale(.98);}100%{opacity:0;transform:translate3d(20vw,0,0) scale(.97);}}
+    @keyframes pageOutRight{0%{opacity:1;transform:translate3d(0,0,0) scale(1);}50%{opacity:0;transform:translate3d(15vw,0,0) scale(.98);}100%{opacity:0;transform:none;}}
     html.exiting-to-tool body{animation:pageOutRight 300ms cubic-bezier(0.4,0,0.2,1) both!important;overflow:hidden;will-change:transform,opacity;transform-origin:center center;backface-visibility:hidden;}
     html.exiting-to-tool{overflow:hidden;}
     @keyframes slideInFromRight{0%{opacity:0;transform:translate3d(20vw,0,0) scale(.98);}100%{opacity:1;transform:none;}}
-    html.returning-from-tool body{opacity:0;transform:translate3d(20vw,0,0) scale(.98);animation:slideInFromRight 460ms cubic-bezier(0.22,1,0.36,1) both!important;will-change:transform,opacity;backface-visibility:hidden;contain:paint style;}
+    html.returning-from-tool body{opacity:0;transform:translate3d(20vw,0,0) scale(.98);animation:slideInFromRight 360ms cubic-bezier(0.22,1,0.36,1) both!important;will-change:transform,opacity;backface-visibility:hidden;contain:paint style;}
     html.returning-from-tool{background:var(--bg);}
     .header-hover-zone{position:fixed;top:0;left:0;right:0;height:14px;z-index:99;pointer-events:auto;}
     @media (hover:none){.header-hover-zone{display:none;}}
@@ -430,6 +475,12 @@
       .dark-toggle .dt-label{display:none;}
       .dark-toggle{padding:0;width:34px;justify-content:center;}
       .install-trigger .it-label{display:none;} .install-trigger{padding:0;width:36px;justify-content:center;}
+      .index-whats-new-dialog{padding:20px 17px;border-radius:16px;}
+      .index-whats-new-head h2{font-size:21px;}
+      .index-whats-new-list{margin-top:14px;}
+      .index-whats-new-list li{padding:10px;}
+      .index-whats-new-foot{align-items:stretch;flex-direction:column;gap:10px;}
+      .index-whats-new-foot button{width:100%;}
       .hero{min-height:400px;padding:46px 16px;margin:12px 0 16px;border-radius:16px;}
       .hero::after{border-radius:16px;}
       .hero-eyebrow{font-size:10px;margin-bottom:13px;}
@@ -456,6 +507,7 @@
       .util-event-action-wrap{grid-column:3;grid-row:1 / span 2;align-self:center;}
       .util-event-detail{padding-left:9px;padding-right:12px;}
       .util-alert-facts{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .util-traffic-facts{grid-template-columns:repeat(2,minmax(0,1fr));}
     }
     @media (max-width:430px){
       .hero-title{font-size:26px;}
@@ -465,15 +517,53 @@
       .module-tiles{grid-template-columns:1fr;}
       .coming-tiles{grid-template-columns:1fr;}
       .util-alert-facts{grid-template-columns:1fr;}
+      .util-traffic-facts{grid-template-columns:1fr;}
     }
     @media (prefers-reduced-motion:reduce){
       *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
+      .hero-inner,.module-tiles .tool-card,.coming-tiles .tool-card,.continue-track .continue-card,.continue-extra .continue-card{animation:none!important;}
       .nj-node{opacity:.8!important;}
+      html.exiting-to-tool body,
+      html.returning-from-tool body { animation:none!important; opacity:1!important; transform:none!important; will-change:auto!important; contain:none!important; }
     }
   </style>
   <script>if(localStorage.getItem('field_dark_mode')==='1')document.documentElement.setAttribute('data-dark','');</script>
   <style>html{background:#eaf0f8}html[data-dark]{background:#040c1a}</style>
-  <script>try{if(sessionStorage.getItem("ft_returning_to_hub")==="1"){document.documentElement.classList.add("returning-from-tool");}}catch(_){}</script>
+  <script>
+  (function(){
+    var d=document.documentElement, returning=false, fallbackTimer=0;
+    function settle(){
+      if(!returning) return;
+      returning=false;
+      if(fallbackTimer) clearTimeout(fallbackTimer);
+      d.setAttribute('data-transition-settled','');
+      d.classList.remove('returning-from-tool');
+      document.removeEventListener('animationend',onAnimationEnd);
+      document.removeEventListener('animationcancel',onAnimationEnd);
+    }
+    function onAnimationEnd(e){
+      if(e.target===document.body && /^slideIn/.test(e.animationName||'')) settle();
+    }
+    try{
+      if(sessionStorage.getItem("ft_returning_to_hub")==="1"){
+        sessionStorage.removeItem("ft_returning_to_hub");
+        d.classList.add("returning-from-tool");
+        returning=true;
+      }
+    }catch(_){ }
+    if(returning){
+      document.addEventListener('animationend',onAnimationEnd);
+      document.addEventListener('animationcancel',onAnimationEnd);
+      function armFallback(){
+        if(returning) fallbackTimer=setTimeout(settle,400);
+      }
+      if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',armFallback,{once:true});
+      else armFallback();
+    }else{
+      setTimeout(function(){d.setAttribute('data-transition-settled','');},420);
+    }
+  })();
+  </script>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XZJ7XL4S34"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XZJ7XL4S34');</script>
 </head>
@@ -487,10 +577,12 @@
     <span class="brand-text">Field Tools <strong>Hub</strong></span>
   </a>
   <nav class="topnav" aria-label="Primary">
-    <a href="#top" class="is-active">Home</a>
-    <a href="#tools">Tools</a>
-    <a href="#documentation">Documentation</a>
-    <a href="#resources">Resources</a>
+    <a href="#top" class="is-active" data-nav-target="top">Home</a>
+    <a href="#tools" data-nav-target="tools">Field Ops</a>
+    <a href="#documentation" data-nav-target="documentation">Documentation</a>
+    <a href="#time-admin" data-nav-target="time-admin">Time &amp; Admin</a>
+    <a href="#resources" data-nav-target="resources">Resources</a>
+    <a href="#alerts" data-nav-target="alerts">Alerts &amp; Updates</a>
   </nav>
   <div class="topbar-spacer"></div>
   <button id="dark-toggle" class="dark-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
@@ -501,11 +593,33 @@
     <svg id="install-trigger-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     <span class="it-label">Install App</span>
   </button>
-  <div id="install-dropdown" class="install-dropdown" role="dialog" aria-label="Install this app">
+<div id="install-dropdown" class="install-dropdown" role="dialog" aria-label="Install this app">
     <div class="install-dropdown-title">Bookmark Field Tools</div>
     <div class="install-dropdown-desc" id="install-dropdown-desc">Press <strong id="install-shortcut">Ctrl+D</strong> to save this page to your browser bookmarks for quick access later.</div>
     <div class="install-dropdown-note">You can also pin the tab or drag the address bar into your bookmarks bar.</div>
   </div>
+</div>
+
+<div class="index-whats-new-layer" id="index-whats-new-layer" aria-hidden="true">
+  <section class="index-whats-new-dialog" role="dialog" aria-modal="true" aria-labelledby="index-whats-new-title">
+    <div class="index-whats-new-head">
+      <div>
+        <div class="hero-eyebrow">Field Tools Hub update</div>
+        <h2 id="index-whats-new-title">What’s new</h2>
+        <p>A quick summary of the major changes across the site.</p>
+      </div>
+      <button type="button" class="index-whats-new-close" id="index-whats-new-close" aria-label="Close update summary">×</button>
+    </div>
+    <ul class="index-whats-new-list">
+      <li><div><strong>Timesheet Tracker</strong><p>A complete payroll workspace with 10-minute entries, lunch and commute deductions, Cash or XP overtime, 35- and 40-hour schedules, holidays, Emergency rates, pay-period history, expanded work logs, and exact Summary Sheet overtime blocks.</p></div></li>
+      <li><div><strong>Bridge Navigator</strong><p>Statewide bridge search now uses county data chunks with map selection, GPS lookup, bookmarks, and share or copy tools.</p></div></li>
+      <li><div><strong>Roadway and emergency tools</strong><p>Conservative signed-route and milepost matching, clearer roadway results, GPS status and recovery, and safe handling when the evidence is ambiguous.</p></div></li>
+      <li><div><strong>Weather and alerts</strong><p>Conditions, forecasts, NWS alerts, radar timeline controls, map alerts, and saved alert settings are brought together in one view.</p></div></li>
+      <li><div><strong>Forms and closeout</strong><p>DC-144 templates, signatures, photos, session restore, Excel export, and improved Work Order closeout PDF and photo handling.</p></div></li>
+      <li><div><strong>Hub and offline improvements</strong><p>Refreshed responsive layouts, dark mode, safer transitions, install and bookmark help, local persistence, and offline-ready behavior across the tools.</p></div></li>
+    </ul>
+    <div class="index-whats-new-foot"><span>This notice appears once on this device.</span><button type="button" id="index-whats-new-done">Continue</button></div>
+  </section>
 </div>
 
 <div class="content">
@@ -543,6 +657,15 @@
       </div>
     </div>
   </header>
+
+  <!-- EMERGENCY ASSISTANCE -->
+  <a class="emergency-banner" href="pages/emergency.html" data-tags="emergency assistance accident contacts protocols reporting safety milepost gps 911">
+    <span class="emergency-banner-ic" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+    </span>
+    <span class="emergency-banner-title">Emergency Assistance</span>
+    <svg class="emergency-banner-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+  </a>
 
   <!-- CONTINUE -->
   <section class="panel continue-panel" id="continue-section" hidden>
@@ -585,6 +708,11 @@
           <div class="card-desc">GPS lookup for nearest Interstate, US, NJ State, or County milepost.</div>
           <div class="card-foot"><span class="card-tag tag-teal">GPS</span><svg class="card-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
         </a>
+        <a href="pages/weather.html" class="tool-card" data-tags="weather forecast rain temperature nws alerts nj conditions wind gps location">
+          <div class="card-top"><div class="card-icon card-icon-teal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.6-1.9A4 4 0 0 0 6 16h11.5z"/></svg></div><div class="card-title">Weather</div></div>
+          <div class="card-desc">Current conditions, forecast, and active alerts for NJ areas.</div>
+          <div class="card-foot"><span class="card-tag tag-teal">NWS</span><svg class="card-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
+        </a>
       </div>
     </section>
 
@@ -607,15 +735,15 @@
       </div>
     </section>
 
-    <section class="panel module grp-time tool-group" data-group="Time &amp; Admin">
+    <section class="panel module grp-time tool-group" id="time-admin" data-group="Time &amp; Admin">
       <div class="panel-head">
         <span class="panel-ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></span>
         <div class="panel-htext"><h2>Time &amp; Admin</h2><p>Hours, overtime &amp; payroll</p></div>
       </div>
       <div class="module-tiles">
-        <a href="pages/timesheet.html" class="tool-card" data-tags="payroll calculator timesheet hours overtime xp cash emergency comp time biweekly">
-          <div class="card-top"><div class="card-icon card-icon-gold"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="card-title">Payroll Calculator</div></div>
-          <div class="card-desc">Log XP, cash &amp; emergency overtime with biweekly views. Saves locally.</div>
+        <a href="pages/timesheet.html" class="tool-card" data-tags="payroll calculator timesheet tracker hours overtime xp cash emergency comp time biweekly">
+          <div class="card-top"><div class="card-icon card-icon-gold"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="card-title">Timesheet Tracker</div></div>
+          <div class="card-desc">Track work hours, commute, lunch, overtime, and biweekly periods. Saves locally.</div>
           <div class="card-foot"><span class="card-tag tag-gold">Local</span><svg class="card-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
         </a>
       </div>
@@ -623,31 +751,11 @@
 
   </div>
 
-  <!-- COMING SOON -->
-  <section class="panel coming-soon grp-soon tool-group" data-group="Coming Soon">
-    <div class="panel-head">
-      <span class="panel-ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2 2"/></svg></span>
-      <div class="panel-htext"><h2>Coming Soon</h2><p>In development — not yet available</p></div>
-    </div>
-    <div class="coming-tiles">
-      <div class="tool-card is-soon" data-tags="drainage culvert catch basin structures map" aria-disabled="true">
-        <span class="soon-badge">COMING SOON</span>
-        <div class="card-top"><div class="card-icon card-icon-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6"/><path d="M12 22a8 8 0 0 0 8-8c0-4-4-7-8-12-4 5-8 8-8 12a8 8 0 0 0 8 8z"/></svg></div>
-        <div><div class="card-title">Drainage Finder</div><div class="card-desc">Map-based search for culverts, catch basins, and drainage structures.</div></div></div>
-      </div>
-      <div class="tool-card is-soon" data-tags="emergency assistance accident contacts protocols reporting safety" aria-disabled="true">
-        <span class="soon-badge">COMING SOON</span>
-        <div class="card-top"><div class="card-icon card-icon-rose"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
-        <div><div class="card-title">Emergency Assistance</div><div class="card-desc">Field accident contacts, protocols, and reporting steps.</div></div></div>
-      </div>
-    </div>
-  </section>
-
   <div id="tools-empty" class="tools-empty" role="status">No tools match your search.</div>
 
   <!-- BOTTOM STRIP -->
-  <!-- Official reference links plus live 511NJ status through the configured Cloudflare proxy. -->
-  <section class="util-strip" id="resources" aria-label="Quick links, alerts, resources">
+  <!-- Official reference links. Live alert feeds follow below. -->
+  <section class="util-strip" id="resources" aria-label="Quick links and resources">
     <div class="panel util-col">
       <h3 class="util-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Quick Links</h3>
       <div class="util-links">
@@ -709,6 +817,21 @@
     </div>
   </section>
 
+  <!-- COMING SOON -->
+  <section class="panel coming-soon grp-soon tool-group" data-group="Coming Soon">
+    <div class="panel-head">
+      <span class="panel-ic" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2 2"/></svg></span>
+      <div class="panel-htext"><h2>Coming Soon</h2><p>In development — not yet available</p></div>
+    </div>
+    <div class="coming-tiles">
+      <div class="tool-card is-soon" data-tags="drainage culvert catch basin structures map" aria-disabled="true">
+        <span class="soon-badge">COMING SOON</span>
+        <div class="card-top"><div class="card-icon card-icon-cyan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6"/><path d="M12 22a8 8 0 0 0 8-8c0-4-4-7-8-12-4 5-8 8-8 12a8 8 0 0 0 8 8z"/></svg></div>
+        <div><div class="card-title">Drainage Finder</div><div class="card-desc">Map-based search for culverts, catch basins, and drainage structures.</div></div></div>
+      </div>
+    </div>
+  </section>
+
 </div>
 
 <div class="page-footer">Field Tools &mdash; Internal Use &middot; <span class="version-stamp" title="Build version">v1.33 &middot; 2026-06-01</span></div>
@@ -727,8 +850,6 @@
 
 <script>
 (function(){
-  setTimeout(function(){document.documentElement.classList.remove('returning-from-tool');},500);
-
   // Dark mode toggle
   var btn=document.getElementById('dark-toggle');
   var icon=document.getElementById('dark-icon');
@@ -765,8 +886,9 @@
       njfuel:{href:'pages/njfuel.html',title:'Fuel Finder',icon:'fuel'},
       closeout:{href:'pages/WorkOrderCloseout.html',title:'Work Order Closeout',icon:'doc'},
       milemarker:{href:'pages/milemarker.html',title:'Milepost Finder',icon:'pin'},
-      timesheet:{href:'pages/timesheet.html',title:'Payroll Calculator',icon:'clock'},
-      dc144:{href:'pages/dc144.html',title:'DC-144 Field Form',icon:'grid'}
+      timesheet:{href:'pages/timesheet.html',title:'Timesheet Tracker',icon:'clock'},
+      dc144:{href:'pages/dc144.html',title:'DC-144 Field Form',icon:'grid'},
+      weather:{href:'pages/weather.html',title:'Weather',icon:'weather'}
     };
     var ICONS={
       bridge:'<path d="M3 17h18"/><path d="M3 17V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8"/><path d="M9 17V9"/><path d="M15 17V9"/>',
@@ -774,9 +896,10 @@
       pin:'<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
       doc:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
       grid:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/>',
-      clock:'<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>'
+      clock:'<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
+      weather:'<path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.6-1.9A4 4 0 0 0 6 16h11.5z"/>'
     };
-    var ICLASS={bridge:'card-icon-teal',fuel:'card-icon-teal',pin:'card-icon-teal',doc:'card-icon-purple',grid:'card-icon-purple',clock:'card-icon-gold'};
+    var ICLASS={bridge:'card-icon-teal',fuel:'card-icon-teal',pin:'card-icon-teal',doc:'card-icon-purple',grid:'card-icon-purple',clock:'card-icon-gold',weather:'card-icon-teal'};
     var ARROW='<svg class="card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
     function lsj(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(_){return null;}}
     function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});}
@@ -918,13 +1041,38 @@
       if(/delay|travel time|congestion|slow/.test(value)) return {label:'Delay',icon:'delay'};
       return {label:'Traffic event',icon:'general'};
     }
+    function splitFirstColon(value){
+      var text=String(value||'').trim();
+      var match=/^(.+?)\s*:\s*(.+)$/.exec(text);
+      return match?{left:match[1].trim(),right:match[2].trim()}:{left:'',right:text};
+    }
+    function coordinateLink(lat,lon){
+      var numericLat=Number(lat),numericLon=Number(lon);
+      if(!isFinite(numericLat)||!isFinite(numericLon))return '';
+      return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(numericLat.toFixed(6)+','+numericLon.toFixed(6));
+    }
     function parseRss(xml){
       var doc=new DOMParser().parseFromString(xml,'application/xml');
       if(doc.getElementsByTagName('parsererror').length) throw new Error('Invalid RSS');
       var channel=doc.getElementsByTagName('channel')[0];
       var items=Array.prototype.slice.call(doc.getElementsByTagName('item')).map(function(node){
         var title=textOf(node,'title'),desc=textOf(node,'description'),date=textOf(node,'pubDate');
-        return {title:title,description:desc,publishedAt:date,link:safeUrl(textOf(node,'link'))};
+        var titleParts=splitFirstColon(title),descriptionParts=splitFirstColon(desc),pointText=textOf(node,'georss:point'),point=pointText?pointText.split(/\s+/):[];
+        var lat=point.length>0?Number(point[0]):NaN,lon=point.length>1?Number(point[1]):NaN;
+        var hasPoint=!isNaN(lat)&&!isNaN(lon);
+        return {
+          title:title,
+          description:desc,
+          publishedAt:date,
+          link:safeUrl(textOf(node,'link')),
+          route:titleParts.left,
+          event:titleParts.right||title,
+          source:descriptionParts.left,
+          detail:descriptionParts.right||desc,
+          lat:hasPoint?lat:'',
+          lon:hasPoint?lon:'',
+          mapLink:hasPoint?coordinateLink(lat,lon):''
+        };
       }).filter(function(item){return item.title||item.description;});
       return {updatedAt:channel?textOf(channel,'pubDate'):'',items:items.slice(0,6)};
     }
@@ -941,7 +1089,11 @@
           expires:p.expires||p.ends||'',
           area:p.areaDesc||'New Jersey',
           severity:p.severity||'',
+          urgency:p.urgency||'',
           certainty:p.certainty||'',
+          response:p.response||'',
+          note:p.note||'',
+          senderName:p.senderName||'',
           link:safeUrl(p.web||((feature||{}).id)||''),
           label:event,
           icon:'weather'
@@ -949,7 +1101,6 @@
       }).filter(function(item){return item.title||item.description;});
       return {updatedAt:new Date().toISOString(),items:items.slice(0,6)};
     }
-    function addMeta(meta, value){if(value){var span=document.createElement('span');span.textContent=value;meta.appendChild(span);}}
     function severityKey(value){
       var key=String(value||'').toLowerCase().trim();
       return /^(extreme|severe|moderate|minor)$/.test(key)?key:'unknown';
@@ -963,6 +1114,23 @@
       var factLabel=document.createElement('div');factLabel.className='util-alert-fact-label';factLabel.textContent=label;
       var factValue=document.createElement('div');factValue.className='util-alert-fact-value';factValue.textContent=value;
       fact.appendChild(factLabel);fact.appendChild(factValue);container.appendChild(fact);
+    }
+    function friendlyAlertLabel(value){
+      var key=String(value||'').toLowerCase().replace(/\s+/g,' ').trim();
+      var labels={
+        what:'What happened',
+        where:'Affected area',
+        when:'Timing',
+        impacts:'Expected impacts',
+        'additional details':'Additional details',
+        'additional detail':'Additional details',
+        hazard:'Hazards',
+        hazards:'Hazards',
+        note:'Notes',
+        notes:'Notes'
+      };
+      if(labels[key])return labels[key];
+      return key?key.charAt(0).toUpperCase()+key.slice(1):'Additional details';
     }
     function appendAlertCopy(parent, lines){
       var paragraphs=[],bullets=[],current='';
@@ -978,6 +1146,13 @@
       if(paragraphs.length){var paragraph=document.createElement('p');paragraph.className='util-alert-block-copy';paragraph.textContent=paragraphs.join(' ');parent.appendChild(paragraph);}
       if(bullets.length){var list=document.createElement('ul');list.className='util-alert-list';bullets.forEach(function(item){var li=document.createElement('li');li.textContent=item;list.appendChild(li);});parent.appendChild(list);}
     }
+    function appendAlertCallout(detail,label,value,className){
+      if(!value)return;
+      var callout=document.createElement('div');callout.className=className;
+      var calloutLabel=document.createElement('div');calloutLabel.className='util-alert-instruction-label';calloutLabel.textContent=label;
+      var calloutCopy=document.createElement('p');calloutCopy.className='util-alert-instruction-copy';calloutCopy.textContent=value;
+      callout.appendChild(calloutLabel);callout.appendChild(calloutCopy);detail.appendChild(callout);
+    }
     function appendNwsDescription(detail, raw){
       if(!raw)return;
       var description=document.createElement('div');description.className='util-alert-description';
@@ -989,12 +1164,42 @@
         var block=document.createElement('div');block.className='util-alert-block';
         var bodyLines=[];
         if(match){
-          var label=document.createElement('div');label.className='util-alert-block-label';label.textContent=match[1].trim();block.appendChild(label);
+          var label=document.createElement('div');label.className='util-alert-block-label';label.textContent=friendlyAlertLabel(match[1]);block.appendChild(label);
           if(match[2])bodyLines.push(match[2]);
-        }else{bodyLines.push(first);}
+        }else{
+          var unlabeled=document.createElement('div');unlabeled.className='util-alert-block-label';unlabeled.textContent='Additional details';block.appendChild(unlabeled);
+          bodyLines.push(first);
+        }
         bodyLines=bodyLines.concat(lines);appendAlertCopy(block,bodyLines);description.appendChild(block);
       });
       if(description.childNodes.length>1)detail.appendChild(description);
+    }
+    function renderNjDetail(detail,item){
+      var overview=document.createElement('div');overview.className='util-alert-overview';
+      var roadway=document.createElement('div');roadway.className='util-alert-area';
+      var roadwayLabel=document.createElement('div');roadwayLabel.className='util-alert-area-label';roadwayLabel.textContent='Affected roadway';
+      var roadwayValue=document.createElement('div');roadwayValue.className='util-alert-area-value';roadwayValue.textContent=item.route||'New Jersey roadway';
+      roadway.appendChild(roadwayLabel);roadway.appendChild(roadwayValue);
+      var event=document.createElement('div');event.className='util-traffic-event';
+      var eventLabel=document.createElement('div');eventLabel.className='util-traffic-event-label';eventLabel.textContent='Event type';
+      var eventValue=document.createElement('div');eventValue.className='util-traffic-event-value';eventValue.textContent=item.event||'Traffic event';
+      event.appendChild(eventLabel);event.appendChild(eventValue);
+      overview.appendChild(roadway);overview.appendChild(event);detail.appendChild(overview);
+
+      var facts=document.createElement('div');facts.className='util-alert-facts util-traffic-facts';
+      addFact(facts,'Reporting agency',item.source||'511NJ');
+      addFact(facts,'Reported',displayDate(item.publishedAt));
+      if(item.lat!==''&&item.lon!=='')addFact(facts,'Approximate coordinates',Number(item.lat).toFixed(4)+', '+Number(item.lon).toFixed(4));
+      if(facts.childNodes.length)detail.appendChild(facts);
+
+      var description=document.createElement('div');description.className='util-alert-description util-traffic-description';
+      var heading=document.createElement('div');heading.className='util-alert-section-title';heading.textContent='Current 511NJ report';description.appendChild(heading);
+      var block=document.createElement('div');block.className='util-alert-block';
+      var label=document.createElement('div');label.className='util-alert-block-label';label.textContent='What is happening';block.appendChild(label);
+      appendAlertCopy(block,[item.detail||item.description]);description.appendChild(block);detail.appendChild(description);
+      if(item.mapLink){
+        var mapLink=document.createElement('a');mapLink.className='util-event-link';mapLink.href=item.mapLink;mapLink.target='_blank';mapLink.rel='noopener';mapLink.textContent='View approximate location on map';detail.appendChild(mapLink);
+      }
     }
     function renderNwsDetail(detail,item){
       var overview=document.createElement('div');overview.className='util-alert-overview';
@@ -1005,18 +1210,17 @@
       var severity=document.createElement('span');severity.className='util-alert-severity';severity.textContent=severityLabel(item.severity);severity.setAttribute('aria-label','Severity: '+severityLabel(item.severity));
       overview.appendChild(area);overview.appendChild(severity);detail.appendChild(overview);
       var facts=document.createElement('div');facts.className='util-alert-facts';
+      addFact(facts,'Urgency',item.urgency||'Unknown');
       addFact(facts,'Certainty',item.certainty||'Unknown');
       addFact(facts,'Issued',displayDate(item.publishedAt));
       addFact(facts,'Effective',displayDate(item.effectiveAt));
       addFact(facts,'Expires',displayDate(item.expires));
+      addFact(facts,'Source',item.senderName);
       if(facts.childNodes.length)detail.appendChild(facts);
       appendNwsDescription(detail,item.description);
-      if(item.instruction){
-        var instruction=document.createElement('div');instruction.className='util-alert-instruction';
-        var instructionLabel=document.createElement('div');instructionLabel.className='util-alert-instruction-label';instructionLabel.textContent='Recommended action';
-        var instructionCopy=document.createElement('p');instructionCopy.className='util-alert-instruction-copy';instructionCopy.textContent=item.instruction;
-        instruction.appendChild(instructionLabel);instruction.appendChild(instructionCopy);detail.appendChild(instruction);
-      }
+      appendAlertCallout(detail,'Notes',item.note,'util-alert-note');
+      appendAlertCallout(detail,'Public response',item.response,'util-alert-response');
+      appendAlertCallout(detail,'Recommended action',item.instruction,'util-alert-instruction');
     }
     function resetFeedToggle(list){
       var button=document.querySelector('[data-feed-toggle="'+list.id+'"]');
@@ -1047,12 +1251,7 @@
           detail.className+=' nws-detail';
           renderNwsDetail(detail,item);
         }else{
-          var fullTitle=document.createElement('div');fullTitle.className='util-event-detail-title';fullTitle.textContent=item.title||'Alert';detail.appendChild(fullTitle);
-          if(item.description){var desc=document.createElement('p');desc.className='util-event-desc';desc.textContent=item.description;detail.appendChild(desc);}
-          if(item.instruction){var instruction=document.createElement('p');instruction.className='util-event-instruction';instruction.textContent=item.instruction;detail.appendChild(instruction);}
-          var meta=document.createElement('div');meta.className='util-event-meta';
-          if(item.publishedAt)addMeta(meta,'Reported: '+displayDate(item.publishedAt));
-          if(meta.childNodes.length)detail.appendChild(meta);
+          renderNjDetail(detail,item);
         }
         if(item.link){var link=document.createElement('a');link.className='util-event-link';link.href=item.link;link.target='_blank';link.rel='noopener';link.textContent=kind==='nws'?'Open full NWS alert':'Open official 511NJ event';detail.appendChild(link);}
         details.appendChild(summary);details.appendChild(detail);list.appendChild(details);
@@ -1115,7 +1314,7 @@
   })();
 
   // Hub→tool transition
-  document.querySelectorAll('.tool-card, .continue-card').forEach(function(card){
+  document.querySelectorAll('.tool-card, .continue-card, .emergency-banner').forEach(function(card){
     if(card.classList.contains('is-soon')||!card.getAttribute('href')) return;
     card.addEventListener('click',function(e){
       if(e.metaKey||e.ctrlKey||e.shiftKey||e.button===1) return;
@@ -1127,13 +1326,77 @@
     });
   });
 
+  // Header area navigation
+  (function(){
+    var links=Array.prototype.slice.call(document.querySelectorAll('.topnav a[data-nav-target]'));
+    if(!links.length)return;
+    var pinnedId='',pendingNav='',focusTimer=0,smoothScroll=!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    function setActive(id){
+      links.forEach(function(link){var active=link.getAttribute('data-nav-target')===id;link.classList.toggle('is-active',active);if(active)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');});
+    }
+    var targets=links.map(function(link){var id=link.getAttribute('data-nav-target');return {id:id,element:document.getElementById(id)};}).filter(function(item){return item.element;});
+    function documentTop(element){return element.getBoundingClientRect().top+(window.pageYOffset||document.documentElement.scrollTop||0);}
+    function focusTarget(element){
+      if(focusTimer)clearTimeout(focusTimer);
+      document.querySelectorAll('.is-nav-focus').forEach(function(panel){panel.classList.remove('is-nav-focus');});
+      element.classList.remove('is-nav-focus');
+      void element.offsetWidth;
+      element.classList.add('is-nav-focus');
+      focusTimer=setTimeout(function(){element.classList.remove('is-nav-focus');},1200);
+    }
+    function updateActive(){
+      var scrollY=window.pageYOffset||document.documentElement.scrollTop||0;
+      if(pendingNav){
+        var pending=targets.filter(function(item){return item.id===pendingNav;})[0];
+        var pendingTop=pending?Math.max(0,documentTop(pending.element)-78):0;
+        if(pending&&Math.abs(scrollY-pendingTop)>10){setActive(pendingNav);return;}
+        pinnedId=pendingNav;
+        pendingNav='';
+      }
+      var position=scrollY+120,current=targets[0]?targets[0].id:'',currentTop=-Infinity;
+      targets.forEach(function(item){var top=documentTop(item.element);if(top<=position&&top>currentTop){current=item.id;currentTop=top;}});
+      if(pinnedId){
+        var pinned=targets.filter(function(item){return item.id===pinnedId;})[0];
+        if(pinned){
+          var pinnedTop=documentTop(pinned.element),nextTop=Infinity;
+          targets.forEach(function(item){var top=documentTop(item.element);if(top>pinnedTop+1&&top<nextTop)nextTop=top;});
+          if(position>=pinnedTop&&position<nextTop){setActive(pinnedId);return;}
+        }
+        pinnedId='';
+      }
+      if(current)setActive(current);
+    }
+    var frame=0;
+    window.addEventListener('scroll',function(){
+      if(frame)return;
+      frame=requestAnimationFrame(function(){frame=0;updateActive();});
+      },{passive:true});
+    links.forEach(function(link){
+      link.addEventListener('click',function(event){
+        var id=link.getAttribute('data-nav-target'),target=targets.filter(function(item){return item.id===id;})[0];
+        if(!target)return;
+        event.preventDefault();
+        pinnedId=id;
+        pendingNav=id;
+        setActive(id);
+        focusTarget(target.element);
+        if(window.history&&window.history.replaceState)window.history.replaceState(null,'','#'+id);
+        window.scrollTo({top:Math.max(0,documentTop(target.element)-78),behavior:smoothScroll?'smooth':'auto'});
+      });
+    });
+    updateActive();
+  })();
+
   // Smart header
   (function(){
     var topbar=document.querySelector('#topbar, .topbar');if(!topbar) return;
     var lastY=window.scrollY,lastDir='up',hideTimeout=null,HIDE=1000,TH=80,over=false;
+    function updateScrolled(){topbar.classList.toggle('is-scrolled',window.scrollY>12);}
+    updateScrolled();
     topbar.addEventListener('mouseenter',function(){over=true;topbar.classList.remove('header-hidden');if(hideTimeout){clearTimeout(hideTimeout);hideTimeout=null;}});
     topbar.addEventListener('mouseleave',function(){over=false;});
     window.addEventListener('scroll',function(){
+      updateScrolled();
       var y=window.scrollY,dy=y-lastY;if(Math.abs(dy)<4) return;var dir=dy>0?'down':'up';
       if(dir!==lastDir){lastDir=dir;if(dir==='up'){topbar.classList.remove('header-hidden');if(hideTimeout){clearTimeout(hideTimeout);hideTimeout=null;}}}
       if(y<TH||over){topbar.classList.remove('header-hidden');if(hideTimeout){clearTimeout(hideTimeout);hideTimeout=null;}}
@@ -1192,17 +1455,35 @@
 
   // Page entrance after back-nav
   window.addEventListener('pageshow',function(e){
-    document.documentElement.classList.remove('exiting-to-tool','exiting-to-hub','entering-from-hub','returning-from-tool');
+    var d=document.documentElement;
     try{
       var flag=sessionStorage.getItem('ft_returning_to_hub')==='1';
       if(!flag&&!e.persisted) return;
       if(flag) sessionStorage.removeItem('ft_returning_to_hub');
+      if(!e.persisted) return;
+      d.setAttribute('data-transition-settled','');
+      d.classList.remove('exiting-to-tool','exiting-to-hub','entering-from-hub','returning-from-tool');
       var body=document.body;if(!body) return;
+      var restoreCleaned=false, restoreTimer=0;
+      function cleanupRestore(){
+        if(restoreCleaned) return;
+        restoreCleaned=true;
+        if(restoreTimer) clearTimeout(restoreTimer);
+        body.removeEventListener('transitionend',onRestoreTransitionEnd);
+        body.style.transition='';body.style.opacity='';body.style.transform='';body.style.willChange='';body.style.backfaceVisibility='';
+      }
+      function onRestoreTransitionEnd(ev){
+        if(ev.target===body && (ev.propertyName==='opacity'||ev.propertyName==='transform')) cleanupRestore();
+      }
+      body.addEventListener('transitionend',onRestoreTransitionEnd);
       body.style.transition='none';body.style.opacity='0';body.style.transform='translate3d(20vw,0,0) scale(0.98)';
       body.style.willChange='transform, opacity';body.style.backfaceVisibility='hidden';void body.offsetWidth;
-      body.style.transition='opacity 420ms cubic-bezier(0.22,1,0.36,1), transform 420ms cubic-bezier(0.22,1,0.36,1)';
-      body.style.opacity='1';body.style.transform='';
-      setTimeout(function(){body.style.transition='';body.style.opacity='';body.style.transform='';body.style.willChange='';body.style.backfaceVisibility='';},460);
+      requestAnimationFrame(function(){
+        if(restoreCleaned) return;
+        body.style.transition='opacity 360ms cubic-bezier(0.22,1,0.36,1), transform 360ms cubic-bezier(0.22,1,0.36,1)';
+        body.style.opacity='1';body.style.transform='';
+      });
+      restoreTimer=setTimeout(cleanupRestore,400);
     }catch(_){}
   });
 })();
@@ -1226,6 +1507,35 @@ function reloadAll(){
   <button class="ub-reload" onclick="reloadAll()">Reload</button>
   <button class="ub-dismiss" onclick="document.getElementById('update-banner').classList.remove('show')" aria-label="Dismiss">×</button>
 </div>
+
+<script>
+(function(){
+  var layer=document.getElementById('index-whats-new-layer');
+  var closeButton=document.getElementById('index-whats-new-close');
+  var doneButton=document.getElementById('index-whats-new-done');
+  var seenKey='ft_hub_whats_new_2026_08_v1';
+  if(!layer||!closeButton||!doneButton) return;
+  function closeUpdate(){
+    layer.classList.remove('is-open');
+    layer.setAttribute('aria-hidden','true');
+    document.body.classList.remove('index-whats-new-open');
+  }
+  function openUpdate(){
+    layer.classList.add('is-open');
+    layer.setAttribute('aria-hidden','false');
+    document.body.classList.add('index-whats-new-open');
+    try{localStorage.setItem(seenKey,'1');}catch(_){ }
+    closeButton.focus();
+  }
+  closeButton.addEventListener('click',closeUpdate);
+  doneButton.addEventListener('click',closeUpdate);
+  layer.addEventListener('click',function(event){if(event.target===layer)closeUpdate();});
+  document.addEventListener('keydown',function(event){if(event.key==='Escape'&&layer.getAttribute('aria-hidden')==='false')closeUpdate();});
+  var seen=false;
+  try{seen=localStorage.getItem(seenKey)==='1';}catch(_){ }
+  if(!seen) window.setTimeout(openUpdate,120);
+})();
+</script>
 
 </body>
 </html>
