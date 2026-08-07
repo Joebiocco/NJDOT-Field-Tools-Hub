@@ -49,7 +49,7 @@ panels. The major tool pages are:
 | Milepost | pages/milemarker.html, js/milepost-lookup.js, data/mileposts and data/roadways; authoritative roadway matcher |
 | Emergency | pages/emergency.html, js/roadway-lookup.js; live location states, emergency actions, map, conservative route/milepost result |
 | Weather | pages/weather.html; NWS conditions/forecast/alerts, location controls, radar timeline, saved alert settings |
-| Payroll | pages/timesheet.html is the active redesign runtime; pages/timesheet-redesign.html is the matching transition/reference copy |
+| Payroll | pages/timesheet.html is the active redesign runtime |
 | DC-144 | pages/dc144.html and js/dc144.js; protected form, Excel export, signatures and photo/session storage |
 | Work Order | pages/WorkOrderCloseout.html; protected html2canvas/jsPDF closeout flow and external logo asset |
 
@@ -82,9 +82,7 @@ optional short-lived RSS proxy, not a core backend.
   preserving the shared ft_ts_entries, ft_ts_settings, and ft_ts_ppoffset
   contract. It uses a 40-hour weekly regular threshold by default, 30-minute
   lunch minimum, separate commute deductions, 10-minute new time inputs, and
-  exact OT blocks before commute home. Keep the matching
-  pages/timesheet-redesign.html transition/reference copy synchronized when
-  both are edited.
+  exact OT blocks before commute home.
 - Keep map/roadway results conservative. NJDOT PARENT_SRI is the signed-route
   identity; route subtype/role filtering and ambiguity thresholds must not be
   weakened to make a card appear.

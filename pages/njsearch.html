@@ -1081,21 +1081,38 @@
     function onAnimationEnd(e){
       if(e.target===document.body && /^slideIn/.test(e.animationName||'')) settle();
     }
+    function playHubEnterAnimation(){
+      if(entering) return;
+      entering=true;
+      function begin(){
+        d.classList.add('entering-from-hub');
+        document.addEventListener('animationend',onAnimationEnd);
+        document.addEventListener('animationcancel',onAnimationEnd);
+        function armFallback(){
+          if(entering) fallbackTimer=setTimeout(settle,400);
+        }
+        if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',armFallback,{once:true});
+        else armFallback();
+      }
+      if(document.body){
+        // Page is already fully painted (bfcache restore) — flush layout and
+        // wait a frame so the animation doesn't start mid style-recalc and stutter.
+        void document.body.offsetWidth;
+        requestAnimationFrame(function(){ requestAnimationFrame(begin); });
+      }else{
+        begin();
+      }
+    }
+    window.__ftPlayHubEnterAnimation = playHubEnterAnimation;
+    var openedFromHub=false;
     try{
       if(sessionStorage.getItem('ft_opening_from_hub')==='1'){
         sessionStorage.removeItem('ft_opening_from_hub');
-        d.classList.add('entering-from-hub');
-        entering=true;
+        openedFromHub=true;
       }
     }catch(_){ }
-    if(entering){
-      document.addEventListener('animationend',onAnimationEnd);
-      document.addEventListener('animationcancel',onAnimationEnd);
-      function armFallback(){
-        if(entering) fallbackTimer=setTimeout(settle,400);
-      }
-      if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',armFallback,{once:true});
-      else armFallback();
+    if(openedFromHub){
+      playHubEnterAnimation();
     }else{
       setTimeout(function(){d.setAttribute('data-transition-settled','');},420);
     }
@@ -3034,12 +3051,13 @@
   })();
 
 
-  // Clean up stale transition classes on bfcache restore
+  // Clean up stale transition classes on bfcache restore, then replay the
+  // hub entrance animation (native back/forward restores this page without
+  // re-running scripts, so the head-script flag check never fires again).
   window.addEventListener('pageshow', function(e) {
     if (!e.persisted) return;
     var d = document.documentElement;
-    d.setAttribute('data-transition-settled', '');
-    d.classList.remove('exiting-to-tool', 'exiting-to-hub', 'entering-from-hub', 'returning-from-tool');
+    d.classList.remove('exiting-to-tool', 'exiting-to-hub', 'returning-from-tool');
     var body = document.body;
     if (body) {
       body.style.transition = '';
@@ -3048,6 +3066,8 @@
       body.style.willChange = '';
       body.style.backfaceVisibility = '';
     }
+    if (window.__ftPlayHubEnterAnimation) window.__ftPlayHubEnterAnimation();
+    else d.setAttribute('data-transition-settled', '');
   });
 
   // Intercept browser back button to play Hub-return animation

@@ -190,33 +190,32 @@ Run this full subsection whenever `pages/dc144.html`, `js/dc144.js`, or
       on page two, and unused blank form sheets are absent while an existing
       Photo Appendix remains.
 
-## Payroll checks after redesign cutover
+## Payroll checks
 
 Use pages/timesheet.html as the active visual, interaction, and calculation
-target. Keep pages/timesheet-redesign.html as a byte-identical reference copy
-until it is intentionally removed.
+target.
 
-- [ ] The active route and matching reference copy load with empty and
-      representative saved storage.
+- [ ] The active route loads with empty and representative saved storage.
 - [ ] ft_ts_entries, ft_ts_settings, and ft_ts_ppoffset retain their current
       shapes and meaning.
 - [ ] New entry, edit, delete, cancel, reload, and period navigation work.
 - [ ] Overnight shifts and date boundaries are correct.
 - [ ] Lunch/break and commute treatment is correct.
-- [ ] Redesign weekly-40 overtime and representative former-legacy entries are
-      tested against the active route separately.
+- [ ] Weekly-40 overtime and representative former-legacy entries are tested
+      against the active route separately.
 - [ ] Biweekly summary and official summary sheet agree with detail.
-- [ ] Month/calendar view, 14-day period math, and exact OT blocks are
-      correct.
-- [ ] Invalid times/minutes preserve the drawer/draft and explain the error.
+- [ ] Period view, 14-day period math, and exact OT blocks are correct.
+- [ ] Invalid times/minutes preserve the entry dialog/draft and explain the
+      error.
 - [ ] New times use 10-minute increments while existing quarter-hour records
       remain editable without silent rounding.
-- [ ] Backup export/import, employee name, settings, and wizard steps work.
-- [ ] Redesign desktop rail and mobile bottom navigation work.
-- [ ] Toasts/drawers clear the mobile bottom-nav area and safe area.
+- [ ] Backup export/import, employee name, and settings work.
+- [ ] The "When can I leave?" sidebar countdown ticks live, switches phase at
+      leave time, shows Done and stops after home time, and survives
+      unrelated dashboard re-renders without resetting or duplicating.
+- [ ] Desktop rail and mobile bottom navigation work.
+- [ ] Toasts/dialogs clear the mobile bottom-nav area and safe area.
 - [ ] 390px, 430px, and 1440px have no clipping or overflow.
-- [ ] The cutover preserves the shared storage keys and the matching reference
-      copy remains byte-identical to the active route.
 - [ ] The active route's seeded regression remains 44.50 payable / 40.00 regular /
       4.50 overtime with Friday OT 5:00–9:30 AM before commute home.
 

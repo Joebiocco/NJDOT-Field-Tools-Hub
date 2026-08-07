@@ -126,26 +126,41 @@ group accents stable:
 These group colors are intentionally different from page-specific map or
 weather colors. Individual tool accents must not recolor the hub taxonomy.
 
-### Timesheet transition tokens
+### Timesheet tokens
 
-The page used for new payroll design work is pages/timesheet-redesign.html,
-not the legacy pages/timesheet.html. The redesign uses a paper-like light
-canvas #f5f7fb, white cards, ink #10213b/#203553, blue #1a56db, gold
-#d99f1f, green #087f68, coral #c7463f, and border #dce4ef. Its larger cards
-use an 18px radius and smaller controls use a 12px radius. The desktop
-navigation rail is intentionally wider and more spacious than the standard
-tool shell; mobile uses a fixed bottom navigation treatment.
+pages/timesheet.html uses page-local `--p-*`-prefixed tokens (not the shared
+field-ui.css names) to avoid colliding with the shell's own `--red`, `--muted`,
+`--radius`, and `--radius-sm`, but the values match the site's standard
+navy/blue/gold theme rather than inventing a separate one. Its light palette
+is canvas `--p-page:#eef2f8`, white cards `--p-card:#ffffff`, ink
+`--p-ink:#101d36`, blue `--p-blue:#1a56db` (the shared site accent), gold
+`--p-gold:#E5B33B` (the shared topbar/back-pill gold), green
+`--p-green:#16a34a`, red `--p-red:#dc2626`, and border `--p-line:#d6dfeb` —
+all matching the values used on Fuel Finder/Bridge Navigator/Weather. The
+topbar uses the same navy gradient (`#10243f` to `#0c1d35`) as those pages,
+and the body carries the same subtle blue grid-dot background
+(`--p-grid-line`, 46px linear-gradient dots, disabled under
+prefers-reduced-motion) layered behind its own page-specific radial-gradient
+hero highlight. `--p-font` and `--p-display` (headings) both resolve to the
+shared Inter typeface, loaded via the same Google Fonts `Inter:wght@400;
+500;600;700;800` request used on Weather/DC-144, in place of the page's prior
+system-font body and Georgia-serif headings. Larger cards use an 18px radius
+(`--p-radius`) and smaller controls use a
+12px radius (`--p-radius-sm`). The desktop navigation rail is intentionally
+wider and more spacious than the standard tool shell; mobile uses a fixed
+bottom navigation treatment.
 
-Its dark palette is #071326 canvas, #0f213b card, #eef5ff ink, #d4e2f4
-secondary ink, #6ba2ff blue, #f2c65b gold, #50d3b0 green, #ff867a coral,
-and a low-opacity blue border. Keep the redesign's timeline vocabulary:
-commute in, lunch, regular work, overtime, commute home. The visual may
-evolve while the shared storage and payroll calculation contract remains
-protected. The visible copy should explain that lunch/commute are excluded,
-Normal overtime begins after 40 regular worked hours in the workweek, and
-exact overtime blocks end before commute home. Summary Sheet is an overview
-for copying those exact blocks, not a second calculator. New times use
-10-minute steps; the old page is not the visual reference during transition.
+Its dark palette matches the same cool navy/blue-glass look the other tool
+pages use in dark mode (not the hub's warm-cream `--text`): canvas
+`--p-page:#040c1a`, card `--p-card:#10213a`, ink `--p-ink:#f1f5f9`, muted
+`--p-muted:#93a7c4`, blue `--p-blue:#3b82f6`, green `--p-green:#4ade80`, red
+`--p-red:#f87171`, and a low-opacity blue border — the same family Fuel
+Finder and Weather use. Keep the timeline vocabulary: commute in, lunch,
+regular work, overtime, commute home. The visible copy should explain that
+lunch/commute are excluded, Normal overtime begins after 40 regular worked
+hours in the workweek, and exact overtime blocks end before commute home.
+Summary Sheet is an overview for copying those exact blocks,
+not a second calculator. New times use 10-minute steps.
 
 ## Shells and navigation
 
@@ -355,12 +370,11 @@ docs/protected-areas.md first.
 
 ### Timesheet
 
-All new payroll UI work targets pages/timesheet-redesign.html. It is a
-purposeful workspace with a spacious desktop rail, summary/period/log
+All payroll UI work targets pages/timesheet.html. It is a purposeful
+workspace with a spacious desktop rail, dashboard/log/period/summary
 navigation, a mobile bottom nav, shift timeline vocabulary, and a clear
-calculation breakdown. The legacy pages/timesheet.html remains a compatibility
-surface until explicit cutover. Preserve both pages' current data keys and
-the calculation rules recorded in protected-areas.md.
+calculation breakdown. Preserve its current data keys and the calculation
+rules recorded in protected-areas.md.
 
 ## Responsive rules
 

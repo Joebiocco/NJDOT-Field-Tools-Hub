@@ -117,11 +117,11 @@ closed-app notification delivery is not a guaranteed feature.
 
 This is the active payroll route and the design/runtime target for new payroll
 work. It is a workspace-style page
-with a desktop rail, overview/log/period/calendar/summary/settings views,
-shift timeline vocabulary, functional three-step entry drawer, calculation
+with a desktop rail, dashboard/log/period/summary/settings views,
+shift timeline vocabulary, a category-first entry dialog, calculation
 breakdown, stored-entry normalization, backup import/export, and fixed mobile
-bottom navigation. With no saved entries it presents the verified seeded
-preview; saved ft_ts_entries become the displayed source.
+bottom navigation. With no saved entries it shows an empty state; demonstration
+data only appears when explicitly loaded from Settings.
 
 It reads and writes the shared payroll keys ft_ts_entries,
 ft_ts_settings, and ft_ts_ppoffset. Its current calculation contract is
@@ -144,17 +144,11 @@ timeline details as the overview.
 
 The Pay rules card also contains the Emergency role/code rate catalog. Saved
 entries keep an additive calculation snapshot so later settings changes do not
-change historical pay. The overview may show a current-day-only leave countdown
-after a shift start, while the shared grid remains behind page content and
-reduced-motion behavior is honored.
-
-### Transition/reference copy — pages/timesheet-redesign.html
-
-This file is retained as a matching transition/reference copy after the
-redesign was cut over to pages/timesheet.html. It contains the same workspace
-UI, calculation logic, entry drawer, period navigation, and shared storage
-contract. Keep it synchronized with the active route when both are edited, or
-remove it only as a separately approved cleanup.
+change historical pay. The dashboard sidebar has a standalone "When can I
+leave?" `<details>` utility (`leaveUtility()`/`updateLeaveEstimator()`, draft
+state in `leaveDraft`) with a live two-phase countdown that switches from
+counting down to leave time to counting down to home time, while the shared
+grid remains behind page content and reduced-motion behavior is honored.
 
 ### DC-144 — pages/dc144.html and js/dc144.js
 
@@ -183,7 +177,7 @@ payload; search it by line number only.
 - Fixed overlays and mobile navigation must use safe-area/dvh sizing and
   cannot depend on a transformed body.
 - Standard tool pages use the shared navy/gold topbar; Weather and the
-  timesheet redesign have specialized shells but follow the same focus,
+  Timesheet Tracker have specialized shells but follow the same focus,
   spacing, state, and transition rules.
 
 ## Data and logic inventory
@@ -213,9 +207,7 @@ subtypes, canonical PARENT_SRI, and primary/associated-carriageway roles.
   network-first; local static assets are cache-first; CDN assets are
   network-first. It precaches the current production page set, icons, core
   data, hero art, and Work Order logo.
-- pages/timesheet.html remains the precached active payroll route. The matching
-  transition/reference copy pages/timesheet-redesign.html is not in
-  LOCAL_ASSETS; do not add it or bump the cache casually.
+- pages/timesheet.html remains the precached active payroll route.
 - manifest.json provides standalone install metadata and legacy-compatible
   internal names/paths. Visible app copy stays Field Tools Hub.
 - cloudflare/njdot-511-proxy.js is an optional short-cache CORS proxy for the

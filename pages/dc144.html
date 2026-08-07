@@ -17,7 +17,8 @@
     }
   </script>
   <style>html{background:#eaf0f8}html[data-dark]{background:#040c1a}</style>
-  <!-- Hub entry animation — checks sessionStorage flag set by hub card click -->
+  <!-- Hub entry animation — checks sessionStorage flag set by hub card click,
+       and replays on bfcache restore (native back/forward) via pageshow below -->
   <script>
     (function () {
       var d = document.documentElement, entering = false, fallbackTimer = 0;
@@ -33,24 +34,48 @@
       function onAnimationEnd(e) {
         if (e.target === document.body && /^slideIn/.test(e.animationName || '')) settle();
       }
+      function playHubEnterAnimation() {
+        if (entering) return;
+        entering = true;
+        function begin() {
+          d.classList.add('entering-from-hub');
+          document.addEventListener('animationend', onAnimationEnd);
+          document.addEventListener('animationcancel', onAnimationEnd);
+          function armFallback() {
+            if (entering) fallbackTimer = setTimeout(settle, 400);
+          }
+          if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', armFallback, { once: true });
+          else armFallback();
+        }
+        if (document.body) {
+          // Page is already fully painted (bfcache restore) — flush layout
+          // and wait a frame so the animation doesn't start mid style-recalc
+          // and stutter, matching the reflow/rAF technique used elsewhere.
+          void document.body.offsetWidth;
+          requestAnimationFrame(function () { requestAnimationFrame(begin); });
+        } else {
+          begin();
+        }
+      }
+      window.__ftPlayHubEnterAnimation = playHubEnterAnimation;
+      var openedFromHub = false;
       try {
         if (sessionStorage.getItem('ft_opening_from_hub') === '1') {
           sessionStorage.removeItem('ft_opening_from_hub');
-          d.classList.add('entering-from-hub');
-          entering = true;
+          openedFromHub = true;
         }
       } catch (_) {}
-      if (entering) {
-        document.addEventListener('animationend', onAnimationEnd);
-        document.addEventListener('animationcancel', onAnimationEnd);
-        function armFallback() {
-          if (entering) fallbackTimer = setTimeout(settle, 400);
-        }
-        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', armFallback, { once: true });
-        else armFallback();
+      if (openedFromHub) {
+        playHubEnterAnimation();
       } else {
         setTimeout(function () { d.setAttribute('data-transition-settled', ''); }, 420);
       }
+      // Native back/forward restores this page from bfcache without re-running
+      // scripts, so the flag above never gets a chance to be read. Replay the
+      // same entrance animation whenever that happens.
+      window.addEventListener('pageshow', function (e) {
+        if (e.persisted) playHubEnterAnimation();
+      });
     }());
   </script>
   <!-- Animation keyframes end with transform:none so fill-mode:both does not

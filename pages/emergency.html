@@ -1016,21 +1016,38 @@
   function onAnimationEnd(e) {
     if (e.target === document.body && /^slideIn/.test(e.animationName || '')) settle();
   }
+  function playHubEnterAnimation() {
+    if (entering) return;
+    entering = true;
+    function begin() {
+      d.classList.add('entering-from-hub');
+      document.addEventListener('animationend', onAnimationEnd);
+      document.addEventListener('animationcancel', onAnimationEnd);
+      function armFallback() {
+        if (entering) fallbackTimer = setTimeout(settle, 400);
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', armFallback, { once: true });
+      else armFallback();
+    }
+    if (document.body) {
+      // Page is already fully painted (bfcache restore) — flush layout and
+      // wait a frame so the animation doesn't start mid style-recalc and stutter.
+      void document.body.offsetWidth;
+      requestAnimationFrame(function () { requestAnimationFrame(begin); });
+    } else {
+      begin();
+    }
+  }
+  window.__ftPlayHubEnterAnimation = playHubEnterAnimation;
+  var openedFromHub = false;
   try {
     if (sessionStorage.getItem('ft_opening_from_hub')) {
-      d.classList.add('entering-from-hub');
       sessionStorage.removeItem('ft_opening_from_hub');
-      entering = true;
+      openedFromHub = true;
     }
   } catch(_) {}
-  if (entering) {
-    document.addEventListener('animationend', onAnimationEnd);
-    document.addEventListener('animationcancel', onAnimationEnd);
-    function armFallback() {
-    if (entering) fallbackTimer = setTimeout(settle, 400);
-    }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', armFallback, { once: true });
-    else armFallback();
+  if (openedFromHub) {
+    playHubEnterAnimation();
   } else {
     setTimeout(function() { d.setAttribute('data-transition-settled', ''); }, 420);
   }
@@ -1830,8 +1847,7 @@ window.addEventListener('storage', function(ev) {
 window.addEventListener('pageshow', function(e) {
   if (!e.persisted) return;
   var d = document.documentElement;
-  d.setAttribute('data-transition-settled', '');
-  d.classList.remove('exiting-to-hub', 'entering-from-hub');
+  d.classList.remove('exiting-to-hub');
   var body = document.body;
   if (body) {
     body.style.transition = '';
@@ -1840,6 +1856,10 @@ window.addEventListener('pageshow', function(e) {
     body.style.willChange = '';
     body.style.backfaceVisibility = '';
   }
+  // Native back/forward restores this page from bfcache without re-running
+  // scripts, so replay the same entrance animation played on a fresh visit.
+  if (window.__ftPlayHubEnterAnimation) window.__ftPlayHubEnterAnimation();
+  else d.setAttribute('data-transition-settled', '');
 });
 </script>
 </body>

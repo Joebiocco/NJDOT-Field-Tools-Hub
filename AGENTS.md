@@ -56,8 +56,7 @@ and runtime behavior are the final source of truth.
   alert settings, and dark mode.
 - pages/timesheet.html is the active Timesheet Tracker payroll runtime. It is
   the tested redesign cut over onto the existing hub and service-worker route,
-  and it preserves the shared storage contract. pages/timesheet-redesign.html
-  remains as a matching transition/reference copy. The active runtime uses a
+  and it preserves the shared storage contract. The active runtime uses a
   40-hour weekly regular threshold by default, minimum 30-minute lunch,
   separate commute deductions, 10-minute new times, and exact OT blocks
   before commute home.

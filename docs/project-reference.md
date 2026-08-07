@@ -71,8 +71,7 @@ visual verification target is 390px and 1440px, with 430px, 768px, 900px,
 - pages/milemarker.html — Milepost Finder.
 - pages/emergency.html — Emergency Assistance.
 - pages/weather.html — Weather, radar, and alerts.
-- pages/timesheet-redesign.html — payroll transition design/runtime target.
-- pages/timesheet.html — legacy payroll compatibility implementation.
+- pages/timesheet.html — active Timesheet Tracker payroll runtime.
 - pages/dc144.html and js/dc144.js — DC-144 form/export.
 - pages/WorkOrderCloseout.html — Work Order PDF; inspect sparingly.
 
@@ -176,21 +175,20 @@ recent sessions, and IndexedDB. Read protected-areas.md before either.
 
 ### Payroll
 
-pages/timesheet-redesign.html is the visual and interaction target for the
-transition. Its completed runtime layer uses the shared payroll keys and
-normalizes stored entries, while showing seeded preview entries only when
-there are no saved entries. It has a workspace rail on desktop, overview/
-log/period/calendar/summary/settings views, a three-step shift drawer,
-functional create/edit/delete, backup import/export, a calculation breakdown,
-and mobile bottom navigation.
+pages/timesheet.html is the active Timesheet Tracker payroll runtime. It uses
+the shared payroll keys and normalizes stored entries; demonstration data
+only appears when explicitly loaded from Settings, never automatically. It
+has a workspace rail on desktop, dashboard/log/period/summary/settings
+views, a category-first shift dialog, functional create/edit/delete, backup
+import/export, a calculation breakdown, and mobile bottom navigation.
 
-The redesign's verified payroll language is 40 regular worked hours per
-workweek before Normal overtime; lunch and commute are excluded; commute to
-work and home are separate; overtime ends before commute home; Cash uses 1.5x
-base pay; XP credits worked hours at 1.5x; Emergency uses a per-entry rate.
-New time inputs use 10-minute increments while existing quarter-hour records
-can be preserved. Its pay periods use a May 30, 2026 Saturday anchor and
-14-day math, yielding 26 starts in 2026. The verified seeded example is 44.50
+Its verified payroll language is 40 regular worked hours per workweek before
+Normal overtime; lunch and commute are excluded; commute to work and home
+are separate; overtime ends before commute home; Cash uses 1.5x base pay; XP
+credits worked hours at 1.5x; Emergency uses a per-entry rate. New time
+inputs use 10-minute increments while existing quarter-hour records can be
+preserved. Its pay periods use a May 30, 2026 Saturday anchor and 14-day
+math, yielding 26 starts in 2026. The verified seeded example is 44.50
 payable, 40.00 regular, and 4.50 overtime.
 
 pages/timesheet.html remains the legacy compatibility implementation. Both
@@ -277,9 +275,9 @@ supports update/reload messaging, and receives notification events. Work
 Order has a deliberate fallback exception during reload behavior.
 
 The current precache list includes the hub, standard production pages, core
-data, roadway scripts/index, Weather, hero art, and Work Order logo. It does
-not include pages/timesheet-redesign.html yet. Adding that page is a deliberate
-cache/release decision, not an incidental documentation change.
+data, roadway scripts/index, Weather, hero art, and Work Order logo, including
+pages/timesheet.html. Changing the precache list is a deliberate cache/release
+decision, not an incidental documentation change.
 
 manifest.json and icon paths are install contracts. Do not alter cache names,
 versioning, scope/start URL, icons, or notification behavior without a

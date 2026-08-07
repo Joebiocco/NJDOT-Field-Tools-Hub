@@ -49,7 +49,7 @@ message explicitly requests it.
 | Fuel | pages/njfuel.html, data/njfuel.json | geolocation, map, bookmarks, station data | load/search/select/GPS/bookmark/navigation, 390/1440 |
 | Roadway matcher | pages/emergency.html, js/roadway-lookup.js, data/roadways, tests | unsafe route/milepost suggestions are a field-safety issue | index checks, 5,000 seeded fixes, targeted collisions, page integration |
 | Milepost | pages/milemarker.html, js/milepost-lookup.js, data/mileposts, data/roadways | shared automatic match, calibrated measures, map fallback | adapter regression, script parse, map/no-map GPS/result check |
-| Payroll | pages/timesheet.html, pages/timesheet-redesign.html | overtime/commute calculation, saved entries, responsive bottom nav | calculation scenarios, CRUD/reload, storage compatibility, mobile/desktop |
+| Payroll | pages/timesheet.html | overtime/commute calculation, saved entries, responsive bottom nav | calculation scenarios, CRUD/reload, storage compatibility, mobile/desktop |
 | Weather | pages/weather.html, service-worker.js | NWS/radar time state, alert settings, cache and notification behavior | location/forecast/radar/alerts, settings, offline shell, reduced motion |
 | PWA | service-worker.js, manifest.json, icons | install, cache/version, offline fallback, notification receiver | asset paths, cache strategy, install metadata, update behavior |
 
@@ -243,25 +243,35 @@ ramp/connector, overlap, poor accuracy, and unavailable-data case.
 
 ## Timesheet and payroll
 
-The redesign cutover is complete:
+pages/timesheet.html is the sole, active Timesheet Tracker route (its former
+pages/timesheet-redesign.html transition/reference copy has been retired and
+deleted). It uses a workspace/rail/bottom-navigation visual language, shared
+payroll keys, and stored-entry normalization. With no saved entries it shows
+an empty state; demonstration data only appears when explicitly loaded from
+Settings ("Load demo data"), never automatically. The existing hub link and
+service-worker route remain intact.
 
-- pages/timesheet.html is the active Timesheet Tracker route. It uses the
-  redesign workspace/rail/bottom-navigation visual language, shared payroll
-  keys, stored-entry normalization, and the seeded preview only when no saved
-  entries exist. The existing hub link and service-worker route remain intact.
-- pages/timesheet-redesign.html is retained as a matching transition/reference
-  copy for review and rollback. It is not the active route or a separate
-  calculation implementation. Keep both files synchronized when editing the
-  payroll runtime, or remove the reference copy only through a separate
-  cleanup.
+The page must preserve the existing localStorage contract: ft_ts_entries,
+ft_ts_settings, and ft_ts_ppoffset. `normalizeEntry()`/`serializeEntry()` and
+`settingsFromRaw()`/`storedSettings()` (all in pages/timesheet.html) form a
+bidirectional compatibility shim: they read and write both the current
+in-memory field names (`category`, `commuteIn`/`commuteOut`,
+`overtimeMethod`, `holidayWork`, `snapshot`, `scheduleHours`, `otRule`,
+`defaultOtMethod`, `holidayCreditHours`, `useCommuteDefaults`,
+`defaultCommuteIn`/`defaultCommuteOut`) and the legacy wire-format field
+names still written for storage compatibility (`entryKind`, `rateType`,
+`otType`, `commuteToMin`/`commuteHomeMin`/`commuteMin`, `act`,
+`redesignSnapshot`-shaped keys, `redesignWorkweekHours`, `redesignOtRule`,
+`redesignLunchMode`, `redesignDefaultOtMethod`, `redesignHolidayCreditHours`,
+`redesignEmergencyRates`, `breakDefault`, `commuteDefaultEnabled`,
+`commuteToDefault`, `commuteHomeDefault`). Do not drop either side of this
+shim without a separate compatibility review.
 
-Both pages must preserve the existing localStorage contract:
-ft_ts_entries, ft_ts_settings, and ft_ts_ppoffset.
+The active implementation uses these protected rules:
 
-The completed redesign implementation uses these protected rules:
-
-- payroll time inputs (shift start/stop, lunch, and commute-in/home) use
-  1-minute increments;
+- payroll time inputs (shift start/stop) use 10-minute increments
+  (`step="600"`); existing quarter-hour records remain editable without
+  silent rounding;
 - a shift requires distinct valid times; an earlier stop means overnight;
 - lunch/break is at least 30 minutes and commute to work/home are separate,
   non-payable deductions;
@@ -269,32 +279,38 @@ The completed redesign implementation uses these protected rules:
   lunch and commute excluded and exact overtime ending before commute home;
 - Cash pays all payable hours at 1.5x base rate; XP credits hours worked at
   1.5x; Emergency uses a required per-entry emergency rate;
-- the redesign pay-period anchor is Saturday, May 30, 2026 with 14-day
-  periods; 26 periods start in calendar year 2026;
-- the redesign supports day, pay-period, month, calendar, Summary Sheet, and
-  settings views, functional three-step entry, create/edit/delete, employee
-  name, local backup export/import, and safe negative-value guards;
+- the pay-period anchor is Saturday, May 30, 2026 with 14-day periods; 26
+  periods start in calendar year 2026;
+- the app supports dashboard, work log, pay period, Summary Sheet, and
+  settings views, a category-first entry dialog (not a multi-step wizard),
+  create/edit/delete, employee name, local backup export/import, and safe
+  negative-value guards;
 - the seeded night-shift regression is 44.50 payable, 40.00 regular, and
   4.50 overtime, with Friday overtime 5:00–9:30 AM before commute home;
-- redesign verification covered all views/settings/wizard steps, 390px,
-  430px, and 1440px layout, pay-period table scrolling, timeline marker
-  alignment, and zero browser errors/warnings.
+- verification covers all views/settings, 390px, 430px, and 1440px layout,
+  pay-period table scrolling, timeline marker alignment, and zero browser
+  errors/warnings.
 
-The redesign payroll contract also includes the following additive rules:
+The payroll contract also includes the following additive rules:
 
-- The redesign workweek is fixed Monday-Sunday. A regular overnight entry is
-  assigned to the week named by its start date, including time after midnight.
-  The default threshold is 40 hours; a namespaced 35-hour profile is optional.
-- A separate union-agreement setting can move the redesign threshold to the
-  scheduled profile hours. A 35-hour profile defaults to 7 holiday-credit
-  hours, but lunch remains unpaid unless paid/on-duty lunch is explicitly
-  enabled. This is an application policy choice, not a claim that New Jersey
-  law universally changes statutory overtime to 35 hours.
-- Normal overtime defaults to Cash and can be changed per entry to XP. Cash is
-  1.5x base pay; XP credits 1.5x the overtime worked. Cash, XP, and Emergency
-  entries do not build the normal threshold. Emergency entries require eight
-  qualifying Normal payable hours for the workday and use a saved role/code
-  rate snapshot.
+- The workweek is fixed Monday-Sunday. A regular overnight entry is assigned
+  to the week named by its start date, including time after midnight. The
+  default threshold is 40 hours; a namespaced 35-hour profile is optional.
+- A separate union-agreement setting can move the threshold to the scheduled
+  profile hours. A 35-hour profile defaults to 7 holiday-credit hours, but
+  lunch remains unpaid unless paid/on-duty lunch is explicitly enabled. This
+  is an application policy choice, not a claim that New Jersey law
+  universally changes statutory overtime to 35 hours.
+- The entry-category pills are Regular shift, All-OT shift (Cash), XP OT,
+  Emergency, and Holiday credit. All-OT shift pays the entire shift as
+  overtime; a Regular shift's overflow past the threshold is credited via a
+  separate "How overflow overtime is credited" dropdown (Cash or XP) so the
+  two concepts read distinctly. Only the visible label/help text was
+  reworded for this distinction; the underlying category `value=` attributes
+  (`Normal`/`Cash`/`XP`/`Emergency`/`Holiday`) are unchanged. Cash, XP, and
+  Emergency entries do not build the normal threshold. Emergency entries
+  require eight qualifying Normal payable hours for the workday and use a
+  saved role/code rate snapshot.
 - Lunch is one duration-only deduction per shift, at least 30 minutes.
   Commute-in and commute-home are separate per-entry deductions and default
   to zero. Deductions are rejected when they consume the entire shift instead
@@ -308,38 +324,52 @@ The redesign payroll contract also includes the following additive rules:
   custom date can be marked Paid holiday per entry, and a holiday-only credit
   entry is supported. Holiday credit counts toward the configured weekly
   threshold; worked holiday time is Cash/XP overtime, while Emergency remains
-  Emergency-rate work. Emergency rates and holiday overrides are namespaced
-  redesign settings.
-- Additive entry fields are entryKind, overtimeMethod, holiday, holidayHours,
-  emergencyRole, and the emergencyRate snapshot. Additive settings are
-  redesignWorkweekHours, redesignOtRule, redesignLunchMode,
-  redesignDefaultOtMethod, redesignHolidayCreditHours,
-  redesignHolidayOverrides, and redesignEmergencyRates. Legacy meanings of
-  otThresholdHrs and weekStart are not overwritten.
-- New or newly touched redesign entries carry a redesignSnapshot of the pay
-  inputs used for calculation (rate, multiplier, threshold/profile, lunch
-  mode, and holiday credit). Settings changes therefore affect future entries,
-  not historical pay. The Emergency role/code catalog is rendered inside the
-  Pay rules card; its selected rate is copied into the entry as the existing
-  historical emergency-rate snapshot.
-- The overview "When can I leave?" leave calculator is a standalone,
-  presentation-only tool: it does not read or write `ft_ts_entries` and does
-  not require a saved work log. It defaults its Start field to the current
-  time and its Lunch/Commute-in/Commute-home fields to the saved settings
-  defaults. Leave-by time is Start + Commute-in + Lunch + scheduled day
-  hours; Home-by time adds the anticipated Commute-home minutes, which the
-  user can change independently to reflect a different work site. The live
-  countdown is two-phase: it counts down to the leave time first, then
-  automatically switches to counting down to the home time once the leave
-  time has passed. It re-defaults on reload rather than persisting between
-  sessions. The redesign grid is background-only, and animations must use
-  explicit properties plus reduced-motion behavior.
-
-The active pages/timesheet.html route is the payroll regression target after
-cutover. Verify its shared-storage compatibility with representative entries
-from the former legacy calculator, including rate type, commute, export,
-import, and period data. The matching reference copy must remain byte-identical
-to the active route until it is intentionally removed or updated as a pair.
+  Emergency-rate work.
+- New or newly touched entries carry a `snapshot` of the pay inputs used for
+  calculation (rate, multiplier, threshold/profile, lunch mode, and holiday
+  credit), read back via `calculationSettings()`. Settings changes therefore
+  affect future entries, not historical pay. The Emergency role/code catalog
+  is rendered inside the settings' "Holiday and emergency time" card; its
+  selected rate is copied into the entry as the existing historical
+  emergency-rate snapshot.
+- The dashboard sidebar's "When can I leave?" utility (`leaveUtility()`,
+  `updateLeaveEstimator()`, module-level `leaveDraft` state in
+  pages/timesheet.html) is a standalone, presentation-only `<details>` tool:
+  it does not read or write `ft_ts_entries` and does not require a saved
+  work log. `leaveDraft` holds the Start/Lunch/Commute-in/Commute-home field
+  values and the `<details>` open/closed state so they survive unrelated
+  dashboard re-renders (the dashboard does a full `innerHTML` replace on
+  most state changes); it is seeded once, from the current time and the
+  saved settings defaults, and defaults `detailsOpen` to `true`. Leave-by
+  time is Start + Commute-in + Lunch + scheduled day hours; Home-by time adds
+  the Commute-home minutes. The live countdown (`clockCountdownText()`,
+  ported from the prior calculator) is two-phase: it counts down to the
+  leave time first, then automatically switches to counting down to the home
+  time once the leave time has passed, showing "Done" and clearing its
+  interval once both have passed. The interval is cleared at the top of
+  every `render()` call and restarted only when the dashboard view renders,
+  so navigating to another view never leaves an orphaned timer. It re-defaults
+  on reload rather than persisting between sessions. The shared grid stays
+  background-only, and animations must use explicit properties plus
+  reduced-motion behavior.
+- Page-local CSS custom properties are `--p-`-prefixed (`--p-red`,
+  `--p-muted`, `--p-radius`, `--p-radius-sm`, etc.) specifically to avoid
+  colliding with field-ui.css's own `--red`/`--muted`/`--radius`/
+  `--radius-sm` tokens, which would otherwise silently shadow the shared
+  values since the page's `<style>` loads after field-ui.css. Do not
+  reintroduce an unprefixed page-local token name that already exists in
+  field-ui.css.
+- The `.hub-back` back-pill has no local color/hover override; it inherits
+  field-ui.css's shared `.topbar-back, .hub-back, .ft-back-link,
+  .ft-home-link` styling (including the solid-gold hover). Only the
+  page-local icon sizing and the narrow-viewport icon-only collapse remain
+  page-local.
+- The `.switch` toggle control's hit area is 46x44px (a 26px-tall visual
+  track centered inside a 44px-tall label) to meet the 44px minimum touch
+  target; the "Worked on a paid holiday" toggle's description text is inside
+  a `<label for="entry-holiday-work">` so tapping the text also toggles the
+  control, matching the pattern already used by the three settings-row
+  switches.
 
 Minimum payroll regression:
 
@@ -347,17 +377,21 @@ Minimum payroll regression:
 - create, edit, delete, cancel, and reload an entry;
 - overnight shift, required lunch, commute defaults/overrides, and boundary
   dates;
-- redesign weekly-40 and legacy rule-set overtime/summary totals separately;
+- weekly-40 and legacy rule-set overtime/summary totals separately;
 - invalid/missing input with preserved draft;
 - settings persistence and pay-period navigation;
-- mobile bottom navigation, drawer/toast safe-area behavior, desktop rail,
+- leave-calculator countdown ticks live, switches phase at leave time, shows
+  Done and stops after home time, survives unrelated dashboard re-renders
+  without resetting or duplicating, and leaves no orphaned interval after
+  navigating to another view;
+- mobile bottom navigation, dialog/toast safe-area behavior, desktop rail,
   390px, 430px, and 1440px;
-- verify legacy and redesign pages do not overwrite each other's data shape.
+- verify legacy-format saved entries and settings still load correctly
+  through the compatibility shim.
 
 The current service worker already lists pages/timesheet.html in LOCAL_ASSETS,
-so the cutover keeps the existing precache path and requires no cache/version
-change. The matching pages/timesheet-redesign.html reference copy is not in
-LOCAL_ASSETS; do not add it or bump the cache casually.
+so this implementation keeps the existing precache path and requires no
+cache/version change; do not bump the cache casually.
 
 ## Weather and alerts
 

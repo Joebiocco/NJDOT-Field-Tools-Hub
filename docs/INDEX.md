@@ -87,7 +87,6 @@ and this router to select sections.
 - pages/emergency.html — Emergency Assistance.
 - pages/weather.html — Weather/radar/alerts.
 - pages/timesheet.html — active Timesheet Tracker payroll runtime.
-- pages/timesheet-redesign.html — matching transition/reference copy.
 - pages/dc144.html and js/dc144.js — DC-144.
 - pages/WorkOrderCloseout.html — Work Order PDF; inspect sparingly.
 
@@ -140,12 +139,8 @@ reduced-motion support.
 - Never rename or clear existing localStorage, sessionStorage, or IndexedDB
   contracts.
 - Do not add visible agency branding without an approved official asset.
-- Timesheet design work uses the active pages/timesheet.html route. The
-  matching pages/timesheet-redesign.html copy is retained for transition and
-  rollback reference; both files must preserve the shared payroll storage
-  contract.
-- Do not add pages/timesheet-redesign.html to the service-worker precache
-  casually; cache/version changes are a deliberate protected release step.
+- Timesheet design work uses the active pages/timesheet.html route, which
+  must preserve the shared payroll storage contract.
 - Running chats do not provide standards. Re-check their final state before
   recording guidance.
 - For chat-derived standards or recurring fixes, use
