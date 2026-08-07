@@ -17,6 +17,41 @@
       }
     } catch (_) {}
   </script>
+  <script>
+  (function(){
+    var d=document.documentElement, entering=false, fallbackTimer=0;
+    function settle(){
+      if(!entering) return;
+      entering=false;
+      if(fallbackTimer) clearTimeout(fallbackTimer);
+      d.setAttribute('data-transition-settled','');
+      d.classList.remove('entering-from-hub');
+      document.removeEventListener('animationend',onAnimationEnd);
+      document.removeEventListener('animationcancel',onAnimationEnd);
+    }
+    function onAnimationEnd(e){
+      if(e.target===document.body && /^slideIn/.test(e.animationName||'')) settle();
+    }
+    try{
+      if(sessionStorage.getItem('ft_opening_from_hub')==='1'){
+        sessionStorage.removeItem('ft_opening_from_hub');
+        d.classList.add('entering-from-hub');
+        entering=true;
+      }
+    }catch(_){ }
+    if(entering){
+      document.addEventListener('animationend',onAnimationEnd);
+      document.addEventListener('animationcancel',onAnimationEnd);
+      function armFallback(){
+        if(entering) fallbackTimer=setTimeout(settle,400);
+      }
+      if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',armFallback,{once:true});
+      else armFallback();
+    }else{
+      setTimeout(function(){d.setAttribute('data-transition-settled','');},420);
+    }
+  })();
+  </script>
   <script type="text/plain" data-previous-runtime="disabled">
     document.addEventListener('DOMContentLoaded', function () {
     (function () {
@@ -859,8 +894,7 @@
         function dateLabel(v, full) { var d=dateObj(v); if(!d)return 'Date not set'; var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], short=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], long=['January','February','March','April','May','June','July','August','September','October','November','December']; return days[d.getDay()]+', '+(full?long[d.getMonth()]:short[d.getMonth()])+' '+d.getDate()+(full?', '+d.getFullYear():''); }
         function timeMinutes(v) { if(typeof v!=='string'||!/^[0-9]{1,2}:[0-9]{2}$/.test(v))return null; var p=v.split(':'),h=Number(p[0]),m=Number(p[1]); return h>=0&&h<24&&m>=0&&m<60?h*60+m:null; }
         function normalizeTime(v) { var m=timeMinutes(v); return m===null?'':pad(Math.floor(m/60))+':'+pad(m%60); }
-        function timeIsTenMinute(v) { var m=timeMinutes(v); return m!==null&&m%10===0; }
-        function timeIsLegacyQuarter(v) { var m=timeMinutes(v); return m!==null&&m%15===0; }
+        function timeIsValidMinute(v) { return timeMinutes(v)!==null; }
         function shiftDuration(start,stop) { if(start===null||stop===null||start===stop)return null; var m=stop-start; return m<0?m+1440:m; }
         function formatClock(total,settings) { var v=((Number(total)%1440)+1440)%1440,h=Math.floor(v/60),m=v%60; return settings.timeFormat==='24'?pad(h)+':'+pad(m):(h%12||12)+':'+pad(m)+(h>=12?' PM':' AM'); }
         function formatRange(start,end,settings) { return formatClock(start,settings)+' - '+formatClock(end,settings); }
@@ -987,18 +1021,33 @@
         function rangeToolbar(active,context) { return '<div class="surface range-toolbar" data-range-toolbar><div class="range-switch" role="tablist" aria-label="Time range"><button type="button" data-range-view="day" class="'+(active==='day'?'is-active':'')+'">Day</button><button type="button" data-range-view="period" class="'+(active==='period'?'is-active':'')+'">Pay period</button><button type="button" data-range-view="month" class="'+(active==='month'?'is-active':'')+'">Month</button></div><span class="range-context" data-range-context>'+safeText(context||'')+'</span><div class="day-history"><button type="button" class="icon-btn" data-day-shift="-1" aria-label="Previous day">&lt;</button><span data-day-label>'+safeText(dateLabel(state.selectedDate,true))+'</span><button type="button" class="icon-btn" data-day-shift="1" aria-label="Next day">&gt;</button></div></div>'; }
         function ensureRangeToolbars() { var o=document.getElementById('screen-overview'),p=document.getElementById('screen-period');if(o&&!o.querySelector('[data-range-toolbar]'))o.querySelector('.period-card').insertAdjacentHTML('beforebegin',rangeToolbar('day',dateLabel(state.selectedDate,true)));if(p&&!p.querySelector('[data-range-toolbar]'))p.querySelector('.period-toolbar').insertAdjacentHTML('beforebegin',rangeToolbar('period',fullPeriodLabel(periodBounds(state.periodOffset)))); }
         function setActiveView(view) { state.view=view;document.querySelectorAll('[data-screen]').forEach(function(s){s.classList.toggle('is-active',s.getAttribute('data-screen')===view);});document.querySelectorAll('.rail-nav [data-view],.mobile-nav [data-view]').forEach(function(b){b.classList.toggle('is-active',b.getAttribute('data-view')===view);});if(location.hash!=='#'+view)history.replaceState(null,'','#'+view); }
-        function leaveCountdownText(milliseconds) { var seconds=Math.max(0,Math.ceil(milliseconds/1000)),hoursPart=Math.floor(seconds/3600),minutesPart=Math.floor((seconds%3600)/60),secondsPart=seconds%60;return pad(hoursPart)+':'+pad(minutesPart)+':'+pad(secondsPart)+' remaining'; }
-        function updateLeaveCountdown(data) {
-          var node=document.getElementById('current-leave-countdown');if(leaveCountdownTimer){clearInterval(leaveCountdownTimer);leaveCountdownTimer=null;}if(!node)return;node.hidden=true;node.classList.remove('is-visible');if(state.view!=='overview'||state.periodOffset!==periodIndexForDate(todayStr()))return;
-          var today=todayStr(),now=new Date(),nowMinutes=now.getHours()*60+now.getMinutes()+now.getSeconds()/60,summary=periodSummary(data,state.periodOffset),candidates=summary.pairs.filter(function(pair){return pair.entry.date===today&&pair.entry.entryKind==='shift'&&pair.entry.rateType==='Normal'&&pair.result&&pair.result.valid;});if(!candidates.length)return;
-          candidates.sort(function(a,b){return (timeMinutes(a.entry.start)||0)-(timeMinutes(b.entry.start)||0);});var active=null,targetMinute=null;for(var i=0;i<candidates.length;i++){var pair=candidates[i],r=pair.result,calc=r.calcSettings||data.settings,start=timeMinutes(pair.entry.start),workHours=Number(calc.scheduledDayHours)||Number(data.settings.scheduledDayHours)||8,lunchM=calc.paidLunch?0:r.breakM,leaveAt=start+r.commuteToM+lunchM+workHours*60;if(start!==null&&leaveAt<1440&&nowMinutes>=start&&nowMinutes<leaveAt){active=pair;targetMinute=leaveAt;break;}}if(!active||targetMinute===null)return;
-          var result=active.result,calcSettings=result.calcSettings||data.settings,targetDate=new Date(now.getFullYear(),now.getMonth(),now.getDate(),0,0,0,0),targetAt=targetDate.getTime()+targetMinute*60000,homeText=result.commuteHomeM?formatRange(result.endRaw-result.commuteHomeM,result.endRaw,calcSettings)+' commute home follows':'No commute-home time recorded';node.innerHTML='<div class="leave-countdown-copy"><span class="mini-label">Today\'s work log</span><strong>Leave work by '+safeText(formatClock(targetMinute,calcSettings))+'</strong><p>'+safeText(hours(Number(calcSettings.scheduledDayHours||8)*60)+' scheduled work · '+(calcSettings.paidLunch?'paid lunch counts':'unpaid lunch '+hours(result.breakM))+' · '+hours(result.commuteToM)+' commute in')+'</p></div><div class="leave-countdown-clock"><span class="mini-label">Time remaining</span><strong data-leave-countdown>--:--:-- remaining</strong><span>'+safeText(homeText)+'</span></div>';node.hidden=false;node.classList.add('is-visible');
-          function tick(){var remaining=targetAt-Date.now();if(remaining<=0){node.hidden=true;node.classList.remove('is-visible');if(leaveCountdownTimer){clearInterval(leaveCountdownTimer);leaveCountdownTimer=null;}return;}var clock=node.querySelector('[data-leave-countdown]');if(clock)clock.textContent=leaveCountdownText(remaining);}tick();leaveCountdownTimer=setInterval(tick,1000);
+        function clockCountdownText(milliseconds) { var seconds=Math.max(0,Math.ceil(milliseconds/1000)),hoursPart=Math.floor(seconds/3600),minutesPart=Math.floor((seconds%3600)/60),secondsPart=seconds%60;return pad(hoursPart)+':'+pad(minutesPart)+':'+pad(secondsPart); }
+        function leaveCalculatorFields() { return { start:document.getElementById('leave-calc-start'), lunch:document.getElementById('leave-calc-lunch'), commuteIn:document.getElementById('leave-calc-commute-in'), commuteOut:document.getElementById('leave-calc-commute-out'), target:document.querySelector('[data-leave-target]'), remaining:document.querySelector('[data-leave-remaining]'), phase:document.querySelector('[data-leave-phase]'), home:document.querySelector('[data-leave-home]'), formula:document.querySelector('[data-leave-formula]') }; }
+        function updateLeaveCalculator() {
+          var f=leaveCalculatorFields();if(leaveCountdownTimer){clearInterval(leaveCountdownTimer);leaveCountdownTimer=null;}if(!f.start||!f.target||!f.remaining||!f.phase||!f.home)return;
+          var settings=getSettings(),start=timeMinutes(f.start.value),lunch=clamp(f.lunch.value,0,600,0),commuteIn=clamp(f.commuteIn.value,0,600,0),commuteOut=clamp(f.commuteOut.value,0,600,0),workHours=Number(settings.scheduledDayHours)||8;
+          if(f.formula)f.formula.textContent='Leave = Start + Commute in + Lunch + '+workHours.toFixed(2)+'h scheduled. Home = Leave + Commute home.';
+          if(start===null){f.target.textContent='Leave by --:--';f.remaining.textContent='--:--:--';f.phase.textContent='Enter a valid start time';f.home.textContent='';return;}
+          var leaveMinute=start+commuteIn+lunch+workHours*60,homeMinute=leaveMinute+commuteOut,now0=new Date(),startOfDay=new Date(now0.getFullYear(),now0.getMonth(),now0.getDate(),0,0,0,0),leaveAt=startOfDay.getTime()+leaveMinute*60000,homeAt=startOfDay.getTime()+homeMinute*60000;
+          f.target.textContent='Leave by '+formatClock(leaveMinute,settings);
+          f.home.textContent=commuteOut?'Home by '+formatClock(homeMinute,settings):'No commute-home time entered';
+          function tick(){
+            var now=Date.now();
+            if(now<leaveAt){f.remaining.textContent=clockCountdownText(leaveAt-now);f.phase.textContent='until you can leave';return;}
+            if(now<homeAt){f.remaining.textContent=clockCountdownText(homeAt-now);f.phase.textContent='until home';return;}
+            f.remaining.textContent='Done';f.phase.textContent='Shift and commute complete';if(leaveCountdownTimer){clearInterval(leaveCountdownTimer);leaveCountdownTimer=null;}
+          }
+          tick();leaveCountdownTimer=setInterval(tick,1000);
+        }
+        function initLeaveCalculator() {
+          var f=leaveCalculatorFields();if(!f.start||f.start.dataset.initialized)return;var s=getSettings(),now=new Date();
+          f.start.value=pad(now.getHours())+':'+pad(now.getMinutes());f.lunch.value=String(s.breakDefault);f.commuteIn.value=String(s.commuteDefaultEnabled?s.commuteToDefault:0);f.commuteOut.value=String(s.commuteDefaultEnabled?s.commuteHomeDefault:0);f.start.dataset.initialized='1';
+          updateLeaveCalculator();
         }
         function updateOverview(data) {
           var summary=periodSummary(data,state.periodOffset),p=summary.period,pairs=summary.pairs,t=summary.totals,selectedPeriod=state.selectedDate>=p.start&&state.selectedDate<=p.end;if(!selectedPeriod)state.selectedDate=pairs.length?pairs[0].entry.date:p.start;var selected=sortPairs(pairs.filter(function(x){return x.entry.date===state.selectedDate;}),false),screen=document.getElementById('screen-overview');
           screen.querySelector('.screen-head .eyebrow').textContent=dateLabel(state.selectedDate,true);screen.querySelector('.period-card .section-kicker').textContent=state.periodOffset===0?'Current pay period':'Selected pay period';screen.querySelector('.period-title strong').textContent=shortPeriodLabel(p);screen.querySelector('.period-title .status-chip').textContent=(state.periodOffset===0?'In progress':'History');var meta=screen.querySelectorAll('.period-meta strong'),cap=data.settings.workweekHours*2*60,percent=cap?Math.min(100,t.payableM/cap*100):0;if(meta.length>=3){meta[0].textContent=hours(t.payableM);meta[1].textContent=hours(Math.max(0,cap-t.payableM));meta[2].textContent=Math.round(percent)+'%';}screen.querySelector('.period-track').setAttribute('aria-label',hours(t.payableM)+' of '+hours(cap)+' scheduled hours recorded');screen.querySelector('.period-track-fill').style.width=percent+'%';screen.querySelector('.period-track-marker').style.left=percent+'%';screen.querySelector('.period-side strong').textContent=money(t.earnings);screen.querySelector('.period-side p').textContent=data.settings.hourlyRate>0?'Includes '+hours(t.otM)+' of overtime; '+hours(t.xpCredited*60)+' XP credit.':'Set an hourly rate in Settings to calculate earnings.';
-           var shell=screen.querySelector('.content-grid > div:first-child > .day-card');if(selected.length)shell.innerHTML=selected.length===1?dayCardBody(selected[0],true,data.settings):'<div class="expanded-log-list">'+selected.map(function(x){return '<article class="surface day-card">'+dayCardBody(x,true,data.settings)+'</article>';}).join('')+'</div>';else shell.innerHTML=emptyCard(state.selectedDate,'No shift details were entered for this day. Choose another date or log a shift.');var list=screen.querySelector('.day-list');if(list)list.innerHTML=pairs.length?pairs.map(function(x){return compactRow(x,data.settings,assignedPeriodResult(summary,x));}).join(''):'<div class="empty-day">No entries recorded for this pay period.</div>';var breakdown=screen.querySelector('.breakdown-card'),rows=breakdown?breakdown.querySelectorAll('.breakdown-row'):[];if(breakdown){var blockCount=summary.allocations.filter(function(a){return a.kind==='ot';}).length;breakdown.querySelector('.soft-chip').textContent=blockCount+' overtime block'+(blockCount===1?'':'s');if(rows.length>=5){rows[0].querySelector('strong').textContent=hours(t.regularM);rows[1].querySelector('strong').textContent=hours(t.otM);rows[2].querySelector('strong').textContent=decimalHours(t.xpCredited);rows[3].querySelector('strong').textContent=hours(t.breakM);rows[4].querySelector('strong').textContent=hours(t.commuteToM+t.commuteHomeM);}}updateLeaveCountdown(data);document.querySelectorAll('.rail-callout').forEach(function(rail){rail.querySelector('strong').textContent=hours(t.payableM);rail.querySelector('span:last-child').textContent=hours(t.regularM)+' regular - '+hours(t.otM)+' OT';rail.querySelector('.mini-label').textContent=state.periodOffset===0?'Payable this period':'Payable in selected period';});
+           var shell=screen.querySelector('.content-grid > div:first-child > .day-card');if(selected.length)shell.innerHTML=selected.length===1?dayCardBody(selected[0],true,data.settings):'<div class="expanded-log-list">'+selected.map(function(x){return '<article class="surface day-card">'+dayCardBody(x,true,data.settings)+'</article>';}).join('')+'</div>';else shell.innerHTML=emptyCard(state.selectedDate,'No shift details were entered for this day. Choose another date or log a shift.');var list=screen.querySelector('.day-list');if(list)list.innerHTML=pairs.length?pairs.map(function(x){return compactRow(x,data.settings,assignedPeriodResult(summary,x));}).join(''):'<div class="empty-day">No entries recorded for this pay period.</div>';var breakdown=screen.querySelector('.breakdown-card'),rows=breakdown?breakdown.querySelectorAll('.breakdown-row'):[];if(breakdown){var blockCount=summary.allocations.filter(function(a){return a.kind==='ot';}).length;breakdown.querySelector('.soft-chip').textContent=blockCount+' overtime block'+(blockCount===1?'':'s');if(rows.length>=5){rows[0].querySelector('strong').textContent=hours(t.regularM);rows[1].querySelector('strong').textContent=hours(t.otM);rows[2].querySelector('strong').textContent=decimalHours(t.xpCredited);rows[3].querySelector('strong').textContent=hours(t.breakM);rows[4].querySelector('strong').textContent=hours(t.commuteToM+t.commuteHomeM);}}document.querySelectorAll('.rail-callout').forEach(function(rail){rail.querySelector('strong').textContent=hours(t.payableM);rail.querySelector('span:last-child').textContent=hours(t.regularM)+' regular - '+hours(t.otM)+' OT';rail.querySelector('.mini-label').textContent=state.periodOffset===0?'Payable this period':'Payable in selected period';});
         }
         function updateWorkLog(data) { var summary=periodSummary(data,state.periodOffset),screen=document.getElementById('screen-log'),pairs=sortPairs(summary.pairs,true);screen.querySelector('.screen-head .eyebrow').textContent=fullPeriodLabel(summary.period);screen.querySelector('.screen-head p').textContent='Every entry is expanded with lunch, both commute segments, regular time, and exact overtime.';var shell=screen.querySelector(':scope > .day-card');shell.innerHTML=pairs.length?'<div class="expanded-log-list">'+pairs.map(function(x){return dayCardMarkup(x,data.settings);}).join('')+'</div>':'<div class="empty-day">No entries recorded for this pay period.</div>'; }
         function overtimePolicyText(settings) { return 'Overtime after '+settings.otThresholdHrs+' regular worked hours and before commute home.'; }
@@ -1023,8 +1072,8 @@
         function saveSettings() { var raw=readRawSettings();raw.hourlyRate=clamp(document.getElementById('rate-setting').value,0,999,30);raw.breakDefault=clamp(document.getElementById('break-setting').value,30,120,30);raw.timeFormat=document.getElementById('format-setting').value==='24 hour'?'24':'12';raw.commuteToDefault=clamp(document.getElementById('commute-to-setting').value,0,240,0);raw.commuteHomeDefault=clamp(document.getElementById('commute-home-setting').value,0,240,0);raw.commuteDefault=Math.min(240,raw.commuteToDefault+raw.commuteHomeDefault);raw.commuteDefaultEnabled=!!document.getElementById('commute-toggle').checked;raw.employeeName=document.getElementById('employee-name').value.trim();raw.redesignWorkweekHours=Number(document.getElementById('workweek-profile').value)===35?35:40;raw.redesignOtRule=document.getElementById('redesign-ot-rule').value==='after-scheduled'?'after-scheduled':'after-40';raw.redesignLunchMode=document.getElementById('redesign-lunch-paid').checked?'paid-on-duty':'unpaid';raw.redesignDefaultOtMethod=document.getElementById('redesign-default-ot').value==='XP'?'XP':'Cash';raw.redesignHolidayCreditHours=clamp(document.getElementById('redesign-holiday-credit').value,0,24,raw.redesignWorkweekHours===35?7:8);raw.redesignEmergencyRates=readEmergencyCatalog();try{localStorage.setItem(LS_SETTINGS,JSON.stringify(raw));showToast('Settings saved.');}catch(e){showToast('Settings could not be saved.');}renderAll(); }
         function saveEmployeeName() { var raw=readRawSettings();raw.employeeName=document.getElementById('employee-name').value.trim();try{localStorage.setItem(LS_SETTINGS,JSON.stringify(raw));}catch(e){}renderAll(); }
         function showToast(message) { if(!toast)return;toast.textContent=message;toast.classList.add('is-visible');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove('is-visible');},2800); }
-        function updateWizard() { var sections=drawer.querySelectorAll('.form-section'),map=[1,1,2,3,3];sections.forEach(function(s,i){s.hidden=map[i]!==state.entryStep;});drawer.querySelectorAll('.step').forEach(function(s,i){var active=i+1===state.entryStep;s.classList.toggle('is-active',active);s.classList.toggle('is-complete',i+1<state.entryStep);s.setAttribute('aria-current',active?'step':'false');});var back=document.getElementById('drawer-back'),next=document.getElementById('drawer-next'),save=document.getElementById('drawer-save');if(back)back.hidden=state.entryStep===1;if(next){next.hidden=state.entryStep===3;next.textContent=state.entryStep===1?'Next: Deductions':'Next: Details';}if(save)save.hidden=state.entryStep!==3;}
-        function updateEntryKindUi() { var holiday=document.getElementById('entry-kind')&&document.getElementById('entry-kind').value==='paid-holiday',dateSection=document.getElementById('entry-start')&&document.getElementById('entry-start').closest('.form-section'),deduction=document.getElementById('entry-break')&&document.getElementById('entry-break').closest('.form-section'),hoursWrap=document.getElementById('entry-holiday-hours-wrap'),holidayCheck=document.getElementById('entry-holiday');if(dateSection)dateSection.hidden=holiday; if(deduction)deduction.hidden=holiday; if(hoursWrap)hoursWrap.hidden=!holiday;if(holidayCheck&&holiday)holidayCheck.checked=true; }
+        function updateWizard() { var sections=drawer.querySelectorAll('.form-section'),map=[1,1,2,3,3],holiday=document.getElementById('entry-kind')&&document.getElementById('entry-kind').value==='paid-holiday';sections.forEach(function(s,i){s.hidden=(map[i]!==state.entryStep)||(holiday&&(i===1||i===2));});drawer.querySelectorAll('.step').forEach(function(s,i){var active=i+1===state.entryStep;s.classList.toggle('is-active',active);s.classList.toggle('is-complete',i+1<state.entryStep);s.setAttribute('aria-current',active?'step':'false');});var back=document.getElementById('drawer-back'),next=document.getElementById('drawer-next'),save=document.getElementById('drawer-save');if(back)back.hidden=state.entryStep===1;if(next){next.hidden=state.entryStep===3;next.textContent=state.entryStep===1?'Next: Deductions':'Next: Details';}if(save)save.hidden=state.entryStep!==3;}
+        function updateEntryKindUi() { var holiday=document.getElementById('entry-kind')&&document.getElementById('entry-kind').value==='paid-holiday',hoursWrap=document.getElementById('entry-holiday-hours-wrap'),holidayCheck=document.getElementById('entry-holiday');if(hoursWrap)hoursWrap.hidden=!holiday;if(holidayCheck&&holiday)holidayCheck.checked=true;updateWizard();}
         function updateRateUi() { var active=drawer.querySelector('.type-pills button.is-active'),rate=active?active.getAttribute('data-rate'):'Normal',kind=document.getElementById('entry-kind')&&document.getElementById('entry-kind').value;document.getElementById('xp-time-wrap').classList.toggle('is-visible',rate==='XP');document.getElementById('emergency-rate-wrap').classList.toggle('is-visible',rate==='Emergency');document.getElementById('drawer-pay-label').textContent=rate==='XP'?'XP credited':rate==='Cash'?'Cash pay':rate==='Emergency'?'Emergency pay':kind==='paid-holiday'?'Holiday credit':'Estimated pay';updateEntryKindUi();}
         function draftEntry() { var active=drawer.querySelector('.type-pills button.is-active'),role=document.getElementById('entry-emergency-role'),holidayHours=document.getElementById('entry-holiday-hours').value;return{id:'__draft__',entryKind:document.getElementById('entry-kind').value,date:document.getElementById('entry-date').value,start:normalizeTime(document.getElementById('entry-start').value),stop:normalizeTime(document.getElementById('entry-stop').value),breakMin:minutesValue(document.getElementById('entry-break').value,120),commuteToMin:minutesValue(document.getElementById('entry-commute-start').value,240),commuteHomeMin:minutesValue(document.getElementById('entry-commute-end').value,240),rateType:active?active.getAttribute('data-rate'):'Normal',overtimeMethod:document.getElementById('entry-overtime-method').value==='XP'?'XP':'Cash',holiday:document.getElementById('entry-holiday').checked,holidayHours:holidayHours===''?null:clamp(holidayHours,0,24,0),emergencyRole:role?role.value:'',emergencyRate:clamp(document.getElementById('entry-emergency-rate').value,0,999,0),xpHours:document.getElementById('entry-xp-time').value===''?null:clamp(document.getElementById('entry-xp-time').value,0,240,0),job:document.getElementById('entry-job').value.trim(),act:document.getElementById('entry-activity').value.trim(),notes:document.getElementById('entry-notes').value.trim()}; }
         function previewBaseEntries() { var shown=displayedEntries();return shown.entries.filter(function(e){return!state.editingId||e.id!==state.editingId;}); }
@@ -1037,7 +1086,7 @@
         function saveEntry() {
           var entry=draftEntry(),settings=getSettings(),original=state.editingId?displayedEntries().entries.filter(function(x){return x.id===state.editingId;})[0]:null;
           if(!validDate(entry.date)){showToast('Enter a valid work date.');return;}if(hasNegativeDraft(entry)){showToast('Negative values are not allowed.');return;}
-          if(entry.entryKind==='shift'){if(!entry.start||!entry.stop){showToast('Select a start and stop time.');return;}var validNew=function(v,old){return timeIsTenMinute(v)||(old&&v===old&&timeIsLegacyQuarter(v));};if(!validNew(entry.start,original&&original.start)||!validNew(entry.stop,original&&original.stop)){showToast('New times must use 10-minute increments. Existing quarter-hour records may be preserved unchanged.');return;}if(shiftDuration(timeMinutes(entry.start),timeMinutes(entry.stop))===null){showToast('Start and stop times must be different. Use an earlier stop for an overnight shift.');return;}if(entry.breakMin<30){showToast('Lunch must be at least 30 minutes.');return;}}
+          if(entry.entryKind==='shift'){if(!entry.start||!entry.stop){showToast('Select a start and stop time.');return;}if(!timeIsValidMinute(entry.start)||!timeIsValidMinute(entry.stop)){showToast('Enter a valid start and stop time.');return;}if(shiftDuration(timeMinutes(entry.start),timeMinutes(entry.stop))===null){showToast('Start and stop times must be different. Use an earlier stop for an overnight shift.');return;}if(entry.breakMin<30){showToast('Lunch must be at least 30 minutes.');return;}}
           if(entry.entryKind==='paid-holiday'){entry.holiday=true;if(entry.holidayHours!=null&&entry.holidayHours<=0){showToast('Holiday credit must be greater than zero.');return;}}
           if(entry.rateType==='Emergency'){var role=getSettings().emergencyRates.filter(function(x){return x.id===entry.emergencyRole;})[0];if(role)entry.emergencyRate=role.rate;if(entry.emergencyRate<=0){showToast('Choose an emergency role or enter an emergency rate.');return;}}
           var base=previewBaseEntries(),overlap=overlapWith(base,entry,state.editingId);if(overlap){showToast('This entry overlaps '+dateLabel(overlap.date,false)+' '+(overlap.start||'')+' - '+(overlap.stop||'')+'. Overlapping shifts are not allowed.');return;}
@@ -1056,19 +1105,129 @@
           document.addEventListener('click',function(event){var target=event.target,view=target.closest('[data-view]');if(view){setActiveView(view.getAttribute('data-view'));renderAll();return;}var open=target.closest('[data-open-entry]');if(open){var id=open.getAttribute('data-edit-entry'),item=id?displayedEntries().entries.filter(function(e){return e.id===id;})[0]:null;openDrawer(item||null);return;}var edit=target.closest('[data-edit-entry]');if(edit){var item2=displayedEntries().entries.filter(function(e){return e.id===edit.getAttribute('data-edit-entry');})[0];if(item2)openDrawer(item2);return;}var del=target.closest('[data-delete-entry]');if(del){deleteEntry(del.getAttribute('data-delete-entry'));return;}var range=target.closest('[data-range-view]');if(range){var m=range.getAttribute('data-range-view');if(m==='day'){state.calendarMode='period';state.view='overview';}else if(m==='period'){state.calendarMode='period';state.view='period';}else{state.calendarMode='month';state.view='calendar';}renderAll();return;}var detail=target.closest('[data-details-toggle]');if(detail){event.preventDefault();event.stopPropagation();var panel=detail.closest('.day-row').querySelector('.inline-details'),openDetail=panel.classList.toggle('is-open');detail.setAttribute('aria-expanded',String(openDetail));detail.textContent=openDetail?'Hide details':'Details';return;}var summaryDetail=target.closest('[data-summary-details-toggle]');if(summaryDetail){var holder=summaryDetail.closest('.summary-details'),opened=holder.classList.toggle('is-open');summaryDetail.setAttribute('aria-expanded',String(opened));return;}var ds=target.closest('[data-day-shift]');if(ds){state.selectedDate=addDays(state.selectedDate,Number(ds.getAttribute('data-day-shift'))||0);state.periodOffset=periodIndexForDate(state.selectedDate);renderAll();return;}var ps=target.closest('[data-period-shift]');if(ps){state.periodOffset+=Number(ps.getAttribute('data-period-shift'))||0;try{localStorage.setItem(LS_PPOFFSET,String(state.periodOffset));}catch(e){}renderAll();return;}var cm=target.closest('[data-calendar-mode]');if(cm){state.calendarMode=cm.getAttribute('data-calendar-mode')==='month'?'month':'period';if(state.calendarMode==='month')state.monthCursor=firstOfMonth(state.selectedDate);else state.periodOffset=periodIndexForDate(state.selectedDate);renderAll();return;}var cs=target.closest('[data-calendar-shift]');if(cs){var delta=Number(cs.getAttribute('data-calendar-shift'))||0;if(state.calendarMode==='month'){var md=dateObj(state.monthCursor);md.setMonth(md.getMonth()+delta);state.monthCursor=firstOfMonth(dateString(md));}else{state.periodOffset+=delta;try{localStorage.setItem(LS_PPOFFSET,String(state.periodOffset));}catch(e2){}}renderAll();return;}var day=target.closest('[data-day-view]');if(day){state.selectedDate=day.getAttribute('data-day-view');state.periodOffset=periodIndexForDate(state.selectedDate);state.calendarMode='period';state.view='overview';renderAll();return;}if(target.id==='drawer-close'||target.id==='drawer-cancel'||target===overlay){closeDrawer();return;}if(target.id==='drawer-save'){saveEntry();return;}if(target.id==='settings-saved'){saveSettings();return;}if(target.id==='backup-export'){exportBackup();return;}if(target.id==='backup-import'){document.getElementById('backup-file').click();return;}if(target.id==='emergency-add-role'){var holder=document.getElementById('emergency-rate-catalog');if(holder){var id='emergency-'+Date.now();holder.insertAdjacentHTML('beforeend','<div class="emergency-rate-row" data-rate-id="'+id+'"><input type="text" data-emergency-field="role" placeholder="Role"><input type="text" data-emergency-field="code" placeholder="Code"><input type="number" data-emergency-field="rate" min="0" step="0.01" placeholder="Rate"><button type="button" class="btn danger" data-remove-emergency="'+id+'">Remove</button></div>');}return;}var remove=target.closest('[data-remove-emergency]');if(remove){remove.closest('.emergency-rate-row').remove();return;}if(target.id==='print-sheet'||target.id==='print-sheet-bottom'){window.print();return;}});
           document.addEventListener('change',function(event){var f=event.target;if(f.matches('[data-period-date]')){if(validDate(f.value)){state.periodOffset=periodIndexForDate(f.value);state.selectedDate=f.value;try{localStorage.setItem(LS_PPOFFSET,String(state.periodOffset));}catch(e){}renderAll();}return;}if(f.id==='employee-name'){saveEmployeeName();showToast('Name saved.');return;}if(f.id==='backup-file'){importBackup(f.files&&f.files[0]);f.value='';return;}if(f.id==='workweek-profile'){var holidayField=document.getElementById('redesign-holiday-credit');if(holidayField&&(holidayField.value==='7'||holidayField.value==='8'||holidayField.value===''))holidayField.value=f.value==='35'?'7':'8';return;}if(f.id==='entry-kind'||f.id==='entry-holiday'||f.id==='entry-overtime-method'||f.id==='entry-emergency-role'){if(f.id==='entry-emergency-role'){var role=getSettings().emergencyRates.filter(function(x){return x.id===f.value;})[0];if(role)document.getElementById('entry-emergency-rate').value=String(role.rate);}if(f.id==='entry-kind'&&f.value==='paid-holiday')document.getElementById('entry-holiday').checked=true;updatePreview();return;}});
         document.addEventListener('change',function(event){var f=event.target;if(f.id==='entry-date'&&!state.editingId){var holiday=document.getElementById('entry-holiday');if(holiday)holiday.checked=isOfficialHoliday(f.value);updatePreview();}});
-        document.addEventListener('input',function(event){var f=event.target;if(f.type==='number'){var value=Number(f.value);if(isFinite(value)&&value<0)f.value='0';if(f.id==='entry-break'&&isFinite(value)&&value<30)f.value='30';}if(f.id==='entry-xp-time')state.xpUserEdited=true;if(f.closest&&f.closest('#entry-drawer'))updatePreview();});
+        document.addEventListener('input',function(event){var f=event.target;if(f.id==='leave-calc-start'||f.id==='leave-calc-lunch'||f.id==='leave-calc-commute-in'||f.id==='leave-calc-commute-out'){updateLeaveCalculator();return;}if(f.type==='number'){var value=Number(f.value);if(isFinite(value)&&value<0)f.value='0';if(f.id==='entry-break'&&isFinite(value)&&value<30)f.value='30';}if(f.id==='entry-xp-time')state.xpUserEdited=true;if(f.closest&&f.closest('#entry-drawer'))updatePreview();});
           drawer.querySelectorAll('.type-pills button').forEach(function(button){button.addEventListener('click',function(){drawer.querySelectorAll('.type-pills button').forEach(function(item){item.classList.remove('is-active');});button.classList.add('is-active');state.xpUserEdited=false;if(button.getAttribute('data-rate')==='XP')document.getElementById('entry-xp-time').value='';updatePreview();});});document.addEventListener('keydown',function(event){if(event.key==='Escape'&&drawer.getAttribute('aria-hidden')==='false')closeDrawer();});
         }
         function exportBackup() { var stored=readStoredEntries(),payload={version:2,exportedAt:new Date().toISOString(),entries:stored.present?stored.entries:[],settings:readRawSettings()};var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='timesheet-backup-'+todayStr()+'.json';document.body.appendChild(link);link.click();link.remove();setTimeout(function(){URL.revokeObjectURL(url);},0);showToast('Backup downloaded.'); }
         function hasOverlappingEntries(entries) { var list=normalizedEntries(entries);for(var i=0;i<list.length;i++){var a=entryInterval(list[i]);if(!a)continue;for(var j=i+1;j<list.length;j++){var b=entryInterval(list[j]);if(b&&a.start<b.end&&b.start<a.end)return{first:list[i],second:list[j]};}}return null; }
         function importBackup(file) { if(!file)return;var reader=new FileReader();reader.onload=function(){try{var payload=JSON.parse(reader.result),imported=Array.isArray(payload)?payload:payload.entries;if(!Array.isArray(imported)||imported.some(rawHasNegative)||normalizedEntries(imported).length!==imported.length||hasOverlappingEntries(imported))throw new Error('invalid entries');if(payload&&payload.settings&&typeof payload.settings==='object'&&!Array.isArray(payload.settings)){if(settingsHasNegative(payload.settings))throw new Error('invalid settings');localStorage.setItem(LS_SETTINGS,JSON.stringify(payload.settings));}localStorage.setItem(LS_ENTRIES,JSON.stringify(imported));ensureEntrySnapshots();renderAll();showToast('Backup imported.');}catch(e){showToast('Backup could not be imported. Negative, incomplete, overlapping, or invalid values were rejected.');}};reader.readAsText(file); }
         window.TimesheetRedesign={calculateEntries:calculateEntries,periodBounds:periodBounds,periodNumber:periodNumber,weekKey:weekKey,allocationForResult:allocationForResult,normalizeEntry:normalizeEntry,holidayList:NJ_HOLIDAYS_2026,entryCalculationSettings:entryCalculationSettings,snapshotForEntry:snapshotForEntry,snapshotForSavedEntry:snapshotForSavedEntry};
-        function init() { ensureSettingsUi();ensureEntrySnapshots();setupWizard();setupEvents();try{state.periodOffset=clamp(parseInt(localStorage.getItem(LS_PPOFFSET)||'0',10),-100000,100000,0);}catch(e){state.periodOffset=0;}state.selectedDate=todayStr();state.monthCursor=firstOfMonth(state.selectedDate);renderAll(); }
+        function init() { ensureSettingsUi();ensureEntrySnapshots();setupWizard();setupEvents();try{state.periodOffset=clamp(parseInt(localStorage.getItem(LS_PPOFFSET)||'0',10),-100000,100000,0);}catch(e){state.periodOffset=0;}state.selectedDate=todayStr();state.monthCursor=firstOfMonth(state.selectedDate);renderAll();initLeaveCalculator(); }
         init();
       }());
     });
   </script>
+  <script>
+  // Hub-back slide-left transition
+  document.addEventListener('DOMContentLoaded', function() {
+    var link = document.querySelector('.hub-back, .topbar-back, .preview-back');
+    if (!link) return;
+    link.addEventListener('click', function(e) {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+      e.preventDefault();
+      try { sessionStorage.setItem('ft_returning_to_hub', '1'); } catch(_){}
+      var body = document.body;
+      body.style.transition = 'none';
+      body.style.opacity = '1';
+      body.style.transform = '';
+      body.style.willChange = 'transform, opacity';
+      body.style.backfaceVisibility = 'hidden';
+      void body.offsetWidth;
+      body.style.transition = 'opacity 300ms cubic-bezier(0.65, 0, 0.35, 1), transform 300ms cubic-bezier(0.65, 0, 0.35, 1)';
+      body.style.opacity = '0';
+      body.style.transform = 'translate3d(-30vw, 0, 0) scale(0.97)';
+      setTimeout(function() { window.location.href = link.href; }, 300);
+    });
+  });
+
+  // Clean up stale transition classes on bfcache restore
+  window.addEventListener('pageshow', function(e) {
+    if (!e.persisted) return;
+    var d = document.documentElement;
+    d.setAttribute('data-transition-settled', '');
+    d.classList.remove('exiting-to-tool', 'exiting-to-hub', 'entering-from-hub', 'returning-from-tool');
+    var body = document.body;
+    if (body) {
+      body.style.transition = '';
+      body.style.opacity = '';
+      body.style.transform = '';
+      body.style.willChange = '';
+      body.style.backfaceVisibility = '';
+    }
+  });
+
+  // Intercept browser back button to play Hub-return animation
+  (function() {
+    if (!window.history || !window.history.pushState) return;
+    if (!history.state || !history.state.ftDummy) {
+      history.pushState({ ftDummy: true }, '');
+    }
+    var backNavigating = false;
+    window.addEventListener('popstate', function() {
+      if (backNavigating) return;
+      backNavigating = true;
+      try { sessionStorage.setItem('ft_returning_to_hub', '1'); } catch(_){}
+      var body = document.body;
+      body.style.transition = 'none';
+      body.style.opacity = '1';
+      body.style.transform = '';
+      body.style.willChange = 'transform, opacity';
+      body.style.backfaceVisibility = 'hidden';
+      void body.offsetWidth;
+      body.style.transition = 'opacity 300ms cubic-bezier(0.65, 0, 0.35, 1), transform 300ms cubic-bezier(0.65, 0, 0.35, 1)';
+      body.style.opacity = '0';
+      body.style.transform = 'translate3d(-30vw, 0, 0) scale(0.97)';
+      setTimeout(function() {
+        window.location.href = '../index.html';
+      }, 300);
+    });
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted && (!history.state || !history.state.ftDummy)) {
+        history.pushState({ ftDummy: true }, '');
+        backNavigating = false;
+      }
+    });
+  })();
+  </script>
   <style>
+    /* Page fade-in on load */
+    @keyframes pageFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    html:not(.entering-from-hub):not(.exiting-to-hub):not([data-transition-settled]) body { animation: pageFadeIn 360ms cubic-bezier(0.16, 1, 0.3, 1); }
+    /* Slide-left exit animation when returning to Hub */
+    @keyframes slideOutLeft {
+      0%   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+      50%  { opacity: 0; transform: translate3d(-30vw, 0, 0) scale(0.98); }
+      100% { opacity: 0; transform: translate3d(-40vw, 0, 0) scale(0.97); }
+    }
+    html.exiting-to-hub body {
+      animation: slideOutLeft 300ms cubic-bezier(0.65, 0, 0.35, 1) both !important;
+      overflow: hidden;
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      contain: paint style;
+    }
+    html.exiting-to-hub { background: var(--bg, #eef0f4); }
+    /* Hub-to-tool entrance: slide in from the LEFT with depth scale */
+    @keyframes slideInFromLeft {
+      0%   { opacity: 0; transform: translate3d(-18vw, 0, 0) scale(0.98); }
+      45%  { opacity: 1; transform: translate3d(-7vw, 0, 0) scale(0.995); }
+      100% { opacity: 1; transform: none; }
+    }
+    html.entering-from-hub body {
+      opacity: 0;
+      transform: translate3d(-18vw, 0, 0) scale(0.98);
+      animation: slideInFromLeft 360ms cubic-bezier(0.22, 1, 0.36, 1) both !important;
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      contain: paint style;
+    }
+    html.entering-from-hub { background: var(--bg, #eef0f4); }
+    @media (prefers-reduced-motion: reduce) {
+      html.entering-from-hub body,
+      html.exiting-to-hub body { animation:none !important; opacity:1 !important; transform:none !important; will-change:auto !important; contain:none !important; }
+    }
     :root {
       --p-ink:#10213b;
       --p-ink-2:#203553;
@@ -1207,15 +1366,19 @@
     .rail-callout strong { display:block; font-size:20px; margin:7px 0 2px; }
     .rail-callout span:last-child { color:#d7e4f7; font-size:10px; }
     .main-area { min-width:0; padding:0 34px 70px; }
-    .current-leave-countdown { display:flex; align-items:center; justify-content:space-between; gap:18px; margin:0 0 14px; padding:15px 18px; color:var(--p-ink); background:linear-gradient(135deg,rgba(26,86,219,.08),rgba(84,211,180,.12)); border:1px solid rgba(26,86,219,.18); border-radius:var(--p-radius-sm); box-shadow:0 9px 24px rgba(26,86,219,.08); }
-    .current-leave-countdown[hidden] { display:none; }
-    .current-leave-countdown.is-visible { animation:leaveCardIn 260ms cubic-bezier(.22,1,.36,1) both; }
-    .leave-countdown-copy, .leave-countdown-clock { display:flex; flex-direction:column; gap:4px; }
-    .leave-countdown-copy strong { font-size:16px; letter-spacing:-.02em; }
-    .leave-countdown-copy p, .leave-countdown-clock span:last-child { color:var(--p-muted); font-size:10px; line-height:1.45; }
-    .leave-countdown-clock { min-width:150px; align-items:flex-end; text-align:right; }
-    .leave-countdown-clock strong { color:var(--p-blue); font-size:22px; letter-spacing:.03em; font-variant-numeric:tabular-nums; }
-    @keyframes leaveCardIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:none; } }
+    .leave-calculator { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-start; row-gap:10px; column-gap:16px; margin:0 0 14px; padding:13px 16px; color:var(--p-ink); background:linear-gradient(135deg,rgba(26,86,219,.08),rgba(84,211,180,.12)); border:1px solid rgba(26,86,219,.18); border-radius:var(--p-radius-sm); box-shadow:0 9px 24px rgba(26,86,219,.08); }
+    .leave-calculator-head { display:flex; flex-direction:column; gap:2px; flex:0 0 auto; max-width:150px; }
+    .leave-calculator-head strong { font-size:13px; letter-spacing:-.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .leave-calculator-head p { color:var(--p-muted); font-size:9px; line-height:1.3; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .leave-calculator-head .leave-calculator-formula { white-space:normal; font-style:italic; font-size:8.5px; line-height:1.35; margin-top:2px; }
+    .leave-calculator-fields { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:center; gap:8px; flex:1 1 auto; min-width:0; }
+    .leave-calculator-fields label { display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--p-muted); font-size:9px; font-weight:800; line-height:1.2; text-align:center; }
+    .leave-calculator-fields label span { display:block; white-space:nowrap; }
+    .leave-calculator-fields input { min-height:34px; width:76px; padding:0 6px; border:1px solid var(--p-border); border-radius:8px; color:var(--p-ink); background:var(--p-card); font-size:12px; font-weight:700; text-align:center; }
+    .leave-calculator-fields input[type="time"] { width:88px; padding:0 6px; }
+    .leave-countdown-clock { display:flex; flex-direction:column; gap:1px; flex:0 0 auto; width:130px; margin-left:auto; align-items:flex-end; text-align:right; }
+    .leave-countdown-clock span { display:block; max-width:100%; overflow-wrap:break-word; white-space:normal; color:var(--p-muted); font-size:9px; line-height:1.3; }
+    .leave-countdown-clock strong { white-space:nowrap; color:var(--p-blue); font-size:16px; letter-spacing:.02em; font-variant-numeric:tabular-nums; }
     .main-inner { max-width:1220px; margin:0 auto; }
     .prototype-note {
       display:flex; align-items:center; gap:9px; min-height:35px; margin:18px 0 3px;
@@ -1610,6 +1773,9 @@
       .period-jump { flex:1; max-width:none; }
       .period-date-jump { width:100%; justify-content:space-between; }
       .period-date-jump input { flex:1; }
+      .leave-calculator { flex-wrap:wrap; overflow-x:visible; }
+      .leave-calculator-fields { flex-wrap:wrap; }
+      .leave-countdown-clock { width:100%; align-items:flex-start; text-align:left; }
       .entry-policy-controls { grid-template-columns:1fr; }
       .emergency-rate-row { grid-template-columns:1fr 1fr; }
       .emergency-rate-row input[type="number"] { grid-column:1; }
@@ -1739,7 +1905,16 @@
 
           <div class="content-grid">
             <div>
-              <div class="current-leave-countdown" id="current-leave-countdown" hidden aria-live="polite"></div>
+              <div class="leave-calculator" id="leave-calculator" aria-live="polite">
+                <div class="leave-calculator-head"><strong>When can I leave?</strong><p title="Estimate your leave and home time any time during your shift. This does not read or save any work log entry.">Estimate only, not saved</p><p class="leave-calculator-formula" data-leave-formula></p></div>
+                <div class="leave-calculator-fields">
+                  <label for="leave-calc-start"><span>Start</span><input id="leave-calc-start" type="time" step="60"></label>
+                  <label for="leave-calc-lunch"><span>Lunch (min)</span><input id="leave-calc-lunch" type="number" min="0" step="1"></label>
+                  <label for="leave-calc-commute-in"><span>Commute in (min)</span><input id="leave-calc-commute-in" type="number" min="0" step="1"></label>
+                  <label for="leave-calc-commute-out"><span>Commute home (min)</span><input id="leave-calc-commute-out" type="number" min="0" step="1"></label>
+                </div>
+                <div class="leave-countdown-clock"><span class="mini-label" data-leave-target>Leave by --:--</span><strong data-leave-remaining>--:--:--</strong><span data-leave-phase>&nbsp;</span><span data-leave-home></span></div>
+              </div>
               <div class="section-row"><h2>Today’s work log</h2><button type="button" class="text-link" data-open-entry>＋ Add another shift</button></div>
               <article class="surface day-card">
                 <div class="day-card-top"><div><h3>Wednesday, August 5</h3><p>1 shift · overnight shift ends Thursday morning</p></div><div class="day-total"><strong>8.50 h</strong><span>payable today</span></div></div>
@@ -1829,8 +2004,8 @@
     <div class="drawer-head"><div><div class="eyebrow">New work log</div><h2>Log a shift</h2><p>Enter the shift details and review the calculation before saving.</p></div><button type="button" class="drawer-close" id="drawer-close" aria-label="Close log a shift">×</button></div>
     <div class="step-line"><span class="step is-active"><i>1</i>Shift</span><b></b><span class="step is-active"><i>2</i>Deductions</span><b></b><span class="step"><i>3</i>Details</span></div>
     <section class="form-section"><div class="form-section-title">How should this time be paid?</div><div class="type-pills"><button type="button" class="is-active" data-rate="Normal">Normal</button><button type="button" data-rate="XP">XP</button><button type="button" data-rate="Cash">Cash</button><button type="button" data-rate="Emergency">Emergency</button></div><div class="xp-time-wrap" id="xp-time-wrap"><label for="entry-xp-time">XP hours worked</label><input id="entry-xp-time" type="number" min="0" step="0.25" value="8"><div class="field-help">Credited comp time: XP hours × 1.5.</div></div><div class="emergency-rate-wrap" id="emergency-rate-wrap"><label for="entry-emergency-rate">Emergency rate per hour</label><input id="entry-emergency-rate" type="number" min="0" step="0.01" value="45"><div class="field-help">All payable hours use this per-entry overtime rate.</div></div></section>
-    <section class="form-section"><div class="form-grid"><div class="form-field full"><label for="entry-date">Work date</label><input id="entry-date" type="date" value="2026-08-05"></div><div class="form-field"><label for="entry-start">Start</label><input id="entry-start" type="time" value="20:00" step="600"></div><div class="form-field"><label for="entry-stop">Stop</label><input id="entry-stop" type="time" value="08:00" step="600"></div><div class="form-field full"><label for="entry-period-worked">Normal hours before this entry</label><input id="entry-period-worked" type="number" min="0" max="168" step="0.5" value="0" readonly aria-readonly="true"><div class="field-help">Calculated from saved Normal entries after lunch and commute; it cannot be entered manually.</div></div></div><div class="field-help">Time selectors move in 10-minute increments. An earlier stop time means the shift continues overnight.</div></section>
-    <section class="form-section"><div class="form-section-title">Subtract from the clock span</div><div class="deduction-row"><div class="deduction-card"><label for="entry-break">Lunch / break</label><input id="entry-break" type="number" min="30" step="10" value="30"><div class="field-help">Minimum 30 minutes</div></div><div class="deduction-card commute"><label for="entry-commute-start">Commute to work</label><input id="entry-commute-start" type="number" min="0" step="10" value="0"><div class="field-help">Start segment · minutes</div></div><div class="deduction-card commute"><label for="entry-commute-end">Commute home</label><input id="entry-commute-end" type="number" min="0" step="10" value="0"><div class="field-help">End segment · minutes</div></div></div><div class="field-help">At least 30 minutes of lunch is deducted. Only worked time after lunch and both commute segments counts toward the weekly overtime threshold.</div></section>
+    <section class="form-section"><div class="form-grid"><div class="form-field full"><label for="entry-date">Work date</label><input id="entry-date" type="date" value="2026-08-05"></div><div class="form-field"><label for="entry-start">Start</label><input id="entry-start" type="time" value="20:00" step="60"></div><div class="form-field"><label for="entry-stop">Stop</label><input id="entry-stop" type="time" value="08:00" step="60"></div><div class="form-field full"><label for="entry-period-worked">Normal hours before this entry</label><input id="entry-period-worked" type="number" min="0" max="168" step="0.5" value="0" readonly aria-readonly="true"><div class="field-help">Calculated from saved Normal entries after lunch and commute; it cannot be entered manually.</div></div></div><div class="field-help">Time selectors move in 1-minute increments. An earlier stop time means the shift continues overnight.</div></section>
+    <section class="form-section"><div class="form-section-title">Subtract from the clock span</div><div class="deduction-row"><div class="deduction-card"><label for="entry-break">Lunch / break</label><input id="entry-break" type="number" min="30" step="1" value="30"><div class="field-help">Minimum 30 minutes</div></div><div class="deduction-card commute"><label for="entry-commute-start">Commute to work</label><input id="entry-commute-start" type="number" min="0" step="1" value="0"><div class="field-help">Start segment · minutes</div></div><div class="deduction-card commute"><label for="entry-commute-end">Commute home</label><input id="entry-commute-end" type="number" min="0" step="1" value="0"><div class="field-help">End segment · minutes</div></div></div><div class="field-help">At least 30 minutes of lunch is deducted. Only worked time after lunch and both commute segments counts toward the weekly overtime threshold.</div></section>
     <section class="form-section"><div class="form-section-title">Calculation preview</div><div class="calc-preview"><div class="calc-preview-head"><div><span class="mini-label">Payable time</span><strong id="drawer-payable">11.50 h</strong></div><div><span class="preview-pay-label" id="drawer-pay-label">Estimated pay</span><span class="preview-pay" id="drawer-pay">$345.00</span></div></div><div class="calc-preview-grid"><div class="calc-preview-cell"><span>Regular</span><b id="drawer-regular">11.50 h</b></div><div class="calc-preview-cell ot"><span>Exact OT</span><b id="drawer-ot">0.00 h</b></div><div class="calc-preview-cell"><span>To work</span><b id="drawer-commute-to">None</b></div><div class="calc-preview-cell"><span>Home</span><b id="drawer-commute-home">None</b></div></div><div class="calc-preview-note" id="drawer-ot-note">No overtime: this entry is below the 40-hour weekly regular threshold after the required lunch deduction.</div></div></section>
     <section class="form-section"><div class="form-grid"><div class="form-field"><label for="entry-job">Job # (optional)</label><input id="entry-job" type="text" placeholder="e.g. 12345"></div><div class="form-field"><label for="entry-activity">Activity</label><input id="entry-activity" type="text" placeholder="Code"></div><div class="form-field full"><label for="entry-notes">Description / notes</label><input id="entry-notes" type="text" placeholder="What were you working on?"></div></div></section>
     <div class="drawer-actions"><button type="button" class="btn" id="drawer-cancel">Cancel</button><button type="button" class="btn primary" id="drawer-save">Save shift</button></div>

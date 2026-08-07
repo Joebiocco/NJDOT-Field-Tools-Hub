@@ -260,8 +260,8 @@ ft_ts_entries, ft_ts_settings, and ft_ts_ppoffset.
 
 The completed redesign implementation uses these protected rules:
 
-- new payroll time inputs use 10-minute increments; an existing legacy
-  quarter-hour value may be preserved unchanged while editing;
+- payroll time inputs (shift start/stop, lunch, and commute-in/home) use
+  1-minute increments;
 - a shift requires distinct valid times; an earlier stop means overnight;
 - lunch/break is at least 30 minutes and commute to work/home are separate,
   non-payable deductions;
@@ -322,11 +322,18 @@ The redesign payroll contract also includes the following additive rules:
   not historical pay. The Emergency role/code catalog is rendered inside the
   Pay rules card; its selected rate is copied into the entry as the existing
   historical emergency-rate snapshot.
-- The overview leave reminder is intentionally limited to the current calendar
-  day. It includes commute-in and unpaid lunch when calculating the allowed
-  leave time, hides after the target time, and never carries into tomorrow or
-  historical views. The redesign grid is background-only, and animations must
-  use explicit properties plus reduced-motion behavior.
+- The overview "When can I leave?" leave calculator is a standalone,
+  presentation-only tool: it does not read or write `ft_ts_entries` and does
+  not require a saved work log. It defaults its Start field to the current
+  time and its Lunch/Commute-in/Commute-home fields to the saved settings
+  defaults. Leave-by time is Start + Commute-in + Lunch + scheduled day
+  hours; Home-by time adds the anticipated Commute-home minutes, which the
+  user can change independently to reflect a different work site. The live
+  countdown is two-phase: it counts down to the leave time first, then
+  automatically switches to counting down to the home time once the leave
+  time has passed. It re-defaults on reload rather than persisting between
+  sessions. The redesign grid is background-only, and animations must use
+  explicit properties plus reduced-motion behavior.
 
 The active pages/timesheet.html route is the payroll regression target after
 cutover. Verify its shared-storage compatibility with representative entries
