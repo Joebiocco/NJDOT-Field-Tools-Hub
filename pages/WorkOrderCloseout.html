@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Work Order Closeout</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -1313,7 +1313,12 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); color: var(--mute
       </div>
       <div id="recentStorageNote" class="recent-storage-note" style="display:none;"></div>
       <div class="recent-photo-note">&#128247; Photos are stored with each saved session.</div>
-      <div class="local-storage-note">Saved on this device only. Export a backup for long-term storage.</div>
+      <div class="local-storage-note" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span>Saved on this device only. Only the latest 5 sessions are kept — saving a 6th permanently deletes the oldest, so export a backup first if you need to keep it. Exports contain work order details and photos in plain text.</span>
+        <button type="button" class="btn-secondary" id="wo-backup-export-btn">Export backup</button>
+        <button type="button" class="btn-secondary" id="wo-backup-import-btn">Import backup</button>
+        <input type="file" id="wo-backup-import-file" accept="application/json,.json" hidden>
+      </div>
       <div class="recent-panel-body" id="recentList">
         <span class="recent-empty">No recent sessions yet.</span>
       </div>
@@ -1620,6 +1625,75 @@ function dbDeletePhotos(key) {
     tx.objectStore(PHOTO_STORE).delete(key);
   }).catch(function() {});
 }
+
+// ── FULL BACKUP / RESTORE (recent index + each session's photo record) ──
+var WO_BACKUP_VERSION = 1;
+
+function exportWOBackup() {
+  var recent = loadRecent();
+  Promise.all(recent.map(function(r) { return dbGetPhotos(r.photoKey).catch(function() { return null; }); })).then(function(photoSets) {
+    var sessions = {};
+    recent.forEach(function(r, i) { if (photoSets[i] != null) sessions[r.photoKey] = photoSets[i]; });
+    var payload = { version: WO_BACKUP_VERSION, exportedAt: new Date().toISOString(), recent: recent, sessions: sessions };
+    var blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href = url; a.download = 'work-order-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function() { URL.revokeObjectURL(url); }, 0);
+    showToast('Backup downloaded', 'ok', 4000);
+  }).catch(function() {
+    showToast('Could not read saved sessions for backup', 'err', 4000);
+  });
+}
+
+function importWOBackup(file) {
+  if (!file) return;
+  if (file.size > 200 * 1024 * 1024) { showToast('Backup file is too large to import', 'err', 5000); return; }
+  var reader = new FileReader();
+  reader.onload = function() {
+    var payload;
+    try {
+      payload = JSON.parse(reader.result);
+      if (!payload || typeof payload !== 'object' || payload.version !== WO_BACKUP_VERSION) throw new Error('version');
+      if (!Array.isArray(payload.recent) || !payload.sessions || typeof payload.sessions !== 'object') throw new Error('shape');
+    } catch (e) {
+      showToast('Backup could not be imported — invalid or unsupported file', 'err', 5000);
+      return;
+    }
+    if (!confirm('Import this backup? Sessions with matching work order/structure numbers will be overwritten; this device already keeps only the latest 5 total.')) return;
+    var current = loadRecent();
+    var merged = current.slice();
+    payload.recent.forEach(function(r) {
+      if (!r || !r.photoKey) return;
+      var dupIndex = merged.findIndex(function(m) { return m.wo === r.wo && m.str === r.str; });
+      if (dupIndex !== -1) merged.splice(dupIndex, 1);
+      merged.unshift(r);
+    });
+    var evicted = merged.length > 5 ? merged.splice(5) : [];
+    saveRecentList(merged);
+    var writes = merged.filter(function(r) { return payload.sessions[r.photoKey] != null; })
+      .map(function(r) { return dbPutPhotos(r.photoKey, payload.sessions[r.photoKey]).catch(function() {}); });
+    Promise.all(writes).then(function() {
+      evicted.forEach(function(r) { dbDeletePhotos(r.photoKey); });
+      if (typeof renderRecent === 'function') renderRecent();
+      showToast('Backup imported', 'ok', 2400);
+    });
+  };
+  reader.readAsText(file);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var exportBtn  = document.getElementById('wo-backup-export-btn');
+  var importBtn  = document.getElementById('wo-backup-import-btn');
+  var importFile = document.getElementById('wo-backup-import-file');
+  if (exportBtn) exportBtn.addEventListener('click', exportWOBackup);
+  if (importBtn && importFile) importBtn.addEventListener('click', function() { importFile.click(); });
+  if (importFile) importFile.addEventListener('change', function() {
+    importWOBackup(importFile.files && importFile.files[0]);
+    importFile.value = '';
+  });
+});
 
 // ── SESSION DATA HELPERS ──────────────────────
 
