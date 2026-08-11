@@ -11,7 +11,7 @@
    - IndexedDB: work-order photos + per-session data (ft_photos DB)
    ============================================================ */
 
-const CACHE = 'ft-v1.35-2026-08-11';
+const CACHE = 'ft-v1.36-2026-08-11';
 const CACHE_PREFIX = 'ft-';
 
 // Mandatory shell assets: if any of these fail to cache, the new worker

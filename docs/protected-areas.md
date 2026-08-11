@@ -418,7 +418,7 @@ bypassed by page code.
 
 ## PWA and external feed
 
-service-worker.js is currently cache name ft-v1.35-2026-08-11. HTML is
+service-worker.js is currently cache name ft-v1.36-2026-08-11. HTML is
 network-first with an offline.html fallback; local static assets are
 cache-first; CDN libraries are network-first. Precached assets are split into
 CORE_ASSETS (must all cache successfully or the new worker never calls
