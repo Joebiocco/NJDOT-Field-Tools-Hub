@@ -279,12 +279,15 @@
     .button:disabled { opacity:.45; cursor:not-allowed; transform:none; }
 
     .surface { background:var(--p-card); border:1px solid var(--p-line); border-radius:var(--p-radius); box-shadow:var(--p-shadow); }
-    .demo-banner {
-      display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:16px; padding:13px 15px;
-      color:var(--p-amber); background:var(--p-amber-soft); border:1px solid color-mix(in srgb,var(--p-gold) 35%,transparent); border-radius:13px;
+    .corrupt-banner {
+      margin-bottom:16px; padding:13px 15px; color:var(--p-red);
+      background:var(--p-red-soft); border:1px solid color-mix(in srgb,var(--p-red) 40%,transparent); border-radius:13px;
     }
-    .demo-banner strong { display:block; color:var(--p-ink); font-size:12px; }
-    .demo-banner span { display:block; margin-top:2px; color:var(--p-muted); font-size:11px; }
+    .corrupt-banner strong { display:block; color:var(--p-ink); font-size:12px; }
+    .corrupt-banner p { margin:2px 0 0; color:var(--p-muted); font-size:11px; }
+    .corrupt-row { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-top:10px; padding-top:10px; border-top:1px solid color-mix(in srgb,var(--p-red) 25%,transparent); }
+    .corrupt-row span { min-width:0; flex:1; color:var(--p-muted); font-size:11px; }
+    .corrupt-row .button-row { display:flex; gap:8px; flex-shrink:0; }
 
     .period-control {
       display:flex; align-items:center; gap:12px; margin-bottom:18px; padding:12px;
@@ -298,7 +301,11 @@
     .date-jump { display:flex; align-items:center; gap:7px; color:var(--p-muted); font-size:10px; font-weight:800; white-space:nowrap; }
     .date-jump input { min-height:38px; padding:0 9px; border:1px solid var(--p-line); border-radius:9px; color:var(--p-ink); background:var(--p-card-2); font-size:11px; font-weight:700; }
 
-    .kpi-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:20px; }
+    .kpi-groups { display:flex; flex-direction:column; gap:14px; margin-bottom:20px; }
+    .kpi-group-label { color:var(--p-muted); font-size:10px; font-weight:850; letter-spacing:.09em; text-transform:uppercase; margin:0 0 8px; }
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+    .kpi-grid-time { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .kpi-grid-pay { grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); }
     .kpi { min-width:0; padding:18px; }
     .kpi-label { color:var(--p-muted); font-size:9px; font-weight:850; letter-spacing:.11em; text-transform:uppercase; }
     .kpi strong { display:block; margin-top:8px; color:var(--p-ink); font-size:25px; letter-spacing:-.04em; }
@@ -432,6 +439,7 @@
     .td-muted { color:var(--p-muted); }
     .td-ot { color:var(--p-red); font-weight:850; }
     .total-row td { background:var(--p-blue-soft); font-weight:850; }
+    .reconcile-row td { padding:8px 14px; color:var(--p-muted); font-size:10px; font-style:italic; border-top:none; }
     .mobile-entry-list { display:none; }
 
     .view-switch { display:flex; justify-content:flex-end; margin-bottom:12px; }
@@ -548,6 +556,9 @@
     .preview-cell.ot strong { color:#fca5a5; }
     .preview-cell.pay strong { color:#86efac; }
     .preview-note { margin-top:13px; padding-top:12px; border-top:1px solid rgba(255,255,255,.13); color:#c9d8e9; font-size:10px; line-height:1.55; }
+    .preview-note.legacy-note { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .preview-note.legacy-note span { flex:1; min-width:180px; }
+    .preview-note.legacy-note button { flex-shrink:0; }
     .preview-blocks { display:grid; gap:7px; margin-top:12px; }
     .preview-block { padding:9px 10px; border-radius:9px; color:#fecaca; background:rgba(220,38,38,.18); font-size:9px; font-weight:750; }
     .dialog-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 20px; border-top:1px solid var(--p-line); background:var(--p-card); }
@@ -582,7 +593,6 @@
       .head-actions { justify-content:stretch; margin-top:15px; }
       .head-actions .button { flex:1; }
       .button.small,.segmented button,.emergency-setting-row .button { min-height:44px; }
-      .demo-banner { align-items:flex-start; }
       .period-control { align-items:flex-start; flex-wrap:wrap; }
       .period-control-main { flex-basis:100%; }
       .period-control-actions { width:100%; justify-content:space-between; }
@@ -646,8 +656,6 @@
     }
     @media (max-width:520px) {
       h1 { font-size:2rem; }
-      .demo-banner { display:block; }
-      .demo-banner .button { width:100%; margin-top:10px; }
       .period-control-copy strong { font-size:12px; }
       .date-jump span { display:none; }
       .section-head { align-items:flex-start; }
@@ -665,7 +673,7 @@
       .mobile-entry-card-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
     @media print {
-      .topbar,.sidebar,.mobile-nav,.page-head,.period-control,.demo-banner,.head-actions,.settings-footer,.button,.view-switch,.toast { display:none !important; }
+      .topbar,.sidebar,.mobile-nav,.page-head,.period-control,.head-actions,.settings-footer,.button,.view-switch,.toast { display:none !important; }
       body,html { background:#fff !important; color:#111 !important; }
       .app-shell { display:block; }
       .main { padding:0; }
@@ -682,6 +690,7 @@
   </style>
 </head>
 <body>
+  <noscript><div style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:#06111f;color:#f1f5f9;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;text-align:center;"><div style="max-width:420px;"><h1 style="font-size:18px;margin:0 0 10px;">JavaScript is required</h1><p style="font-size:13px;line-height:1.6;color:#93a7c4;">The Timesheet Tracker calculates and displays all totals in the browser and cannot run with JavaScript disabled. No totals shown here are real until it loads. <a href="../index.html" style="color:#e5b33b;">Return to Field Tools Hub</a>.</p></div></div></noscript>
   <svg width="0" height="0" aria-hidden="true" style="position:absolute;overflow:hidden">
     <symbol id="i-dashboard" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
     <symbol id="i-log" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h6"/></symbol>
@@ -720,7 +729,7 @@
         <nav class="nav-list" id="desktop-nav"></nav>
       </div>
       <div class="sidebar-spacer"></div>
-      <div class="sidebar-summary" id="sidebar-summary"><span>Payable this period</span><strong>0.00 h</strong><small>0.00 regular · 0.00 OT</small></div>
+      <div class="sidebar-summary" id="sidebar-summary"><span>Payable this period</span><strong>Loading…</strong><small>Not yet calculated</small></div>
     </aside>
 
     <main class="main" id="main-content">
@@ -848,9 +857,10 @@
       logFilter:'all',
       entries:[],
       settings:{...DEFAULT_SETTINGS},
-      demo:false,
       calculations:null,
-      lastFocus:null
+      lastFocus:null,
+      corruptKeys:[],
+      rateConfirmed:false
     };
 
     const screen = document.getElementById('screen');
@@ -940,7 +950,23 @@
     function safeGet(key) { try { return localStorage.getItem(key); } catch(_) { return null; } }
     function safeSet(key,value) { try { localStorage.setItem(key,value); return true; } catch(_) { return false; } }
     function safeRemove(key) { try { localStorage.removeItem(key); } catch(_) {} }
-    function readObject(key) { try { const value=JSON.parse(safeGet(key)||'{}'); return value&&typeof value==='object'&&!Array.isArray(value)?value:{}; } catch(_) { return {}; } }
+    function quarantineRaw(key,raw) {
+      if(state.corruptKeys.some(c=>c.key===key))return;
+      const quarantineKey=`${key}_corrupt_${Date.now()}`;
+      const backedUp=safeSet(quarantineKey,raw);
+      state.corruptKeys.push({key,quarantineKey,savedAt:new Date().toISOString(),backedUp});
+    }
+    function isStorageQuarantined(key) { return state.corruptKeys.some(c=>c.key===key); }
+    function readObject(key) {
+      const raw=safeGet(key);
+      if(raw===null)return {};
+      try {
+        const value=JSON.parse(raw);
+        if(value&&typeof value==='object'&&!Array.isArray(value))return value;
+        quarantineRaw(key,raw);
+        return {};
+      } catch(_) { quarantineRaw(key,raw); return {}; }
+    }
     function normalizeEmergencyRates(raw) {
       let source=[];
       if(Array.isArray(raw))source=raw;
@@ -1015,7 +1041,7 @@
         redesignEmergencyRates:settings.emergencyRates
       };
     }
-    function persistSettings() { return safeSet(STORAGE.settings,JSON.stringify(storedSettings(state.settings))); }
+    function persistSettings() { if(isStorageQuarantined(STORAGE.settings))return false; return safeSet(STORAGE.settings,JSON.stringify(storedSettings(state.settings))); }
     function snapshotFromSettings(settings) {
       return {
         hourlyRate:settings.hourlyRate,
@@ -1121,33 +1147,12 @@
     function readStoredEntries() {
       const raw=safeGet(STORAGE.entries);
       if(raw===null)return null;
-      try { const parsed=JSON.parse(raw); const arr=Array.isArray(parsed)?parsed:(Array.isArray(parsed.entries)?parsed.entries:[]); return arr.map(normalizeEntry).filter(Boolean); } catch(_) { return []; }
-    }
-
-    function buildDemoEntries(settings) {
-      const p=periodBounds(0),dates=[2,3,4,5,6].map(offset=>addDays(p.start,offset));
-      const stops=['04:00','05:30','06:30','08:00','10:30'];
-      const activities=['Roadway maintenance','Roadway maintenance','Traffic control','Traffic control','Traffic control'];
-      const notes=['Overnight lane closure support','Barrier inspection and repair','Night work-zone traffic control','Extended overnight traffic control','Friday closeout and overtime'];
-      return dates.map((date,index)=>({
-        id:`demo-${date}`,
-        date,
-        category:'Normal',
-        start:'20:00',
-        stop:stops[index],
-        breakMin:30,
-        breakStart:'00:00',
-        commuteIn:30,
-        commuteOut:60,
-        overtimeMethod:'Cash',
-        holidayWork:false,
-        holidayHours:null,
-        emergencyRate:0,
-        job:'WO-26-081',
-        activity:activities[index],
-        notes:notes[index],
-        snapshot:snapshotFromSettings(settings)
-      }));
+      try {
+        const parsed=JSON.parse(raw);
+        const arr=Array.isArray(parsed)?parsed:(parsed&&Array.isArray(parsed.entries)?parsed.entries:null);
+        if(arr===null){quarantineRaw(STORAGE.entries,raw);return [];}
+        return arr.map(normalizeEntry).filter(Boolean);
+      } catch(_) { quarantineRaw(STORAGE.entries,raw); return []; }
     }
 
     function entryBase(entry,settings) {
@@ -1226,12 +1231,20 @@
       });
       events.sort((a,b)=>a.start-b.start||a.priority-b.priority||a.index-b.index);
       const regularByWeek={};
+      const holidayCreditByDate={};
+      const xpRegularUsed={};
+      const XP_DAILY_REGULAR_MINUTES=480;
       events.forEach(event=>{
         const r=results[event.index],entry=r.entry,calc=r.base.calc;
         if(event.type==='holiday'){
-          const date=entry.date,week=weekKeyForDate(date),minutes=r.base.holidayCreditM;
-          addAllocation(r,{kind:'holiday',minutes,date,method:'Cash'});
-          regularByWeek[week]=(regularByWeek[week]||0)+minutes;
+          const date=entry.date,week=weekKeyForDate(date);
+          const cap=calc.holidayCreditHours*60,used=holidayCreditByDate[date]||0;
+          const minutes=Math.max(0,Math.min(r.base.holidayCreditM,cap-used));
+          if(minutes>0){
+            addAllocation(r,{kind:'holiday',minutes,date,method:'Cash'});
+            regularByWeek[week]=(regularByWeek[week]||0)+minutes;
+            holidayCreditByDate[date]=used+minutes;
+          }
           return;
         }
         let cursor=event.start;
@@ -1242,8 +1255,12 @@
             const threshold=calc.otThresholdHours*60,before=regularByWeek[week]||0,regular=Math.min(minutes,Math.max(0,threshold-before));
             if(regular>0){addAllocation(r,{kind:'regular',start:cursor,end:cursor+regular,method:'Cash'});regularByWeek[week]=before+regular;}
             if(regular<minutes)addAllocation(r,{kind:'ot',start:cursor+regular,end:next,method:entry.overtimeMethod});
+          } else if(entry.category==='XP'){
+            const used=xpRegularUsed[event.index]||0,regular=Math.min(minutes,Math.max(0,XP_DAILY_REGULAR_MINUTES-used));
+            if(regular>0){addAllocation(r,{kind:'regular',start:cursor,end:cursor+regular,method:'Cash'});regularByWeek[week]=(regularByWeek[week]||0)+regular;xpRegularUsed[event.index]=used+regular;}
+            if(regular<minutes)addAllocation(r,{kind:'ot',start:cursor+regular,end:next,method:'XP'});
           } else {
-            const method=entry.category==='XP'?'XP':entry.category==='Emergency'?'Emergency':entry.category==='Normal'?entry.overtimeMethod:'Cash';
+            const method=entry.category==='Emergency'?'Emergency':entry.category==='Normal'?entry.overtimeMethod:'Cash';
             addAllocation(r,{kind:'ot',start:cursor,end:next,method});
           }
           cursor=next;
@@ -1251,8 +1268,15 @@
       });
       results.forEach(r=>{
         if(r.entry.category==='XP'&&r.entry.xpHours!=null){
-          let remaining=Math.min(r.base.workMinutes,Math.max(0,Number(r.entry.xpHours)||0)*60);
-          r.allocations.filter(a=>a.kind==='ot'&&a.method==='XP').sort((a,b)=>a.start-b.start).forEach(a=>{const credited=Math.min(a.minutes,remaining);a.xpCredit=credited/60*1.5;remaining-=credited;});
+          const xpAllocations=r.allocations.filter(a=>a.kind==='ot'&&a.method==='XP');
+          const otPoolMinutes=xpAllocations.reduce((n,a)=>n+a.minutes,0);
+          let remaining=Math.min(otPoolMinutes,Math.max(0,Number(r.entry.xpHours)||0)*60);
+          xpAllocations.sort((a,b)=>a.start-b.start).forEach(a=>{
+            const credited=Math.min(a.minutes,remaining),uncredited=a.minutes-credited;
+            a.xpCredit=credited/60*1.5;
+            a.earnings=uncredited/60*r.base.calc.hourlyRate*r.base.calc.otMultiplier;
+            remaining-=credited;
+          });
         }
         r.regularM=r.allocations.filter(a=>a.kind==='regular').reduce((n,a)=>n+a.minutes,0);
         r.holidayM=r.allocations.filter(a=>a.kind==='holiday').reduce((n,a)=>n+a.minutes,0);
@@ -1318,9 +1342,11 @@
     }
     function methodLabel(method) { return method==='XP'?'XP credit':method==='Emergency'?'Emergency rate':'Cash OT'; }
     function readiness(summary) {
+      if(state.corruptKeys.length)return{label:'Data needs recovery',className:'bad'};
       if(summary.errors.length)return{label:'Review errors',className:'bad'};
       if(!summary.allocations.length)return{label:'No entries',className:'warn'};
       if(!state.settings.employeeName.trim())return{label:'Add employee name',className:'warn'};
+      if(!state.rateConfirmed)return{label:'Confirm hourly rate',className:'warn'};
       return{label:'Ready to copy',className:''};
     }
 
@@ -1346,15 +1372,52 @@
         </div>
       </div>`;
     }
-    function demoBanner() {
-      return state.demo?`<div class="demo-banner"><div><strong>Demo data is being shown.</strong><span>These sample shifts demonstrate the full workflow and are not saved until you edit them.</span></div><button type="button" class="button small" data-start-blank>Start with a blank timesheet</button></div>`:'';
+    function corruptBanner() {
+      if(!state.corruptKeys.length)return '';
+      const labels={[STORAGE.entries]:'Your saved timesheet entries',[STORAGE.settings]:'Your Timesheet settings'};
+      const rows=state.corruptKeys.map(c=>{
+        const message=c.backedUp
+          ? `${esc(labels[c.key]||c.key)} could not be read and were not lost — a copy of the raw data was kept as <code>${esc(c.quarantineKey)}</code>. Saving is paused for this data until you resolve it.`
+          : `${esc(labels[c.key]||c.key)} could not be read, and a backup copy could not be saved on this device (storage may be full or unavailable). Saving is paused for this data until you resolve it.`;
+        const exportBtn=c.backedUp ? `<button type="button" class="button small soft" data-export-corrupt="${esc(c.quarantineKey)}">Export raw data</button>` : '';
+        return `<div class="corrupt-row"><span>${message}</span><div class="button-row">${exportBtn}<button type="button" class="button small danger" data-reset-corrupt="${esc(c.key)}">Reset this data</button></div></div>`;
+      }).join('');
+      return `<div class="corrupt-banner" role="alert"><strong>Some saved Timesheet data couldn't be read on this device.</strong><p>This can happen after a browser crash, storage corruption, or an interrupted save. Nothing was deleted — recover or reset each item below.</p>${rows}</div>`;
+    }
+    function exportCorruptData(quarantineKey) {
+      const raw=safeGet(quarantineKey);
+      if(raw==null){showToast('That backup is no longer available.');return;}
+      const blob=new Blob([raw],{type:'application/octet-stream'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=url;a.download=`${quarantineKey}.txt`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),0);
+      showToast('Raw data exported.');
+    }
+    function resetCorruptData(key) {
+      const entry=state.corruptKeys.find(c=>c.key===key);
+      if(!entry)return;
+      if(!confirm('Reset this data and resume normal saving? Make sure you exported the raw data first if you need it.'))return;
+      state.corruptKeys=state.corruptKeys.filter(c=>c.key!==key);
+      if(key===STORAGE.entries){state.entries=[];safeSet(STORAGE.entries,'[]');}
+      else if(key===STORAGE.settings){state.settings={...DEFAULT_SETTINGS};safeSet(STORAGE.settings,JSON.stringify(storedSettings(state.settings)));state.rateConfirmed=true;}
+      render();
+      showToast('Data reset. Saving has resumed.');
     }
     function kpis(summary) {
-      return `<div class="kpi-grid">
-        <div class="surface kpi"><span class="kpi-label">Payable</span><strong>${hours(summary.payableM)}</strong><p>${hours(Math.max(0,summary.expectedM-summary.payableM))} remaining to scheduled period hours</p></div>
-        <div class="surface kpi"><span class="kpi-label">Regular + holiday</span><strong>${hours(summary.regularM)}</strong><p>${summary.holidayM?`${hours(summary.holidayM)} holiday credit included`:`Threshold ${state.settings.otRule==='after-schedule'?state.settings.scheduleHours:40} hours per workweek`}</p></div>
-        <div class="surface kpi ot"><span class="kpi-label">Overtime</span><strong>${hours(summary.otM)}</strong><p>${summary.otBlocks.length} exact clock block${summary.otBlocks.length===1?'':'s'}</p></div>
-        <div class="surface kpi pay"><span class="kpi-label">Estimated pay</span><strong>${money(summary.earnings)}</strong><p>${summary.xpCredit?`${decimalHours(summary.xpCredit)} XP credit in addition`:`At saved entry rates`}</p></div>
+      return `<div class="kpi-groups">
+        <div class="kpi-group">
+          <h3 class="kpi-group-label">Time worked</h3>
+          <div class="kpi-grid kpi-grid-time">
+            <div class="surface kpi"><span class="kpi-label">Payable</span><strong>${hours(summary.payableM)}</strong><p>${hours(Math.max(0,summary.expectedM-summary.payableM))} remaining to scheduled period hours</p></div>
+            <div class="surface kpi"><span class="kpi-label">Regular + holiday</span><strong>${hours(summary.regularM)}</strong><p>${summary.holidayM?`${hours(summary.holidayM)} holiday credit included`:`Threshold ${state.settings.otRule==='after-schedule'?state.settings.scheduleHours:40} hours per workweek`}</p></div>
+            <div class="surface kpi ot"><span class="kpi-label">Overtime</span><strong>${hours(summary.otM)}</strong><p>${summary.otBlocks.length} exact clock block${summary.otBlocks.length===1?'':'s'}</p></div>
+          </div>
+        </div>
+        <div class="kpi-group kpi-group-pay">
+          <h3 class="kpi-group-label">Pay</h3>
+          <div class="kpi-grid kpi-grid-pay">
+            <div class="surface kpi pay"><span class="kpi-label">Estimated pay</span><strong>${money(summary.earnings)}</strong><p>${state.rateConfirmed?'At saved entry rates — estimate only, not an official payroll record':'Sample estimate — hourly rate not confirmed in Settings'}</p></div>
+            ${summary.xpCredit?`<div class="surface kpi xp"><span class="kpi-label">XP credit</span><strong>${decimalHours(summary.xpCredit)}</strong><p>Banked separately — not included in Estimated pay</p></div>`:''}
+          </div>
+        </div>
       </div>`;
     }
 
@@ -1439,8 +1502,7 @@
       screen.dataset.print='';
       screen.innerHTML=`
         <div class="page-head"><div><div class="eyebrow">${esc(dateLabel(state.selectedDate,'full'))}</div><h1>Timesheet overview</h1><p class="page-subtitle">Review the selected work date, see the current pay-period totals, and fix anything before submission.</p></div><div class="head-actions"><button type="button" class="button" data-view="summary">Open summary</button><button type="button" class="button primary" data-open-entry>${icon('plus')}Log a shift</button></div></div>
-        ${demoBanner()}
-        ${renderPeriodControl()}
+                ${renderPeriodControl()}
         ${kpis(summary)}
         <div class="dashboard-grid">
           <div class="stack">
@@ -1461,7 +1523,7 @@
       if(state.logFilter==='ot')results=results.filter(r=>r.otM>0);
       if(state.logFilter==='errors')results=results.filter(r=>!r.valid);
       screen.dataset.print='';
-      screen.innerHTML=`<div class="page-head"><div><div class="eyebrow">Work log</div><h1>Work log</h1><p class="page-subtitle">Every entry shows the clock span, actual break placement, commute deductions, regular time, and exact overtime blocks.</p></div><div class="head-actions"><button type="button" class="button primary" data-open-entry>${icon('plus')}Log a shift</button></div></div>${demoBanner()}${renderPeriodControl()}<div class="surface filter-bar"><div class="segmented" role="group" aria-label="Work log filter"><button type="button" data-log-filter="all" class="${state.logFilter==='all'?'is-active':''}">All</button><button type="button" data-log-filter="ot" class="${state.logFilter==='ot'?'is-active':''}">With overtime</button><button type="button" data-log-filter="errors" class="${state.logFilter==='errors'?'is-active':''}">Needs attention</button></div><span class="filter-count">${results.length} entr${results.length===1?'y':'ies'}</span></div><div class="work-log">${results.length?results.map(r=>shiftCard(r)).join(''):`<div class="surface empty-state"><div><div class="empty-icon">${icon('log')}</div><h3>No matching entries</h3><p>Change the filter, choose another pay period, or log a new shift.</p><button class="button primary" data-open-entry>${icon('plus')}Log a shift</button></div></div>`}</div>`;
+      screen.innerHTML=`<div class="page-head"><div><div class="eyebrow">Work log</div><h1>Work log</h1><p class="page-subtitle">Every entry shows the clock span, actual break placement, commute deductions, regular time, and exact overtime blocks.</p></div><div class="head-actions"><button type="button" class="button primary" data-open-entry>${icon('plus')}Log a shift</button></div></div>${renderPeriodControl()}<div class="surface filter-bar"><div class="segmented" role="group" aria-label="Work log filter"><button type="button" data-log-filter="all" class="${state.logFilter==='all'?'is-active':''}" aria-pressed="${state.logFilter==='all'}">All</button><button type="button" data-log-filter="ot" class="${state.logFilter==='ot'?'is-active':''}" aria-pressed="${state.logFilter==='ot'}">With overtime</button><button type="button" data-log-filter="errors" class="${state.logFilter==='errors'?'is-active':''}" aria-pressed="${state.logFilter==='errors'}">Needs attention</button></div><span class="filter-count">${results.length} entr${results.length===1?'y':'ies'}</span></div><div class="work-log">${results.length?results.map(r=>shiftCard(r)).join(''):`<div class="surface empty-state"><div><div class="empty-icon">${icon('log')}</div><h3>No matching entries</h3><p>Change the filter, choose another pay period, or log a new shift.</p><button class="button primary" data-open-entry>${icon('plus')}Log a shift</button></div></div>`}</div>`;
     }
 
     function periodTable(summary) {
@@ -1469,7 +1531,8 @@
         const assigned=assignedForPeriod(r,summary.target),e=r.entry,blocks=assigned.otBlocks.map(b=>`${dateLabel(b.date,'short')} ${formatRange(b.start,b.end,r.base.calc,false)}`).join('<br>')||'—';
         return `<tr data-day="${esc(e.date)}"><td><strong>${esc(dateLabel(e.date,'short'))}</strong><br><span class="td-muted">${esc(categoryLabel(e))}</span></td><td>${e.category==='Holiday'?'Holiday credit':esc(formatRange(r.base.clockStart,r.base.clockEnd,r.base.calc,true))}</td><td><strong>${r.valid?hours(assigned.payableM):'Error'}</strong></td><td>${r.valid?hours(assigned.regularM):'—'}</td><td class="${assigned.otM?'td-ot':'td-muted'}">${r.valid?hours(assigned.otM):'—'}</td><td class="${assigned.otM?'td-ot':'td-muted'}">${blocks}</td><td>${esc(e.job||'Not set')}</td><td>${esc(e.activity||'Not set')}</td><td class="td-muted">${esc(r.valid?(e.notes||'No description'):r.error)}</td></tr>`;
       }).join('');
-      return `<div class="surface table-wrap"><table><thead><tr><th>Work date</th><th>Clock span</th><th>Payable</th><th>Regular</th><th>OT</th><th>OT block</th><th>Job #</th><th>Activity</th><th>Description</th></tr></thead><tbody>${rows||`<tr><td colspan="9" style="text-align:center;padding:30px" class="td-muted">No entries in this pay period.</td></tr>`}<tr class="total-row"><td colspan="2">Period total</td><td>${hours(summary.payableM)}</td><td>${hours(summary.regularM)}</td><td class="td-ot">${hours(summary.otM)}</td><td>${summary.otBlocks.length} block${summary.otBlocks.length===1?'':'s'}</td><td colspan="3">${summary.results.length} represented entr${summary.results.length===1?'y':'ies'} · ${decimalHours(summary.xpCredit)} XP</td></tr></tbody></table></div>`;
+      const reconcile=`Regular (${hours(summary.regularM)}) + Overtime (${hours(summary.otM)}) = Payable (${hours(summary.payableM)})${summary.xpCredit?` · ${decimalHours(summary.xpCredit)} XP credit banked separately — not part of Payable or Estimated pay`:''}`;
+      return `<div class="surface table-wrap"><table><thead><tr><th>Work date</th><th>Clock span</th><th>Payable</th><th>Regular</th><th>OT</th><th>OT block</th><th>Job #</th><th>Activity</th><th>Description</th></tr></thead><tbody>${rows||`<tr><td colspan="9" style="text-align:center;padding:30px" class="td-muted">No entries in this pay period.</td></tr>`}<tr class="total-row"><td colspan="2">Period total</td><td>${hours(summary.payableM)}</td><td>${hours(summary.regularM)}</td><td class="td-ot">${hours(summary.otM)}</td><td>${summary.otBlocks.length} block${summary.otBlocks.length===1?'':'s'}</td><td colspan="3">${summary.results.length} represented entr${summary.results.length===1?'y':'ies'} · ${decimalHours(summary.xpCredit)} XP</td></tr><tr class="reconcile-row"><td colspan="9">${esc(reconcile)}</td></tr></tbody></table></div>`;
     }
     function mobilePeriodCards(summary) {
       if(!summary.results.length)return`<div class="surface empty-state"><div><h3>No entries in this period</h3><p>Log a shift to begin.</p></div></div>`;
@@ -1490,7 +1553,7 @@
     }
     function renderPeriod(summary) {
       screen.dataset.print='';
-      screen.innerHTML=`<div class="page-head"><div><div class="eyebrow">Pay period</div><h1>Pay period review</h1><p class="page-subtitle">One control changes the period for the totals, work entries, calendar, and summary.</p></div><div class="head-actions"><button type="button" class="button" data-view="summary">Open summary</button><button type="button" class="button primary" data-open-entry>${icon('plus')}Log a shift</button></div></div>${demoBanner()}${renderPeriodControl()}${kpis(summary)}<div class="view-switch"><div class="segmented" role="group" aria-label="Pay period display"><button type="button" data-period-mode="list" class="${state.periodMode==='list'?'is-active':''}">Entry list</button><button type="button" data-period-mode="calendar" class="${state.periodMode==='calendar'?'is-active':''}">Calendar</button></div></div>${state.periodMode==='calendar'?calendarMarkup(summary):periodTable(summary)}${state.periodMode==='list'?mobilePeriodCards(summary):''}`;
+      screen.innerHTML=`<div class="page-head"><div><div class="eyebrow">Pay period</div><h1>Pay period review</h1><p class="page-subtitle">One control changes the period for the totals, work entries, calendar, and summary.</p></div><div class="head-actions"><button type="button" class="button" data-view="summary">Open summary</button><button type="button" class="button primary" data-open-entry>${icon('plus')}Log a shift</button></div></div>${renderPeriodControl()}${kpis(summary)}<div class="view-switch"><div class="segmented" role="group" aria-label="Pay period display"><button type="button" data-period-mode="list" class="${state.periodMode==='list'?'is-active':''}" aria-pressed="${state.periodMode==='list'}">Entry list</button><button type="button" data-period-mode="calendar" class="${state.periodMode==='calendar'?'is-active':''}" aria-pressed="${state.periodMode==='calendar'}">Calendar</button></div></div>${state.periodMode==='calendar'?calendarMarkup(summary):periodTable(summary)}${state.periodMode==='list'?mobilePeriodCards(summary):''}`;
     }
 
     function ledgerMarkup(summary) {
@@ -1503,7 +1566,7 @@
     function renderSummary(summary) {
       const ready=readiness(summary);
       screen.dataset.print='summary';
-      screen.innerHTML=`<div class="page-head"><div><div class="eyebrow">Submission review</div><h1>Summary Sheet</h1><p class="page-subtitle">Check the employee name, totals, exact overtime blocks, and job descriptions before transferring the information.</p></div><div class="head-actions"><button type="button" class="button" data-view="period">Back to period</button><button type="button" class="button primary" data-print>${icon('print')}Print</button></div></div>${demoBanner()}${renderPeriodControl()}<article class="surface summary-sheet"><div class="summary-head"><div><h2>Timesheet summary</h2><p>Period totals and exact overtime blocks.</p></div>${ready.label==='Add employee name'?`<button type="button" class="readiness ${ready.className}" data-view="settings">${esc(ready.label)}</button>`:`<span class="readiness ${ready.className}">${esc(ready.label)}</span>`}</div><div class="summary-meta"><div><span>Pay period</span><strong>${esc(periodLabel(summary.bounds,true))}</strong></div><div><span>Employee</span><strong>${esc(state.settings.employeeName.trim()||'Name not set')}</strong></div><div><span>Entries</span><strong>${summary.results.length} represented · ${summary.errors.length} error${summary.errors.length===1?'':'s'}</strong></div></div>${kpis(summary)}<section class="surface overtime-ledger"><div class="section-head"><div><h2>Overtime blocks to copy</h2><p>Break timing is used to calculate these clock blocks.</p></div>${summary.otBlocks.length?`<button type="button" class="button small soft" data-copy-all>${icon('copy')}Copy all</button>`:''}</div><div class="ledger-list">${ledgerMarkup(summary)}</div></section><div class="summary-note">${icon('alert')}<span>${summary.otBlocks.some(b=>!b.exact)?'A tilde (~) means the imported entry did not include a break start. Edit that entry before treating the block as exact.':'Every overtime block shown here uses the saved break start, commute-in segment, and commute-home segment.'} Existing entries retain the calculation settings that were active when they were saved.</span></div><div style="margin-top:18px">${periodTable(summary)}${mobilePeriodCards(summary)}</div></article>`;
+      screen.innerHTML=`<div class="page-head"><div><div class="eyebrow">Submission review</div><h1>Summary Sheet</h1><p class="page-subtitle">Check the employee name, totals, exact overtime blocks, and job descriptions before transferring the information.</p></div><div class="head-actions"><button type="button" class="button" data-view="period">Back to period</button><button type="button" class="button primary" data-print>${icon('print')}Print</button></div></div>${renderPeriodControl()}<article class="surface summary-sheet"><div class="summary-head"><div><h2>Timesheet summary</h2><p>Period totals and exact overtime blocks.</p></div>${(ready.label==='Add employee name'||ready.label==='Confirm hourly rate')?`<button type="button" class="readiness ${ready.className}" data-view="settings">${esc(ready.label)}</button>`:`<span class="readiness ${ready.className}">${esc(ready.label)}</span>`}</div><div class="summary-meta"><div><span>Pay period</span><strong>${esc(periodLabel(summary.bounds,true))}</strong></div><div><span>Employee</span><strong>${esc(state.settings.employeeName.trim()||'Name not set')}</strong></div><div><span>Entries</span><strong>${summary.results.length} represented · ${summary.errors.length} error${summary.errors.length===1?'':'s'}</strong></div></div>${kpis(summary)}<section class="surface overtime-ledger"><div class="section-head"><div><h2>Overtime blocks to copy</h2><p>Break timing is used to calculate these clock blocks.</p></div>${summary.otBlocks.length?`<button type="button" class="button small soft" data-copy-all>${icon('copy')}Copy all</button>`:''}</div><div class="ledger-list">${ledgerMarkup(summary)}</div></section><div class="summary-note">${icon('alert')}<span>${summary.otBlocks.some(b=>!b.exact)?'A tilde (~) means the imported entry did not include a break start. Edit that entry before treating the block as exact.':'Every overtime block shown here uses the saved break start, commute-in segment, and commute-home segment.'} Existing entries retain the calculation settings that were active when they were saved.</span></div><div style="margin-top:18px">${periodTable(summary)}${mobilePeriodCards(summary)}</div></article>`;
     }
 
     function settingsField(id,label,help,control) { return `<div class="setting-row"><div class="setting-copy"><label for="${id}">${label}</label><small>${help}</small></div><div class="setting-control">${control}</div></div>`; }
@@ -1522,7 +1585,7 @@
     function renderSettings() {
       const s=state.settings;
       screen.dataset.print='';
-      screen.innerHTML=`<div class="page-head"><div><div class="eyebrow">Settings</div><h1>Settings</h1><p class="page-subtitle">New settings apply to future entries. Saved entries keep their original calculation snapshot.</p></div></div>${demoBanner()}<form id="settings-form" class="settings-form">
+      screen.innerHTML=`<div class="page-head"><div><div class="eyebrow">Settings</div><h1>Settings</h1><p class="page-subtitle">New settings apply to future entries. Saved entries keep their original calculation snapshot.</p></div></div><form id="settings-form" class="settings-form">
         <section class="surface settings-card"><h3>Profile and pay</h3><p>Information used on new entries and the summary.</p>
           ${settingsField('set-name','Employee name','Shown on the summary sheet.',`<input class="input" id="set-name" name="employeeName" type="text" maxlength="80" value="${esc(s.employeeName)}" placeholder="Enter name">`)}
           ${settingsField('set-rate','Base hourly rate','Used for regular pay and cash overtime.',`<input class="input" id="set-rate" name="hourlyRate" type="number" min="0" max="999" step="0.01" value="${s.hourlyRate}">`)}
@@ -1548,7 +1611,7 @@
           <div class="setting-row is-stacked"><div class="setting-copy"><label>Emergency role catalog</label><small>Saved roles appear in the Emergency entry form. The selected rate is copied into the entry so future catalog changes do not alter old entries.</small></div><div class="setting-control"><div class="emergency-catalog" id="emergency-settings-list">${s.emergencyRates.length?s.emergencyRates.map(item=>emergencySettingRow(item)).join(''):'<div class="emergency-empty">No emergency roles saved.</div>'}</div><button type="button" class="button small soft" style="margin-top:9px" data-add-emergency>${icon('plus')}Add role</button></div></div>
           <div class="setting-row"><div class="setting-copy"><label for="set-emergency-rule">Require a full regular day first</label><small>Uses the selected schedule: 7 hours for a 35-hour schedule or 8 hours for a 40-hour schedule.</small></div><label class="switch"><input id="set-emergency-rule" name="emergencyRequireFullDay" type="checkbox" ${s.emergencyRequireFullDay?'checked':''}><span></span></label></div>
         </section>
-        <section class="surface settings-card"><h3>Data and backup</h3><p>Export, import, or reset the Timesheet Tracker data stored by the Field Tools Hub.</p><div class="data-actions"><button type="button" class="button soft" data-export>${icon('download')}Export backup</button><button type="button" class="button" data-import>${icon('upload')}Import backup</button><button type="button" class="button danger" data-clear>${icon('trash')}Clear entries</button></div></section>
+        <section class="surface settings-card"><h3>Data and backup</h3><p>Export, import, or reset the Timesheet Tracker data stored by the Field Tools Hub. The exported file contains your employee name, hours, pay rate, and job details in plain text — store and share it accordingly.</p><div class="data-actions"><button type="button" class="button soft" data-export>${icon('download')}Export backup</button><button type="button" class="button" data-import>${icon('upload')}Import backup</button><button type="button" class="button danger" data-clear>${icon('trash')}Clear entries</button></div></section>
         <div class="surface settings-footer"><span>Changes affect new entries; existing entries keep their saved rules.</span><button type="submit" class="button primary">Save settings</button></div>
       </form>`;
     }
@@ -1565,20 +1628,19 @@
       else if(state.view==='period')renderPeriod(summary);
       else if(state.view==='summary')renderSummary(summary);
       else renderSettings();
+      if(state.corruptKeys.length)screen.insertAdjacentHTML('afterbegin',corruptBanner());
       if(location.hash!==`#${state.view}`)history.replaceState(null,'',`#${state.view}`);
     }
 
     function setView(view) { if(!validView(view))return; state.view=view; render(); window.scrollTo({top:0,behavior:'smooth'}); }
     function showToast(message) { toast.textContent=message;toast.classList.add('is-visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('is-visible'),2800); }
-    function persistEntries() { state.demo=false; return safeSet(STORAGE.entries,JSON.stringify(state.entries.map(serializeEntry))); }
+    function persistEntries() { if(isStorageQuarantined(STORAGE.entries))return false; return safeSet(STORAGE.entries,JSON.stringify(state.entries.map(serializeEntry))); }
     function persistPeriodOffset() { safeSet(STORAGE.periodOffset,String(state.periodOffset)); }
     function validNewClockTime(value,originalValue='') {
       const minute=timeMinutes(value);
       return minute!=null&&(minute%10===0||(originalValue&&value===originalValue&&minute%15===0));
     }
-    function startBlank() { if(!confirm('Remove the demonstration shifts and start with a blank timesheet?'))return;state.entries=[];state.demo=false;safeSet(STORAGE.entries,'[]');state.selectedDate=todayStr();state.periodOffset=0;persistPeriodOffset();render();showToast('Blank timesheet ready.'); }
-    function loadDemo() { if(!confirm('Temporarily replace the current view with demonstration data? Saved entries are not deleted unless you edit or clear them.'))return;state.entries=buildDemoEntries(state.settings);state.demo=true;state.periodOffset=0;state.selectedDate=state.entries[state.entries.length-1].date;state.view='dashboard';persistPeriodOffset();render();showToast('Demonstration data loaded.'); }
-    function clearEntries() { if(!confirm('Delete every saved timesheet entry?'))return;state.entries=[];state.demo=false;safeSet(STORAGE.entries,'[]');state.selectedDate=todayStr();state.periodOffset=0;persistPeriodOffset();render();showToast('All entries cleared.'); }
+    function clearEntries() { if(!confirm('Delete every saved timesheet entry?'))return;state.entries=[];const saved=safeSet(STORAGE.entries,'[]');if(saved)state.corruptKeys=state.corruptKeys.filter(c=>c.key!==STORAGE.entries);state.selectedDate=todayStr();state.periodOffset=0;persistPeriodOffset();render();showToast(saved?'All entries cleared.':'Could not save — storage is unavailable.'); }
 
     function updateLeaveEstimator() {
       if(leaveCountdownTimer){clearInterval(leaveCountdownTimer);leaveCountdownTimer=0;}
@@ -1650,7 +1712,10 @@
       if(!result||!result.valid){preview.innerHTML=`<h3>Calculation preview</h3><p>Fix the entry before saving.</p><div class="preview-note">${esc(result?result.error:'Complete the required fields.')}</div>`;return;}
       const blocks=result.otBlocks.map(b=>`<div class="preview-block">${esc(dateLabel(b.date,'short'))} · ${esc(formatRange(b.start,b.end,result.base.calc,false))} · ${esc(methodLabel(b.method))}</div>`).join('');
       const assumption=result.base.breakAssumed?'Break time assumed at the first payable minute. Enter the actual break start before saving. ':'';
-      preview.innerHTML=`<h3>Calculation preview</h3><p>Based on saved entries in the same workweek.</p><div class="preview-total"><span>Payable time</span><strong>${hours(result.payableM)}</strong></div><div class="preview-grid"><div class="preview-cell"><span>Regular</span><strong>${hours(result.regularM+result.holidayM)}</strong></div><div class="preview-cell ot"><span>Overtime</span><strong>${hours(result.otM)}</strong></div><div class="preview-cell pay"><span>Estimated pay</span><strong>${money(result.earnings)}</strong></div><div class="preview-cell"><span>XP credit</span><strong>${decimalHours(result.xpCredit)}</strong></div></div>${blocks?`<div class="preview-blocks">${blocks}</div>`:''}<div class="preview-note">${esc(assumption)}${resultExplanation(result).replace(/<[^>]+>/g,'')}</div>`;
+      const isLegacy=original&&!original.snapshot;
+      const legacyNote=isLegacy?'This entry has no saved calculation snapshot — saving it will lock in your current pay settings (rate, threshold, lunch mode, holiday credit) as its permanent historical basis. ':'';
+      const legacyExportRow=isLegacy?`<div class="preview-note legacy-note"><span>${esc(legacyNote)}</span><button type="button" class="button small soft" data-export>${icon('download')}Export backup now</button></div>`:'';
+      preview.innerHTML=`<h3>Calculation preview</h3><p>Based on saved entries in the same workweek.</p><div class="preview-total"><span>Payable time</span><strong>${hours(result.payableM)}</strong></div><div class="preview-grid"><div class="preview-cell"><span>Regular</span><strong>${hours(result.regularM+result.holidayM)}</strong></div><div class="preview-cell ot"><span>Overtime</span><strong>${hours(result.otM)}</strong></div><div class="preview-cell pay"><span>Estimated pay</span><strong>${money(result.earnings)}</strong></div><div class="preview-cell"><span>XP credit</span><strong>${decimalHours(result.xpCredit)}</strong></div></div>${blocks?`<div class="preview-blocks">${blocks}</div>`:''}${legacyExportRow}<div class="preview-note">${esc(assumption)}${resultExplanation(result).replace(/<[^>]+>/g,'')}</div>`;
     }
     function openEntry(entry=null) {
       state.lastFocus=document.activeElement;
@@ -1697,14 +1762,14 @@
         const invalid=times.find(([,value,oldValue])=>!validNewClockTime(value,oldValue));
         if(invalid){setEntryFormError(`${invalid[0]} must use a 10-minute increment. An unchanged legacy quarter-hour value may be preserved.`);return;}
       }
-      draft.snapshot=original&&original.snapshot?original.snapshot:snapshotFromSettings(state.settings);
+      draft.snapshot=original&&original.snapshot?original.snapshot:{...snapshotFromSettings(state.settings),migratedAt:new Date().toISOString(),migratedFromVersion:'legacy'};
       const overlap=candidateOverlap(draft);if(overlap){setEntryFormError(`This clock span overlaps the entry starting ${dateLabel(overlap.date,'short')} at ${overlap.start}.`);return;}
       const calc=calculateEntries([...state.entries.filter(e=>e.id!==editingId),draft],state.settings),result=calc.byId.get(draft.id);
       if(!result||!result.valid){setEntryFormError(result?result.error:'The entry could not be calculated.');return;}
-      const index=state.entries.findIndex(e=>e.id===draft.id);if(index>=0)state.entries[index]=draft;else state.entries.push(draft);state.entries.sort(entrySort);persistEntries();state.selectedDate=draft.date;state.periodOffset=periodOffsetForDate(draft.date);persistPeriodOffset();state.view='dashboard';closeEntry();render();showToast(index>=0?'Entry updated.':'Entry saved.');
+      const index=state.entries.findIndex(e=>e.id===draft.id);if(index>=0)state.entries[index]=draft;else state.entries.push(draft);state.entries.sort(entrySort);const saved=persistEntries();state.selectedDate=draft.date;state.periodOffset=periodOffsetForDate(draft.date);persistPeriodOffset();state.view='dashboard';closeEntry();render();showToast(saved?(index>=0?'Entry updated.':'Entry saved.'):'Could not save — storage is unavailable or needs recovery.');
     }
     function deleteCurrentEntry() {
-      const id=document.getElementById('entry-id').value;if(!id)return;if(!confirm('Delete this entry?'))return;state.entries=state.entries.filter(e=>e.id!==id);persistEntries();closeEntry();render();showToast('Entry deleted.');
+      const id=document.getElementById('entry-id').value;if(!id)return;if(!confirm('Delete this entry?'))return;state.entries=state.entries.filter(e=>e.id!==id);const saved=persistEntries();closeEntry();render();showToast(saved?'Entry deleted.':'Could not save — storage is unavailable or needs recovery.');
     }
 
     function saveSettings(event) {
@@ -1728,7 +1793,7 @@
         defaultEmergencyRate:clamp(data.get('defaultEmergencyRate'),0,999,45),
         emergencyRates:readEmergencySettings(event.target)
       };
-      persistSettings();render();showToast('Settings saved.');
+      const saved=persistSettings();if(saved)state.rateConfirmed=true;render();showToast(saved?'Settings saved.':'Could not save — storage is unavailable or needs recovery.');
     }
     function exportBackup() {
       const payload={version:3,exportedAt:new Date().toISOString(),entries:state.entries.map(serializeEntry),settings:storedSettings(state.settings)};
@@ -1739,15 +1804,35 @@
       for(let index=1;index<shifts.length;index++)if(shifts[index].base.clockStart<shifts[index-1].base.clockEnd)return true;
       return false;
     }
+    const SUPPORTED_BACKUP_VERSIONS=[1,2,3];
     function importBackup(file) {
-      if(!file)return;const reader=new FileReader();reader.onload=()=>{try{
-        const payload=JSON.parse(reader.result),rawEntries=Array.isArray(payload)?payload:payload.entries;if(!Array.isArray(rawEntries))throw new Error('entries');
+      if(!file)return;
+      if(file.size>15*1024*1024){showToast('Backup file is too large to import.');return;}
+      const reader=new FileReader();reader.onload=()=>{try{
+        const payload=JSON.parse(reader.result);
+        if(!Array.isArray(payload)){
+          const version=Number(payload&&payload.version);
+          if(!SUPPORTED_BACKUP_VERSIONS.includes(version))throw new Error('version');
+        }
+        const rawEntries=Array.isArray(payload)?payload:payload.entries;if(!Array.isArray(rawEntries))throw new Error('entries');
         const entries=rawEntries.map(normalizeEntry).filter(Boolean),hasImportedSettings=payload&&payload.settings&&typeof payload.settings==='object'&&!Array.isArray(payload.settings),candidateSettings=hasImportedSettings?{...DEFAULT_SETTINGS,...settingsFromRaw(payload.settings)}:state.settings;
         const importedCalculation=calculateEntries(entries,candidateSettings);
         if(entries.length!==rawEntries.length||entriesOverlap(entries,candidateSettings)||importedCalculation.results.some(result=>!result.valid))throw new Error('invalid');
-        if(hasImportedSettings){safeSet(STORAGE.settings,JSON.stringify(payload.settings));state.settings=candidateSettings;}
-        state.entries=entries;persistEntries();state.selectedDate=entries.length?entries[entries.length-1].date:todayStr();state.periodOffset=periodOffsetForDate(state.selectedDate);persistPeriodOffset();state.view='dashboard';render();showToast('Backup imported.');
-      }catch(_){showToast('Backup could not be imported. Invalid or overlapping entries were rejected.');}};reader.readAsText(file);
+
+        const prevEntriesRaw=safeGet(STORAGE.entries),prevSettingsRaw=safeGet(STORAGE.settings);
+        const entriesOk=safeSet(STORAGE.entries,JSON.stringify(entries.map(serializeEntry)));
+        const settingsOk=hasImportedSettings?safeSet(STORAGE.settings,JSON.stringify(payload.settings)):true;
+        if(!entriesOk||!settingsOk){
+          if(prevEntriesRaw==null)safeRemove(STORAGE.entries);else safeSet(STORAGE.entries,prevEntriesRaw);
+          if(hasImportedSettings){if(prevSettingsRaw==null)safeRemove(STORAGE.settings);else safeSet(STORAGE.settings,prevSettingsRaw);}
+          showToast('Import failed — previous data was restored.');
+          return;
+        }
+        state.corruptKeys=state.corruptKeys.filter(c=>c.key!==STORAGE.entries&&(!hasImportedSettings||c.key!==STORAGE.settings));
+        state.entries=entries;
+        if(hasImportedSettings){state.settings=candidateSettings;state.rateConfirmed=true;}
+        state.selectedDate=entries.length?entries[entries.length-1].date:todayStr();state.periodOffset=periodOffsetForDate(state.selectedDate);persistPeriodOffset();state.view='dashboard';render();showToast('Backup imported.');
+      }catch(_){showToast('Backup could not be imported. Invalid, unsupported version, or overlapping entries were rejected.');}};reader.readAsText(file);
     }
     function copyText(text) {
       if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>showToast('Copied to clipboard.'),()=>fallbackCopy(text));}else fallbackCopy(text);
@@ -1766,7 +1851,8 @@
       const edit=target.closest('[data-edit-entry]');if(edit){const entry=state.entries.find(e=>e.id===edit.dataset.editEntry);if(entry)openEntry(entry);return;}
       const day=target.closest('[data-day]');if(day){state.selectedDate=day.dataset.day;state.periodOffset=periodOffsetForDate(state.selectedDate);persistPeriodOffset();state.view='dashboard';render();return;}
       if(target.closest('[data-today]')){state.selectedDate=todayStr();state.periodOffset=0;persistPeriodOffset();render();return;}
-      if(target.closest('[data-start-blank]')){startBlank();return;}
+      const exportCorrupt=target.closest('[data-export-corrupt]');if(exportCorrupt){exportCorruptData(exportCorrupt.dataset.exportCorrupt);return;}
+      const resetCorrupt=target.closest('[data-reset-corrupt]');if(resetCorrupt){resetCorruptData(resetCorrupt.dataset.resetCorrupt);return;}
       if(target.closest('[data-dialog-close]')){closeEntry();return;}
       if(target.closest('[data-period-mode]')){state.periodMode=target.closest('[data-period-mode]').dataset.periodMode;render();return;}
       if(target.closest('[data-log-filter]')){state.logFilter=target.closest('[data-log-filter]').dataset.logFilter;render();return;}
@@ -1775,7 +1861,6 @@
       if(target.closest('[data-copy-all]')){copyAllBlocks();return;}
       if(target.closest('[data-export]')){exportBackup();return;}
       if(target.closest('[data-import]')){document.getElementById('import-file').click();return;}
-      if(target.closest('[data-load-demo]')){loadDemo();return;}
       const addEmergency=target.closest('[data-add-emergency]');if(addEmergency){const list=document.getElementById('emergency-settings-list');if(list){list.querySelector('.emergency-empty')?.remove();list.insertAdjacentHTML('beforeend',emergencySettingRow());list.querySelector('[data-emergency-setting-row]:last-child input')?.focus();}return;}
       const removeEmergency=target.closest('[data-remove-emergency]');if(removeEmergency){const row=removeEmergency.closest('[data-emergency-setting-row]'),list=row?.parentElement;row?.remove();if(list&&!list.querySelector('[data-emergency-setting-row]'))list.innerHTML='<div class="emergency-empty">No emergency roles saved.</div>';return;}
       if(target.closest('[data-clear]')){clearEntries();return;}
@@ -1866,15 +1951,23 @@
     window.TimesheetTracker={calculateEntries,summaryForPeriod,normalizeEntry,serializeEntry,periodBounds,snapshotFromSettings};
 
     function init() {
+      state.rateConfirmed=safeGet(STORAGE.settings)!==null;
       state.settings=readSettings();
       const stored=readStoredEntries();
-      state.entries=stored||[];state.demo=false;
+      state.entries=stored||[];
       const savedOffset=Number.parseInt(safeGet(STORAGE.periodOffset)||'0',10);state.periodOffset=Number.isFinite(savedOffset)?clamp(savedOffset,-2600,2600,0):0;
       const bounds=periodBounds(state.periodOffset);state.selectedDate=state.periodOffset===0?todayStr():bounds.start;
       render();
       document.addEventListener('submit',event=>{if(event.target.id==='settings-form')saveSettings(event);});
     }
-    init();
+    try {
+      init();
+    } catch(err) {
+      const el=document.getElementById('screen');
+      if(el)el.innerHTML=`<div class="surface" style="padding:24px;text-align:center;"><h2 style="margin:0 0 10px;">Timesheet failed to load</h2><p style="color:var(--p-muted);">A runtime error stopped the Timesheet Tracker from starting. No totals on this page are current or reliable. Reload the page, or return to the <a href="../index.html" data-view="none">Field Tools Hub</a> and try again.</p></div>`;
+      const side=document.getElementById('sidebar-summary');
+      if(side)side.innerHTML=`<span>Payable this period</span><strong>—</strong><small>Not calculated — runtime error</small>`;
+    }
   })();
   </script>
 <!-- Google Analytics 4 -->
