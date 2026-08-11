@@ -32,3 +32,7 @@ Work Order Website - Backup */
 node_modules/
 package.json
 package-lock.json
+
+# Python bytecode
+__pycache__/
+*.pyc
