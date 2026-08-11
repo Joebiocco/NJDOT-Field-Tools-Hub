@@ -418,16 +418,37 @@ bypassed by page code.
 
 ## PWA and external feed
 
-service-worker.js is currently cache name ft-v1.33-2026-06-01. HTML is
-network-first with cache fallback; local static assets are cache-first; CDN
-libraries are network-first. The worker also handles update messaging and a
-notification receiver/click path. Preserve the cache name, cleanup behavior,
-no-cache HTML handling, Work Order fallback exception, and asset paths unless
-the task is an explicit release/cache update.
+service-worker.js is currently cache name ft-v1.34-2026-08-10. HTML is
+network-first with an offline.html fallback; local static assets are
+cache-first; CDN libraries are network-first. Precached assets are split into
+CORE_ASSETS (must all cache successfully or the new worker never calls
+skipWaiting, so a previous complete worker stays in control instead of
+activating a broken offline install) and OPTIONAL_ASSETS (best-effort; a
+single failed fetch there is swallowed and does not block activation). The
+activate handler scopes its cache cleanup to keys starting with the ft-
+prefix rather than an exact CACHE match. The worker also handles update
+messaging and a notification receiver/click path constrained to same-origin
+targets. Preserve the cache name, CORE_ASSETS/OPTIONAL_ASSETS split, cleanup
+behavior, no-cache HTML handling, Work Order fallback exception, and asset
+paths unless the task is an explicit release/cache update.
+
+**Cache-busting individual data files:** a handful of large data files
+(bridge/roadway/milepost indexes) are precached by explicit URL in
+CORE_ASSETS/OPTIONAL_ASSETS. When one of these files' *content* changes but
+its filename does not, appending a manually-chosen query string to that one
+entry (for example `./data/bridges/index.json?v=2026-08-05-coordinate-review`)
+forces the service worker to treat it as a new cache entry on the next
+CACHE version bump, without needing a build step or an auto-generated
+manifest. This is a real, standing convention — not a one-off — apply it any
+time a precached data file's content changes independently of a full
+CACHE/index.html version bump. It only affects the one file whose query
+string changes; every other precached asset keeps relying on the CACHE name
+bump for freshness.
 
 manifest.json and icon links are install contracts. If an icon changes, check
-manifest paths, favicon/apple-touch links, LOCAL_ASSETS, and actual HTTP 200
-responses. Do not commit exported ZIP/readme artifacts as icons.
+manifest paths, favicon/apple-touch links, CORE_ASSETS/OPTIONAL_ASSETS, and
+actual HTTP 200 responses. Do not commit exported ZIP/readme artifacts as
+icons.
 
 cloudflare/njdot-511-proxy.js is an optional CORS proxy for the official
 511NJ RSS feed. It allows the configured GitHub Pages origin plus localhost,
