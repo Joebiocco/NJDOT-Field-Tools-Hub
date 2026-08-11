@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Weather - Field Tools</title>
   <meta name="theme-color" content="#10243f">
   <link rel="manifest" href="../manifest.json">
@@ -2175,7 +2175,8 @@ if ('serviceWorker' in navigator) {
 
   function saveAlertSettings() {
     if (alertSettings) alertSettings.enabled = hasEnabledAlertAreas(alertSettings);
-    try { localStorage.setItem(ALERT_SETTINGS_KEY, JSON.stringify(alertSettings)); } catch(_) {}
+    try { localStorage.setItem(ALERT_SETTINGS_KEY, JSON.stringify(alertSettings)); return true; }
+    catch(_) { return false; }
   }
 
   function alertAreaLabel(area) {
@@ -2663,9 +2664,13 @@ if ('serviceWorker' in navigator) {
     alertSettingsSave.addEventListener('click', function() {
       var next = readAlertSettingsForm();
       alertSettings = next;
-      saveAlertSettings();
+      var saved = saveAlertSettings();
       alertSettingsDirty = false;
       renderAlertSettings();
+      if (!saved) {
+        setAlertSettingsPermission('Settings could not be saved on this device (storage may be full or unavailable).', 'is-error');
+        return;
+      }
       restartWeatherAlertScheduler();
       var enabledCount = enabledAlertAreaCount(alertSettings);
       if (enabledCount && notificationPermissionState() !== 'granted') {
