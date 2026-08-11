@@ -174,6 +174,8 @@ html[data-dark] body {
 
 .btn:hover { background: rgba(255,255,255,0.15); }
 .btn.btn-active { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.3); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn:disabled:hover { background: rgba(255,255,255,0.08); }
 :where(a, button, input, select, textarea, [tabindex], .drop-zone):focus-visible {
   outline: 3px solid rgba(229,179,59,0.95);
   outline-offset: 3px;
@@ -629,6 +631,18 @@ textarea.notes-field {
   transition: color var(--transition), border-color var(--transition), background-color var(--transition);
 }
 .add-page-cta:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-lo); }
+.add-page-cta:disabled { opacity: 0.5; cursor: not-allowed; }
+.page-cap-note {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  background: rgba(220,38,38,0.08);
+  color: #dc2626;
+}
+html[data-dark] .page-cap-note { background: rgba(220,38,38,0.10); color: #fca5a5; }
 
 
 /* ── PHOTO BADGE ───────────────────────── */
@@ -754,6 +768,7 @@ html[data-dark] .recent-chip:hover { border-color: #93b4f5; }
   transition: background 0.14s, transform 0.1s; backdrop-filter: blur(6px);
 }
 .fab-sm:active { transform: scale(0.97); }
+.fab-sm:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 .fab-sm-danger  { border-color: rgba(220,38,38,0.4); color: #fca5a5; }
 .fab-sm-success { border-color: rgba(34,197,94,0.4);  color: #86efac; }
 
@@ -1165,6 +1180,7 @@ html[data-dark] .recent-chip:hover { border-color: #93b4f5; }
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
       Add Documentation Page
     </button>
+    <div id="pageCapNote" class="page-cap-note" role="status" style="display:none;">Page limit reached (30 pages max). Export this closeout or start a new one to add more.</div>
 
   </div>
 
@@ -1536,7 +1552,7 @@ function restorePageCount(targetCount) {
   // Remove extras (never remove the last one)
   for (var i = blocks.length - 1; i >= targetCount; i--) blocks[i].remove();
   // Add missing pages
-  while (pagesContainer.querySelectorAll('.page-block').length < targetCount) buildPage();
+  while (pagesContainer.querySelectorAll('.page-block').length < targetCount) buildPage({ bypassCap: true, silent: true });
   updatePageNumbers();
 }
 
@@ -2010,8 +2026,44 @@ function buildPhotoCard(num, pageNum) {
 
 // ── BUILD PAGE ────────────────────────────────
 var pageCounter = 0;
+// Reasoned default, not empirically measured: at scale:2 on a 612x792pt
+// page, capture produces a ~7.4MB transient canvas per page (freed right
+// after), while what actually accumulates for the whole export is jsPDF's
+// own in-memory JPEG data, roughly 300KB-1.5MB/page — so 30 pages lands
+// around 10-45MB retained, comfortably safe on essentially any device that
+// can run this PWA. Flagged as needing device profiling before treating
+// as final; adjust if it proves wrong in practice.
+var MAX_PAGES = 30;
 
-function buildPage() {
+function pageCapReached() {
+  return pagesContainer.querySelectorAll('.page-block').length >= MAX_PAGES;
+}
+
+// Keeps the 3 add-page controls (bottom CTA, topbar button, FAB) and the
+// persistent cap note in sync with the live page count. Called after every
+// buildPage() attempt and after every page removal, since removing a page
+// can bring the count back under the cap.
+function updatePageCapUI() {
+  var atCap = pageCapReached();
+  var note = document.getElementById('pageCapNote');
+  if (note) note.style.display = atCap ? '' : 'none';
+  [addPageBtn, document.getElementById('addPageTop'), document.getElementById('fabAddPage')].forEach(function(btn) {
+    if (!btn) return;
+    btn.disabled = atCap;
+    btn.setAttribute('aria-disabled', atCap ? 'true' : 'false');
+  });
+}
+
+function buildPage(opts) {
+  opts = opts || {};
+  if (!opts.bypassCap && pageCapReached()) {
+    if (!opts.silent) {
+      showToast('Page limit reached (' + MAX_PAGES + ' pages). Export this closeout or start a new one to add more.', 'err', 5000);
+    }
+    updatePageCapUI();
+    return null;
+  }
+
   pageCounter++;
   var n = pageCounter;
 
@@ -2051,6 +2103,7 @@ function buildPage() {
   pagesContainer.appendChild(block);
   updatePageNumbers();
   if (typeof window.attachDragToAllCards === 'function') window.attachDragToAllCards();
+  updatePageCapUI();
   return block;
 }
 
@@ -2248,7 +2301,7 @@ saveDraftBtn.addEventListener('click', function() {
   }
 
   var savedPages = data.pages || [];
-  while (pagesContainer.querySelectorAll('.page-block').length < savedPages.length) buildPage();
+  while (pagesContainer.querySelectorAll('.page-block').length < savedPages.length) buildPage({ bypassCap: true, silent: true });
 
   pagesContainer.querySelectorAll('.page-block').forEach(function(p, idx) {
     var pageData = savedPages[idx] || {};
@@ -2294,6 +2347,7 @@ function removePageWithAnimation(block, onDone) {
       block.style.opacity = '0';
       setTimeout(function() {
         block.remove();
+        updatePageCapUI();
         if (onDone) onDone();
       }, 220);
     }, 240);
@@ -2317,7 +2371,7 @@ function scrollToLastPage() {
 
 // ── ADD / REMOVE PAGE ─────────────────────────
 addPageBtn.addEventListener('click', function() {
-  buildPage();
+  if (!buildPage()) return;
   scrollToLastPage();
   showToast('Page added', 'ok');
 });
@@ -2496,6 +2550,13 @@ exportPdfBtn.addEventListener('click', async function() {
   var {jsPDF} = window.jspdf;
   var fields    = getTopFields();
   var formPages = pagesContainer.querySelectorAll('.page-block');
+  // Defense-in-depth only: buildPage() blocks new pages past MAX_PAGES, but
+  // an existing draft from before this cap existed (or one restored from an
+  // imported backup) can still legitimately exceed it. Never block export —
+  // that would feel like data loss — just surface the memory-risk warning.
+  if (formPages.length > MAX_PAGES) {
+    showToast('This closeout has ' + formPages.length + ' pages (recommended max ' + MAX_PAGES + ') — export may use significant memory on this device.', 'err', 6000);
+  }
 
   var allPhotos = [], globalNum = 1;
   formPages.forEach(function(block) {
@@ -2900,12 +2961,12 @@ exportPdfBtn.addEventListener('click', async function() {
 
 // ── TOPBAR ADD PAGE ──────────────────────────
 document.getElementById('addPageTop').addEventListener('click', function() {
+  if (!buildPage()) return;
   var btn = this;
   btn.classList.remove('btn-flash-green');
   void btn.offsetWidth; // reflow to restart animation
   btn.classList.add('btn-flash-green');
   btn.addEventListener('animationend', function() { btn.classList.remove('btn-flash-green'); }, { once: true });
-  buildPage();
   updatePhotoBadge();
   scrollToLastPage();
   showToast('Page added', 'ok');
@@ -2965,7 +3026,8 @@ document.getElementById('clearForm').addEventListener('click', function() {
   // Add Page FAB
   var fabAdd = document.getElementById('fabAddPage');
   if (fabAdd) fabAdd.addEventListener('click', function() {
-    buildPage(); updatePhotoBadge(); scrollToLastPage(); showToast('Page added', 'ok');
+    if (!buildPage()) return;
+    updatePhotoBadge(); scrollToLastPage(); showToast('Page added', 'ok');
   });
 
   // Remove Page FAB
@@ -3034,8 +3096,9 @@ if (pagesContainer.querySelectorAll('.page-block').length) {
   pageCounter = pagesContainer.querySelectorAll('.page-block').length;
   pagesContainer.querySelectorAll('.page-block').forEach(wireExistingPageBlock);
   updatePageNumbers();
+  updatePageCapUI();
 } else {
-  buildPage();
+  buildPage({ bypassCap: true, silent: true });
 }
 if (typeof window.attachDragToAllCards === 'function') window.attachDragToAllCards();
 updatePhotoBadge();
