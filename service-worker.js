@@ -11,7 +11,7 @@
    - IndexedDB: work-order photos + per-session data (ft_photos DB)
    ============================================================ */
 
-const CACHE = 'ft-v1.34-2026-08-10';
+const CACHE = 'ft-v1.35-2026-08-11';
 const CACHE_PREFIX = 'ft-';
 
 // Mandatory shell assets: if any of these fail to cache, the new worker
@@ -37,6 +37,7 @@ const CORE_ASSETS = [
   './pages/milemarker.html',
   './pages/dc144.html',
   './js/dc144.js',
+  './js/guide-overlay.js',
   './pages/emergency.html',
   './js/milepost-lookup.js',
   './js/roadway-lookup.js',
