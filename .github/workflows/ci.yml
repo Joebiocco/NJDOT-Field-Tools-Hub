@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate bridge data
+        run: node tools/validate-bridge-data.js
+
+      - name: Emergency route classifier (5,000 seeded GPS fixes)
+        run: node tools/test-emergency-route-classifier.js
+        env:
+          ROUTE_TEST_SAMPLE_COUNT: 5000
+          ROUTE_TEST_SEED: 0x5eed500
+
+      - name: Milepost roadway adapter (fixture + 100 randomized cases)
+        run: node tools/test-milepost-roadway-adapter.js
+
+      - name: Static site checks (syntax, JSON, duplicate IDs, local assets)
+        run: node tools/verify-static.js
