@@ -251,6 +251,16 @@
       background: #0c1a30;
       box-shadow: 0 12px 32px rgba(0,0,0,0.32);
     }
+    .map-unavailable {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+    }
     .map-placeholder {
       height: 100%;
       display: flex;
@@ -1499,36 +1509,46 @@
   }
 
   // -- Lazy map init --
+  function showMapUnavailable() {
+    var mapEl = document.getElementById('map');
+    if (!mapEl || mapEl.classList.contains('map-unavailable')) return;
+    mapEl.textContent = 'The map library is unavailable. Bridge search and details still work without it.';
+    mapEl.classList.add('map-unavailable');
+    mapEl.setAttribute('role', 'status');
+  }
   function initMap() {
     if (map) return true;
-    if (typeof L === 'undefined') return false;
-    try {
-      var mapEl = document.getElementById('map');
-      mapEl.innerHTML = '';
-      map = L.map('map', { wheelDebounceTime: 200 }).setView([40.1, -74.5], 8);
-      var osmLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-        attribution: 'Map data &copy; Google',
-        subdomains: '0123',
-        maxZoom: 20
-      });
-      var satLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-        attribution: 'Map data &copy; Google',
-        subdomains: '0123',
-        maxZoom: 20
-      }).addTo(map);
-      L.control.layers({ 'Street': osmLayer, 'Satellite': satLayer }, null, { position: 'topright' }).addTo(map);
-      var searchPointPane = map.createPane('bridge-search-points');
-      searchPointPane.style.zIndex = '400';
-      searchPointPane.style.pointerEvents = 'none';
-      searchPointLayer = createSearchPointLayer().addTo(map);
-      searchPointTooltip = L.tooltip({ direction: 'top', offset: [0, -8], opacity: 0.95 });
-      map.on('mousemove', handleSearchPointMouseMove);
-      map.on('mouseout', handleSearchPointMouseOut);
-      map.on('click', handleSearchPointClick);
-      return true;
-    } catch(e) {
-      return false;
+    if (typeof L !== 'undefined') {
+      try {
+        var mapEl = document.getElementById('map');
+        mapEl.innerHTML = '';
+        map = L.map('map', { wheelDebounceTime: 200 }).setView([40.1, -74.5], 8);
+        var osmLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+          attribution: 'Map data &copy; Google',
+          subdomains: '0123',
+          maxZoom: 20
+        });
+        var satLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+          attribution: 'Map data &copy; Google',
+          subdomains: '0123',
+          maxZoom: 20
+        }).addTo(map);
+        L.control.layers({ 'Street': osmLayer, 'Satellite': satLayer }, null, { position: 'topright' }).addTo(map);
+        var searchPointPane = map.createPane('bridge-search-points');
+        searchPointPane.style.zIndex = '400';
+        searchPointPane.style.pointerEvents = 'none';
+        searchPointLayer = createSearchPointLayer().addTo(map);
+        searchPointTooltip = L.tooltip({ direction: 'top', offset: [0, -8], opacity: 0.95 });
+        map.on('mousemove', handleSearchPointMouseMove);
+        map.on('mouseout', handleSearchPointMouseOut);
+        map.on('click', handleSearchPointClick);
+        return true;
+      } catch(e) {
+        map = null;
+      }
     }
+    showMapUnavailable();
+    return false;
   }
 
   function focusMapOnBridge(lat, lng) {

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
   <link rel="stylesheet" href="../css/field-ui.css">
   <style>
     /* Page-local Field Operations tokens — refined light + glass dark */
@@ -84,6 +84,16 @@
     #map {
       width: 100%;
       height: 100%;
+    }
+    .map-unavailable {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
     }
     @media (max-width: 700px) {
       body { overflow: auto; height: auto; }
@@ -1248,19 +1258,34 @@
   let userMarker = null;
   let activeCardIndex = -1;
 
+  function showMapUnavailable() {
+    var mapEl = document.getElementById('map');
+    if (!mapEl || mapEl.classList.contains('map-unavailable')) return;
+    mapEl.textContent = 'The map library is unavailable. Station search and details still work without it.';
+    mapEl.classList.add('map-unavailable');
+    mapEl.setAttribute('role', 'status');
+  }
   function initFuelMap() {
-    if (fuelMap) return;
-    if (typeof L === 'undefined') return;
+    if (fuelMap) return true;
     var el = document.getElementById('map');
-    if (!el) return;
-    fuelMap = L.map('map', { wheelDebounceTime: 200 }).setView([40.1, -74.5], 8);
-    var streetLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-      attribution: 'Map data &copy; Google', subdomains: '0123', maxZoom: 20
-    });
-    var satLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-      attribution: 'Map data &copy; Google', subdomains: '0123', maxZoom: 20
-    }).addTo(fuelMap);
-    L.control.layers({ 'Street': streetLayer, 'Satellite': satLayer }, null, { position: 'topright' }).addTo(fuelMap);
+    if (!el) return false;
+    if (typeof L !== 'undefined') {
+      try {
+        fuelMap = L.map('map', { wheelDebounceTime: 200 }).setView([40.1, -74.5], 8);
+        var streetLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+          attribution: 'Map data &copy; Google', subdomains: '0123', maxZoom: 20
+        });
+        var satLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+          attribution: 'Map data &copy; Google', subdomains: '0123', maxZoom: 20
+        }).addTo(fuelMap);
+        L.control.layers({ 'Street': streetLayer, 'Satellite': satLayer }, null, { position: 'topright' }).addTo(fuelMap);
+        return true;
+      } catch (e) {
+        fuelMap = null;
+      }
+    }
+    showMapUnavailable();
+    return false;
   }
 
   function makePinIcon(color, active) {
@@ -1291,6 +1316,7 @@
   }
 
   function placeAllMarkers(stations) {
+    if (!fuelMap) return;
     stationMarkers.forEach(function(m) { if (m) fuelMap.removeLayer(m); });
     stationMarkers = [];
     stations.forEach(function(s, i) {
@@ -1666,16 +1692,18 @@
         .sort((a, b) => a.dist - b.dist);
 
       setStatus('', false);
-      initFuelMap();
+      var mapReady = initFuelMap();
       currentStations = sorted;
       renderStations(sorted);
-      placeAllMarkers(sorted);
-      // User location marker
-      if (userMarker) fuelMap.removeLayer(userMarker);
-      userMarker = L.marker([userLat, userLng], { icon: makeUserPulseIcon(), zIndexOffset: 1000 })
-        .bindTooltip('Your location', { permanent: false, direction: 'top', offset: [0, -22] })
-        .addTo(fuelMap);
-      fuelMap.setView([userLat, userLng], 10, { animate: hadUserMarker, duration: 0.8 });
+      if (mapReady && fuelMap) {
+        placeAllMarkers(sorted);
+        // User location marker
+        if (userMarker) fuelMap.removeLayer(userMarker);
+        userMarker = L.marker([userLat, userLng], { icon: makeUserPulseIcon(), zIndexOffset: 1000 })
+          .bindTooltip('Your location', { permanent: false, direction: 'top', offset: [0, -22] })
+          .addTo(fuelMap);
+        fuelMap.setView([userLat, userLng], 10, { animate: hadUserMarker, duration: 0.8 });
+      }
       // Re-enable the locate button so the user can re-search if they've moved
       var lbtn = document.getElementById('locate-btn');
       if (lbtn) {
