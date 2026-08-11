@@ -786,244 +786,6 @@ html[data-dark] .recent-chip:hover { border-color: #93b4f5; }
 .toast.ok  { border-color: #22c55e; color: #22c55e; background: #1a2e1a; }
 .toast.err { border-color: #ef4444; color: #ef4444; background: #2e1a1a; }
 
-/* ── GUIDE OVERLAY ─────────────────────────── */
-.guide-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1200;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 220ms ease;
-}
-.guide-overlay.open { opacity: 1; pointer-events: auto; }
-.guide-modal {
-  background: var(--surface);
-  font-family: var(--sans);
-  border-radius: 18px;
-  width: min(520px, 100%);
-  max-height: min(680px, calc(100dvh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.3);
-  transform: translateY(14px) scale(0.98);
-  transition: transform 280ms cubic-bezier(0.22,1,0.36,1);
-  overflow: hidden;
-}
-.guide-overlay.open .guide-modal { transform: none; }
-.guide-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 20px 14px;
-  border-bottom: 1.5px solid var(--border-lo);
-  flex-shrink: 0;
-}
-.guide-header-title { font-family: var(--sans); font-size: 16px; font-weight: 700; line-height: 1.25; }
-.guide-close {
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 4px;
-  font-family: var(--sans);
-  transition: color var(--transition);
-}
-.guide-close:hover { color: var(--text); }
-.guide-slides { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
-.guide-slide {
-  padding: 20px 22px;
-  border-bottom: 1px solid var(--border-lo);
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-}
-.guide-slide:last-child { border-bottom: none; }
-.guide-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-.guide-icon svg { width: 20px; height: 20px; display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.gi-blue { background: var(--accent-lo); color: var(--accent); }
-.gi-green { background: rgba(16,185,129,0.12); color: #059669; }
-.gi-orange { background: rgba(245,158,11,0.12); color: #b45309; }
-.gi-red { background: rgba(220,38,38,0.10); color: #dc2626; }
-.gi-navy { background: rgba(30,41,57,0.08); color: var(--muted2); }
-html[data-dark] .gi-green { background: rgba(52,211,153,0.16); color: #6ee7b7; }
-html[data-dark] .gi-orange { background: rgba(251,191,36,0.16); color: #fcd34d; }
-html[data-dark] .gi-red { background: rgba(244,63,94,0.16); color: #fb7185; }
-html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); color: var(--muted); }
-.guide-slide-body { flex: 1; min-width: 0; }
-.guide-slide-title { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
-.guide-slide-text { font-size: 13px; color: var(--muted2); line-height: 1.55; }
-.guide-slide-text strong { color: var(--text); }
-.guide-pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.guide-pill {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 20px;
-  letter-spacing: 0.03em;
-}
-.gp-blue { background: var(--accent-lo); color: var(--accent); }
-.gp-green { background: rgba(16,185,129,0.12); color: #059669; }
-.gp-orange { background: rgba(245,158,11,0.12); color: #b45309; }
-.gp-red { background: rgba(220,38,38,0.10); color: #dc2626; }
-.guide-footer {
-  padding: 14px 20px;
-  border-top: 1.5px solid var(--border-lo);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-  gap: 10px;
-}
-.guide-footer-note { font-size: 11px; color: var(--muted); }
-.guide-done {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius);
-  padding: 10px 22px;
-  font-family: var(--sans);
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background var(--transition);
-}
-.guide-done:hover { background: #1647b8; }
-.guide-done:active { transform: scale(0.97); }
-
-/* ── RESPONSIVE ─────────────────────────────── */
-@media (max-width: 720px) {
-  .topbar {
-    padding: 8px 12px;
-    height: auto;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-  }
-  .brand { width: 100%; justify-content: flex-start; }
-  .topbar-actions { width: 100%; justify-content: center; flex-wrap: wrap; gap: 6px; }
-  .brand-sub { display: none; }
-  .btn-label { display: none; }
-  .layout { padding: 12px 10px 80px; }
-  .photos-grid { grid-template-columns: 1fr; }
-  .fields-row { flex-wrap: wrap; }
-  .fields-row .field-group { flex: 1 1 120px; }
-}
-
-@media (max-width: 520px) {
-  .topbar-help {
-    width: 30px;
-    height: 30px;
-  }
-  .guide-modal {
-    width: 100%;
-    max-height: calc(100dvh - 26px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-    border-radius: 14px;
-  }
-  .guide-header {
-    padding: 15px 16px 12px;
-  }
-  .guide-header-title {
-    font-size: 15px;
-    line-height: 1.25;
-  }
-  .guide-slide {
-    padding: 16px;
-    gap: 11px;
-  }
-  .guide-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-  }
-  .guide-icon svg { width: 18px; height: 18px; }
-  .guide-slide-title { font-size: 13px; }
-  .guide-slide-text {
-    font-size: 12px;
-    line-height: 1.5;
-  }
-  .guide-footer {
-    padding: 12px 16px;
-  }
-}
-
-@media (max-width: 380px) {
-  .topbar {
-    padding-left: 8px;
-    padding-right: 8px;
-  }
-  .brand { gap: 8px; }
-  .hub-back {
-    padding: 5px 9px 5px 7px;
-    font-size: 11px;
-  }
-  .brand-title { font-size: 14px; }
-  .topbar-actions {
-    gap: 4px;
-  }
-  .btn {
-    padding: 7px 10px;
-  }
-  .photo-badge {
-    font-size: 10px;
-    padding: 5px 8px;
-  }
-  .guide-modal {
-    width: 100%;
-    max-height: calc(100dvh - 18px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-  }
-  .guide-slide {
-    padding: 14px;
-    gap: 9px;
-  }
-  .guide-icon {
-    width: 30px;
-    height: 30px;
-  }
-  .guide-icon svg { width: 16px; height: 16px; }
-  .guide-pill {
-    font-size: 10px;
-    padding: 3px 8px;
-  }
-  .guide-footer {
-    align-items: stretch;
-    flex-direction: column;
-  }
-  .guide-done {
-    width: 100%;
-  }
-}
-
-@media (max-width: 330px) {
-  .guide-slide {
-    display: block;
-  }
-  .guide-icon {
-    margin: 0 0 10px;
-  }
-  .guide-header-title {
-    font-size: 14px;
-  }
-}
-
   
     /* ── UI ANIMATIONS ──────────────────────── */
     /* Dark mode crossfade (only during toggle, removed after) */
@@ -1423,7 +1185,7 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); color: var(--mute
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <!-- ── GUIDE MODAL ─────────────────────────── -->
-  <div class="guide-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="Work Order Closeout Guide" aria-hidden="true">
+  <div class="guide-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="Work Order Closeout Guide" aria-hidden="true" tabindex="-1">
     <div class="guide-modal">
       <div class="guide-header">
         <div class="guide-header-title">How to Use Work Order Closeout</div>
@@ -1486,6 +1248,7 @@ html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); color: var(--mute
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="../js/guide-overlay.js"></script>
   <script>
 'use strict';
 
@@ -3236,41 +2999,16 @@ document.getElementById('clearForm').addEventListener('click', function() {
 })();
 
 // ── Guide / Tutorial ─────────────────────────
-(function() {
-  var GUIDE_KEY = 'ft_wo_guide_shown';
-  var guideOverlay = document.getElementById('guide-overlay');
-  var openBtn = document.getElementById('open-guide');
-  var closeBtn = document.getElementById('guide-close');
-  var doneBtn = document.getElementById('guide-done');
-  if (!guideOverlay || !openBtn) return;
-
-  function openGuide() {
-    guideOverlay.classList.add('open');
-    guideOverlay.setAttribute('aria-hidden', 'false');
-  }
-  function closeGuide() {
-    guideOverlay.classList.remove('open');
-    guideOverlay.setAttribute('aria-hidden', 'true');
-  }
-
-  openBtn.addEventListener('click', openGuide);
-  if (closeBtn) closeBtn.addEventListener('click', closeGuide);
-  if (doneBtn) doneBtn.addEventListener('click', closeGuide);
-  guideOverlay.addEventListener('click', function(e) {
-    if (e.target === guideOverlay) closeGuide();
+if (window.GuideOverlay) {
+  window.GuideOverlay.init({
+    storageKey: 'ft_wo_guide_shown',
+    autoShowDelay: 600,
+    // Only auto-show while the closeout is still empty — a real, page-
+    // specific adaptation: don't interrupt a user who already has an
+    // in-progress or restored draft with pages built.
+    autoShowGate: function() { return !pagesContainer.querySelectorAll('.page-block').length; }
   });
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && guideOverlay.classList.contains('open')) closeGuide();
-  });
-
-  try {
-    var shown = parseInt(localStorage.getItem(GUIDE_KEY) || '0', 10);
-    if (shown < 2 && !pagesContainer.querySelectorAll('.page-block').length) {
-      setTimeout(openGuide, 600);
-      localStorage.setItem(GUIDE_KEY, String(shown + 1));
-    }
-  } catch(_) {}
-})();
+}
 
 // ── PWA ───────────────────────────────────────
 if ('serviceWorker' in navigator && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {
