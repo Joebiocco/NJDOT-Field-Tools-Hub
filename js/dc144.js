@@ -311,11 +311,33 @@ function dbGetDC144(key) {
 }
 
 function dbDeleteDC144(key) {
-  if (!key) return;
-  openPhotoDB().then(function(db) {
-    var tx = db.transaction(IDB_DC144_STORE, 'readwrite');
-    tx.objectStore(IDB_DC144_STORE).delete(key);
-  }).catch(function() {});
+  if (!key) return Promise.resolve();
+  return openPhotoDB().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction(IDB_DC144_STORE, 'readwrite');
+      tx.objectStore(IDB_DC144_STORE).delete(key);
+      tx.oncomplete = function() { resolve(); };
+      tx.onerror    = function(e) { reject(e.target.error); };
+    });
+  });
+}
+
+// Full-fidelity dump of every saved DC-144 session (each session already
+// embeds its own photos/signature as base64, so a plain JSON dump is a
+// complete, self-contained backup — no separate photo store to reconcile).
+function dbGetAllDC144() {
+  return openPhotoDB().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx    = db.transaction(IDB_DC144_STORE, 'readonly');
+      var store = tx.objectStore(IDB_DC144_STORE);
+      var keysReq = store.getAllKeys();
+      var valsReq = store.getAll();
+      var keys, vals;
+      keysReq.onsuccess = function() { keys = keysReq.result; if (vals !== undefined) resolve({ keys: keys, values: vals }); };
+      valsReq.onsuccess = function() { vals = valsReq.result; if (keys !== undefined) resolve({ keys: keys, values: vals }); };
+      tx.onerror = function(e) { reject(e.target.error); };
+    });
+  });
 }
 
 /* ============================================================
@@ -474,6 +496,42 @@ function pad2(n) { return n < 10 ? '0'+n : String(n); }
    6. TOAST
    ============================================================ */
 
+/* ============================================================
+   6a. SHARED OVERLAY FOCUS TRAP + OPENER RESTORATION
+   Every DC-144 modal/panel is a plain div (role="dialog"), not a native
+   <dialog>, so none get focus containment or restoration for free. This
+   is an additive layer: call trapFocusOpen(el) right after an overlay
+   becomes visible and trapFocusClose(el) right after it is hidden. It
+   never changes existing show/hide logic or initial-focus behavior.
+   ============================================================ */
+var _overlayFocusStack = [];
+function trapFocusOpen(overlayEl) {
+  if (!overlayEl) return;
+  _overlayFocusStack.push({ el: overlayEl, opener: document.activeElement });
+}
+function trapFocusClose(overlayEl) {
+  var idx = -1;
+  for (var i = _overlayFocusStack.length - 1; i >= 0; i--) {
+    if (_overlayFocusStack[i].el === overlayEl) { idx = i; break; }
+  }
+  if (idx === -1) return;
+  var entry = _overlayFocusStack.splice(idx, 1)[0];
+  if (entry.opener && typeof entry.opener.focus === 'function' && document.contains(entry.opener)) {
+    try { entry.opener.focus(); } catch (e) {}
+  }
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Tab' || !_overlayFocusStack.length) return;
+  var top = _overlayFocusStack[_overlayFocusStack.length - 1].el;
+  if (!top || !top.isConnected) return;
+  var nodes = top.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])');
+  var focusable = Array.prototype.filter.call(nodes, function(el) { return el.offsetParent !== null || el === document.activeElement; });
+  if (!focusable.length) return;
+  var first = focusable[0], last = focusable[focusable.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
+
 function showToast(msg, type, dur) {
   var ct = document.getElementById('toast-ct');
   if (!ct) return;
@@ -508,6 +566,8 @@ function setAutosaveStatus(status) {
       el.textContent = '';
       setMobileStatusPill('', '');
     }, 3000);
+  } else if (status === 'error') {
+    text = 'Not saved to this device — retry'; color = '#dc2626';
   }
   el.textContent = text;
   el.style.color = color;
@@ -521,6 +581,22 @@ function setMobileStatusPill(text, color) {
   pill.style.color = color || '';
   pill.style.display = text ? '' : 'none';
 }
+
+// iOS Safari keeps the layout viewport full-height when the on-screen
+// keyboard opens (only visualViewport shrinks), so a plain `bottom: Npx`
+// fixed pill can end up hidden behind the keyboard. Nudge it up by the
+// keyboard's height when visualViewport reports one. No-op elsewhere.
+(function() {
+  var pill = document.getElementById('mobile-status-pill');
+  if (!pill || !window.visualViewport) return;
+  function repositionMobileStatusPill() {
+    var vv = window.visualViewport;
+    var keyboardOffset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    pill.style.bottom = 'calc(var(--actionbar-h, 120px) + 8px + ' + keyboardOffset + 'px)';
+  }
+  window.visualViewport.addEventListener('resize', repositionMobileStatusPill);
+  window.visualViewport.addEventListener('scroll', repositionMobileStatusPill);
+})();
 
 function scheduleAutosave() {
   clearTimeout(autosaveTimer);
@@ -583,30 +659,34 @@ function playScreenTransition(el, direction) {
 }
 
 function showDashboard() {
+  function goToDashboard() {
+    // Close any open modals before changing screens
+    closeSignaturePad();
+    closeTemplateModal();
+    var form = document.getElementById('form-screen');
+    var dash = document.getElementById('dashboard-screen');
+    form.style.display = 'none';
+    dash.style.display = '';
+    playScreenTransition(dash, 'back');
+    document.getElementById('topbar-title').textContent        = 'DC-144 Field Form';
+    document.getElementById('topbar-export-btn').style.display = 'none';
+    updateActionbarTop(false);
+    if (_progressObserver) { _progressObserver.disconnect(); _progressObserver = null; }
+    currentTab     = null;
+    currentSession = null;
+    renderRecentChips();
+    renderTemplateChips();
+  }
   // Flush in-flight form data to IDB before clearing state so the 2-second
   // autosave timer cannot cause data loss when the user taps "Back to Reports".
+  // Navigation is blocked and currentSession/currentTab are kept until the
+  // save is verified, so a failed save can never silently drop in-memory
+  // work — saveCurrentSessionNow() already surfaces a "Save failed" toast.
   if (currentSession && currentTab) {
-    collectFormData();
-    currentSession.savedAt = new Date().toISOString();
-    dbPutDC144(currentSession.photoKey, currentSession).then(function() {
-      addToRecent(currentSession);
-    }).catch(function() {});
+    saveCurrentSessionNow().then(goToDashboard).catch(function() {});
+    return;
   }
-  // Close any open modals before changing screens
-  closeSignaturePad();
-  closeTemplateModal();
-  var form = document.getElementById('form-screen');
-  var dash = document.getElementById('dashboard-screen');
-  form.style.display = 'none';
-  dash.style.display = '';
-  playScreenTransition(dash, 'back');
-  document.getElementById('topbar-title').textContent        = 'DC-144 Field Form';
-  document.getElementById('topbar-export-btn').style.display = 'none';
-  updateActionbarTop(false);
-  currentTab     = null;
-  currentSession = null;
-  renderRecentChips();
-  renderTemplateChips();
+  goToDashboard();
 }
 
 function showForm(tab, session) {
@@ -622,6 +702,8 @@ function showForm(tab, session) {
   document.getElementById('form-actionbar-title').textContent = TAB_META[tab].label + ' — ' + TAB_META[tab].name;
   setAutosaveStatus('');
   renderForm(tab, session);
+  updateActionbarTop(false);
+  initFormProgressTracker();
 }
 
 /* ============================================================
@@ -765,7 +847,14 @@ function startNewSession(tab, tplData) {
     addToRecent(session);
     showForm(tab, session);
   }).catch(function() {
+    // Storage failed to create the initial record — still let the field
+    // user work (a blank editor with no way forward is worse in the
+    // field), but make the unsaved state impossible to miss so nothing
+    // is lost silently. setAutosaveStatus('error') stays visible until a
+    // later save (autosave or "Back to Reports") succeeds.
+    showToast('Could not save this draft to your device — work is temporary until a save succeeds', 'err', 6000);
     showForm(tab, session);
+    setAutosaveStatus('error');
   });
 }
 
@@ -778,11 +867,14 @@ function restoreSession(photoKey, tab) {
 
 function deleteSession(photoKey) {
   if (!confirm('Delete this draft permanently? This cannot be undone.')) return;
-  dbDeleteDC144(photoKey);
   var arr = loadRecent().filter(function(r) { return r.photoKey !== photoKey; });
   saveRecent(arr);
   renderRecentChips();
-  showToast('Draft deleted', 'info', 1800);
+  dbDeleteDC144(photoKey).then(function() {
+    showToast('Draft deleted', 'info', 1800);
+  }).catch(function() {
+    showToast('Removed from list, but the on-device record could not be fully deleted', 'err', 4000);
+  });
 }
 
 /* ============================================================
@@ -794,7 +886,7 @@ function loadTemplates() {
 }
 
 function saveTemplatesArr(arr) {
-  try { localStorage.setItem(DC144_TEMPLATES_KEY, JSON.stringify(arr.slice(0, DC144_MAX_TEMPLATES))); } catch(e) {}
+  try { localStorage.setItem(DC144_TEMPLATES_KEY, JSON.stringify(arr.slice(0, DC144_MAX_TEMPLATES))); return true; } catch(e) { return false; }
 }
 
 function addTemplate(name, session) {
@@ -825,17 +917,111 @@ function addTemplate(name, session) {
     };
   }
   arr.unshift(entry);
-  saveTemplatesArr(arr);
+  if (!saveTemplatesArr(arr)) {
+    showToast('Could not save template — storage is full or unavailable', 'err', 5000);
+    return null;
+  }
   return entry;
 }
 
 function deleteTemplate(id) {
   if (!confirm('Delete this template? This cannot be undone.')) return;
   var arr = loadTemplates().filter(function(t) { return t.id !== id; });
-  saveTemplatesArr(arr);
-  renderTemplateChips();
-  showToast('Template deleted', 'info', 1800);
+  if (saveTemplatesArr(arr)) {
+    renderTemplateChips();
+    showToast('Template deleted', 'info', 1800);
+  } else {
+    showToast('Could not delete template — storage error', 'err', 4000);
+  }
 }
+
+/* ============================================================
+   10b. FULL BACKUP / RESTORE (templates + recent index + all sessions)
+   ============================================================ */
+
+var DC144_BACKUP_VERSION = 1;
+
+function exportDC144Backup() {
+  dbGetAllDC144().then(function(dump) {
+    var sessions = {};
+    dump.keys.forEach(function(k, i) { sessions[k] = dump.values[i]; });
+    var payload = {
+      version: DC144_BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      recent: loadRecent(),
+      templates: loadTemplates(),
+      sessions: sessions
+    };
+    var blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href = url; a.download = 'dc144-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function() { URL.revokeObjectURL(url); }, 0);
+    showToast('Backup downloaded', 'ok', 2400);
+  }).catch(function() {
+    showToast('Could not read saved drafts for backup', 'err', 4000);
+  });
+}
+
+function importDC144Backup(file) {
+  if (!file) return;
+  if (file.size > 200 * 1024 * 1024) { showToast('Backup file is too large to import', 'err', 5000); return; }
+  var reader = new FileReader();
+  reader.onload = function() {
+    var payload;
+    try {
+      payload = JSON.parse(reader.result);
+      if (!payload || typeof payload !== 'object' || payload.version !== DC144_BACKUP_VERSION) throw new Error('version');
+      if (!payload.sessions || typeof payload.sessions !== 'object') throw new Error('shape');
+    } catch (e) {
+      showToast('Backup could not be imported — invalid or unsupported file', 'err', 5000);
+      return;
+    }
+    if (!confirm('Import this backup? Sessions and templates with matching IDs will be overwritten; everything else stays.')) return;
+    openPhotoDB().then(function(db) {
+      var keys = Object.keys(payload.sessions);
+      var tx = db.transaction(IDB_DC144_STORE, 'readwrite');
+      var store = tx.objectStore(IDB_DC144_STORE);
+      keys.forEach(function(k) { store.put(payload.sessions[k], k); });
+      return new Promise(function(resolve, reject) {
+        tx.oncomplete = resolve;
+        tx.onerror    = function(e) { reject(e.target.error); };
+      });
+    }).then(function() {
+      if (Array.isArray(payload.recent)) {
+        var recentByKey = Object.create(null);
+        loadRecent().forEach(function(r) { recentByKey[r.photoKey] = r; });
+        payload.recent.forEach(function(r) { if (r && typeof r.photoKey === 'string' && r.photoKey) recentByKey[r.photoKey] = r; });
+        saveRecent(Object.keys(recentByKey).map(function(k) { return recentByKey[k]; }));
+      }
+      if (Array.isArray(payload.templates)) {
+        var tplById = Object.create(null);
+        loadTemplates().forEach(function(t) { tplById[t.id] = t; });
+        payload.templates.forEach(function(t) { if (t && typeof t.id === 'string' && t.id) tplById[t.id] = t; });
+        saveTemplatesArr(Object.keys(tplById).map(function(k) { return tplById[k]; }));
+      }
+      renderRecentChips();
+      renderTemplateChips();
+      showToast('Backup imported', 'ok', 2400);
+    }).catch(function() {
+      showToast('Backup import failed partway — some drafts may not have restored', 'err', 5000);
+    });
+  };
+  reader.readAsText(file);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var exportBtn = document.getElementById('dc144-backup-export-btn');
+  var importBtn = document.getElementById('dc144-backup-import-btn');
+  var importFile = document.getElementById('dc144-backup-import-file');
+  if (exportBtn) exportBtn.addEventListener('click', exportDC144Backup);
+  if (importBtn && importFile) importBtn.addEventListener('click', function() { importFile.click(); });
+  if (importFile) importFile.addEventListener('change', function() {
+    importDC144Backup(importFile.files && importFile.files[0]);
+    importFile.value = '';
+  });
+});
 
 function openTemplateModal() {
   if (!currentSession) return;
@@ -847,13 +1033,14 @@ function openTemplateModal() {
     input.style.borderColor = '';
   }
   prepareModalForViewport(modal);
+  trapFocusOpen(modal);
   modal.classList.add('open');
   if (input) requestAnimationFrame(function() { input.focus(); input.select(); });
 }
 
 function closeTemplateModal() {
   var modal = document.getElementById('template-modal');
-  if (modal) modal.classList.remove('open');
+  if (modal) { modal.classList.remove('open'); trapFocusClose(modal); }
 }
 
 function confirmSaveTemplate() {
@@ -1335,6 +1522,7 @@ function openSignaturePad() {
   // pageFadeIn leaves transform:translate3d(0,0,0) on body which would
   // otherwise create a containing block and push the modal off-screen.
   prepareModalForViewport(modal);
+  trapFocusOpen(modal);
   modal.classList.add('open');
   // Two rAFs guarantee the browser has performed at least one layout pass
   // after the modal becomes visible, so getBoundingClientRect() returns
@@ -1342,11 +1530,12 @@ function openSignaturePad() {
   requestAnimationFrame(function() {
     requestAnimationFrame(function() { initSignatureCanvas(); });
   });
+  requestAnimationFrame(function() { try { modal.focus(); } catch (e) {} });
 }
 
 function closeSignaturePad() {
   var modal = document.getElementById('signature-modal');
-  if (modal) modal.classList.remove('open');
+  if (modal) { modal.classList.remove('open'); trapFocusClose(modal); }
   if (signatureState && signatureState.cleanup) signatureState.cleanup();
   signatureState = null;
 }
@@ -2328,13 +2517,15 @@ function showExportReview(session) {
   // Move modal to documentElement and clear body's transform so
   // position:fixed centers on the viewport regardless of scroll.
   prepareModalForViewport(modal);
+  trapFocusOpen(modal);
   modal.classList.add('open');
   modal.dataset.sessionKey = session.photoKey;
+  requestAnimationFrame(function() { try { modal.focus(); } catch (e) {} });
 }
 
 function closeExportReview() {
   var modal = document.getElementById('export-review-modal');
-  if (modal) modal.classList.remove('open');
+  if (modal) { modal.classList.remove('open'); trapFocusClose(modal); }
 }
 
 function confirmExport() {
@@ -2344,6 +2535,10 @@ function confirmExport() {
 }
 
 function doActualExport(session) {
+  if (typeof ExcelJS === 'undefined') {
+    showToast('Export library failed to load — check your connection and reload the page', 'err', 6000);
+    return;
+  }
   var exportBtn1 = document.getElementById('topbar-export-btn');
   var exportBtn2 = document.getElementById('actionbar-export-btn');
 
@@ -3194,6 +3389,11 @@ function updateActionbarTop(isTopbarHidden) {
   var actionbar = document.getElementById('form-actionbar');
   if (!actionbar) return;
   actionbar.style.top = isTopbarHidden ? '0px' : 'var(--topbar-h)';
+  var progressBar = document.getElementById('form-progress-bar');
+  if (progressBar) {
+    var base = isTopbarHidden ? 0 : (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--topbar-h'), 10) || 58);
+    progressBar.style.top = (base + actionbar.offsetHeight) + 'px';
+  }
 }
 
 function initSmartHeader() {
@@ -3247,6 +3447,63 @@ function initSmartHeader() {
 }
 
 /* ============================================================
+   24a. MOBILE SECTION PROGRESS TRACKER
+   Sticky dot/step strip below the form actionbar (mobile widths only,
+   see the max-width:720px CSS block). Rebuilt each time showForm() opens
+   a report; scroll-spies the .section-card elements already produced by
+   renderForm() so it needs no changes to how sections are rendered.
+   ============================================================ */
+var _progressObserver = null;
+function initFormProgressTracker() {
+  var dotsEl  = document.getElementById('form-progress-dots');
+  var labelEl = document.getElementById('form-progress-label');
+  if (!dotsEl || !labelEl) return;
+
+  if (_progressObserver) { _progressObserver.disconnect(); _progressObserver = null; }
+
+  var sections = Array.prototype.slice.call(document.querySelectorAll('#form-content .section-card'));
+  dotsEl.innerHTML = '';
+  if (!sections.length) { labelEl.textContent = ''; return; }
+
+  var titles = sections.map(function(card) {
+    var t = card.querySelector('.section-card-title');
+    return t ? t.textContent : '';
+  });
+
+  sections.forEach(function(card, i) {
+    var dot = document.createElement('span');
+    dot.className = 'form-progress-dot';
+    dotsEl.appendChild(dot);
+    card.dataset.progressIndex = String(i);
+  });
+
+  function setActive(i) {
+    var dots = dotsEl.children;
+    for (var j = 0; j < dots.length; j++) {
+      dots[j].classList.toggle('active', j === i);
+      dots[j].classList.toggle('done', j < i);
+    }
+    labelEl.textContent = (i + 1) + ' of ' + sections.length + ' · ' + titles[i];
+  }
+  setActive(0);
+
+  // Track whichever section sits closest to the top of the actionbar's
+  // sticky band; a small negative top margin biases toward the section
+  // that has just scrolled under the sticky bar rather than the one still
+  // mostly below the fold.
+  var actionbar = document.getElementById('form-actionbar');
+  var bandHeight = (actionbar ? actionbar.offsetHeight : 0) + 40;
+  _progressObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (!entry.isIntersecting) return;
+      var i = Number(entry.target.dataset.progressIndex);
+      if (!isNaN(i)) setActive(i);
+    });
+  }, { rootMargin: '-' + bandHeight + 'px 0px -70% 0px', threshold: 0 });
+  sections.forEach(function(card) { _progressObserver.observe(card); });
+}
+
+/* ============================================================
    25. TOPBAR DROPDOWN PANELS — DRAFTS & TEMPLATES
    ============================================================ */
 
@@ -3261,7 +3518,11 @@ function openDraftsPanel() {
   renderDraftsPanel();
   var overlay = document.getElementById('drafts-panel-overlay');
   var btn     = document.getElementById('topbar-drafts-btn');
-  if (overlay) overlay.classList.add('open');
+  if (overlay) {
+    trapFocusOpen(overlay);
+    overlay.classList.add('open');
+    requestAnimationFrame(function() { try { overlay.focus(); } catch (e) {} });
+  }
   if (btn)     { btn.classList.add('panel-active'); btn.setAttribute('aria-expanded', 'true'); }
   draftsPanel.open = true;
 }
@@ -3269,7 +3530,7 @@ function openDraftsPanel() {
 function closeDraftsPanel() {
   var overlay = document.getElementById('drafts-panel-overlay');
   var btn     = document.getElementById('topbar-drafts-btn');
-  if (overlay) overlay.classList.remove('open');
+  if (overlay) { overlay.classList.remove('open'); trapFocusClose(overlay); }
   if (btn)     { btn.classList.remove('panel-active'); btn.setAttribute('aria-expanded', 'false'); }
   draftsPanel.open = false;
 }
@@ -3364,7 +3625,7 @@ function openTemplatesPanel() {
   renderTemplatesPanel();
   var overlay = document.getElementById('templates-panel-overlay');
   var btn     = document.getElementById('topbar-templates-btn');
-  if (overlay) overlay.classList.add('open');
+  if (overlay) { trapFocusOpen(overlay); overlay.classList.add('open'); }
   if (btn)     { btn.classList.add('panel-active'); btn.setAttribute('aria-expanded', 'true'); }
   templatesPanel.open = true;
   // Focus search after panel opens
@@ -3377,7 +3638,7 @@ function openTemplatesPanel() {
 function closeTemplatesPanel() {
   var overlay = document.getElementById('templates-panel-overlay');
   var btn     = document.getElementById('topbar-templates-btn');
-  if (overlay) overlay.classList.remove('open');
+  if (overlay) { overlay.classList.remove('open'); trapFocusClose(overlay); }
   if (btn)     { btn.classList.remove('panel-active'); btn.setAttribute('aria-expanded', 'false'); }
   templatesPanel.open = false;
 }
@@ -3587,10 +3848,13 @@ function applyTemplateFromPanel(tpl) {
 function deleteTemplateFromPanel(id) {
   if (!confirm('Delete this template? This cannot be undone.')) return;
   var arr = loadTemplates().filter(function(t) { return t.id !== id; });
-  saveTemplatesArr(arr);
-  renderTemplatesPanel();
-  renderTemplateChips();
-  showToast('Template deleted', 'info', 1800);
+  if (saveTemplatesArr(arr)) {
+    renderTemplatesPanel();
+    renderTemplateChips();
+    showToast('Template deleted', 'info', 1800);
+  } else {
+    showToast('Could not delete template — storage error', 'err', 4000);
+  }
 }
 
 /* Wire search input — live filter as user types */

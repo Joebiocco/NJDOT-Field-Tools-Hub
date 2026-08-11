@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>DC-144 Field Form — Field Tools</title>
   <meta name="theme-color" content="#E5B33B">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -404,6 +404,10 @@
       font-size: 11px; font-weight: 500; color: var(--muted);
       white-space: nowrap; flex-shrink: 0; transition: color 0.2s;
     }
+
+    /* ── Mobile section-progress tracker (hidden on desktop; see the
+       max-width:720px block for layout) ─────────────────────────────── */
+    .form-progress-bar { display: none; }
 
     /* ── Buttons ─────────────────────────────────────────────────────────── */
     .btn-primary {
@@ -841,6 +845,7 @@
       display: none; position: fixed; inset: 0; z-index: 8000;
       background: rgba(0,0,0,0.45); align-items: center; justify-content: center; padding: 20px;
       backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      outline: none;
     }
     .dc-modal-backdrop.open { display: flex; }
     .dc-modal-box {
@@ -862,6 +867,7 @@
       transition: opacity 220ms ease;
       padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
       backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      outline: none;
     }
     .guide-overlay.open { opacity: 1; pointer-events: auto; }
     .guide-modal {
@@ -1008,6 +1014,7 @@
       display: none;
       background: rgba(0,0,0,0.38);
       backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+      outline: none;
     }
     .dc144-panel-overlay.open {
       display: flex; align-items: flex-start; justify-content: flex-end; padding-right: 16px;
@@ -1243,6 +1250,31 @@
 
       #form-content.page-content { padding-bottom: 80px; }
 
+      /* Section progress tracker — sticky strip below the actionbar.
+         `top` is set inline by updateActionbarTop() in js/dc144.js so it
+         tracks the actionbar's own show/hide-on-scroll offset. */
+      .form-progress-bar {
+        display: flex; align-items: center; gap: 8px;
+        position: sticky; z-index: 499;
+        padding: 6px 12px; background: var(--surface);
+        border-bottom: 1px solid var(--border-lo);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        transition: top 460ms cubic-bezier(0.65, 0, 0.35, 1);
+      }
+      html[data-dark] .form-progress-bar { background: #071326; box-shadow: 0 2px 10px rgba(0,0,0,0.35); }
+      .form-progress-dots { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+      .form-progress-dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: var(--border); flex-shrink: 0;
+        transition: background 0.2s, transform 0.2s;
+      }
+      .form-progress-dot.active { background: var(--accent); transform: scale(1.35); }
+      .form-progress-dot.done { background: var(--accent); opacity: 0.45; }
+      .form-progress-label {
+        font-size: 11px; font-weight: 600; color: var(--muted2);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+      }
+
       /* Mobile data table → card layout. Desktop table stays unchanged. */
       .data-table-wrap {
         overflow: visible;
@@ -1401,7 +1433,7 @@
   <div id="toast-ct" role="status" aria-live="polite" aria-atomic="false"></div>
 
   <!-- ── Drafts panel overlay ──────────────────────────────────────────────── -->
-  <div id="drafts-panel-overlay" class="dc144-panel-overlay" role="dialog" aria-modal="true" aria-label="Recent Drafts">
+  <div id="drafts-panel-overlay" class="dc144-panel-overlay" role="dialog" aria-modal="true" aria-label="Recent Drafts" tabindex="-1">
     <div class="dc144-panel" id="drafts-panel">
       <div class="dc144-panel-header">
         <div class="dc144-panel-header-left">
@@ -1456,7 +1488,7 @@
   </div>
 
   <!-- ── Signature pad modal ─────────────────────────────────────────────── -->
-  <div id="signature-modal" class="dc-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="sig-modal-title">
+  <div id="signature-modal" class="dc-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="sig-modal-title" tabindex="-1">
     <div class="dc-modal-box">
       <div class="dc-modal-title" id="sig-modal-title">Inspector Signature</div>
       <div class="signature-pad-hint">Sign in the box below using your finger, stylus, or mouse.</div>
@@ -1475,7 +1507,7 @@
   </div>
 
   <!-- ── Export review modal ────────────────────────────────────────────── -->
-  <div id="export-review-modal" class="dc-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="export-review-title">
+  <div id="export-review-modal" class="dc-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="export-review-title" tabindex="-1">
     <div class="dc-modal-box" style="max-width:540px;">
       <div class="dc-modal-title" id="export-review-title">Export Review</div>
       <div id="export-review-body"></div>
@@ -1503,7 +1535,12 @@
       <div id="tab-cards-grid" class="tab-cards-grid"></div>
 
       <p class="sec-label">Recent Drafts</p>
-      <div class="ft-local-note" style="margin-bottom:12px;">Saved on this device only. Export a backup for long-term storage.</div>
+      <div class="ft-local-note" style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span>Saved on this device only. Exports contain project details, inspector names, signatures, and photos in plain text — handle accordingly.</span>
+        <button type="button" class="btn-secondary" id="dc144-backup-export-btn">Export backup</button>
+        <button type="button" class="btn-secondary" id="dc144-backup-import-btn">Import backup</button>
+        <input type="file" id="dc144-backup-import-file" accept="application/json,.json" hidden>
+      </div>
       <div id="recent-chips-container"></div>
 
       <div id="templates-section" style="margin-top:28px;">
@@ -1539,6 +1576,12 @@
         <span class="btn-label"><span class="btn-main">Export</span><span class="btn-helper">XLSX</span></span>
       </button>
     </div>
+    <!-- Mobile-only section progress tracker — sticky below the actionbar,
+         mirrors its show/hide-on-scroll offset via updateActionbarTop(). -->
+    <div id="form-progress-bar" class="form-progress-bar" aria-hidden="true">
+      <div class="form-progress-dots" id="form-progress-dots"></div>
+      <div class="form-progress-label" id="form-progress-label"></div>
+    </div>
     <div id="form-content" class="page-content"></div>
   </div>
 
@@ -1547,7 +1590,7 @@
     style="display:none;" aria-hidden="true">
 
   <!-- ── Guide / Tutorial Modal ─────────────────────────────────────────── -->
-  <div class="guide-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="DC-144 Field Form Guide" aria-hidden="true">
+  <div class="guide-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="DC-144 Field Form Guide" aria-hidden="true" tabindex="-1">
     <div class="guide-modal">
       <div class="guide-header">
         <div class="guide-header-title">How to Use DC-144 Field Form</div>
@@ -1646,12 +1689,15 @@
       if (overlay.parentNode !== document.documentElement) {
         document.documentElement.appendChild(overlay);
       }
+      if (typeof trapFocusOpen === 'function') trapFocusOpen(overlay);
       overlay.classList.add('open');
       overlay.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(function() { try { overlay.focus(); } catch(_) {} });
     }
     function closeGuide() {
       overlay.classList.remove('open');
       overlay.setAttribute('aria-hidden', 'true');
+      if (typeof trapFocusClose === 'function') trapFocusClose(overlay);
     }
 
     openBtn.addEventListener('click', openGuide);
