@@ -11,12 +11,16 @@
    - IndexedDB: work-order photos + per-session data (ft_photos DB)
    ============================================================ */
 
-const CACHE = 'ft-v1.33-2026-06-01';
+const CACHE = 'ft-v1.34-2026-08-10';
+const CACHE_PREFIX = 'ft-';
 
-// Local assets to pre-cache on install
-const LOCAL_ASSETS = [
+// Mandatory shell assets: if any of these fail to cache, the new worker
+// must not activate — the browser keeps the previous complete worker
+// instead of serving a broken offline install.
+const CORE_ASSETS = [
   './',
   './index.html',
+  './offline.html',
   './manifest.json',
   './css/field-ui.css',
   './assets/icons/icon-192.png',
@@ -29,19 +33,24 @@ const LOCAL_ASSETS = [
   './pages/njsearch.html',
   './pages/njfuel.html',
   './pages/WorkOrderCloseout.html',
-  './data/njfuel.json',
-  './data/bridges/index.json?v=2026-08-05-coordinate-review',
   './pages/timesheet.html',
   './pages/milemarker.html',
-  './data/mileposts/index.json',
   './pages/dc144.html',
   './js/dc144.js',
-  './data/dc144-template.xlsx',
   './pages/emergency.html',
   './js/milepost-lookup.js',
   './js/roadway-lookup.js',
-  './data/roadways/index.json',
   './pages/weather.html',
+];
+
+// Best-effort assets: large or non-critical-path files. A failure here
+// must not block installation/activation of the new worker.
+const OPTIONAL_ASSETS = [
+  './data/njfuel.json',
+  './data/bridges/index.json?v=2026-08-05-coordinate-review',
+  './data/mileposts/index.json',
+  './data/dc144-template.xlsx',
+  './data/roadways/index.json',
   './assets/hero/bridge-dark.webp',
   './assets/hero/bridge-light.webp',
   './assets/hero/nj-dark.webp',
@@ -52,22 +61,27 @@ const LOCAL_ASSETS = [
 self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE).then(function(c) {
-      return c.addAll(LOCAL_ASSETS).catch(function() {
-        // If any asset fails, continue anyway
-        return Promise.all(LOCAL_ASSETS.map(function(url) {
+      return c.addAll(CORE_ASSETS).then(function() {
+        // Optional assets are cached best-effort and must never block
+        // (or fail) the install — each asset failure is swallowed alone.
+        return Promise.all(OPTIONAL_ASSETS.map(function(url) {
           return c.add(url).catch(function() {});
         }));
       });
+      // If CORE_ASSETS fails to cache, this promise rejects, install
+      // fails, and skipWaiting below is never reached — the previous
+      // complete worker (if any) stays in control.
+    }).then(function() {
+      self.skipWaiting();
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', function(e) {
   e.waitUntil(
     caches.keys().then(function(keys) {
       return Promise.all(
-        keys.filter(function(k) { return k !== CACHE; })
+        keys.filter(function(k) { return k.indexOf(CACHE_PREFIX) === 0 && k !== CACHE; })
             .map(function(k) { return caches.delete(k); })
       );
     })
@@ -91,8 +105,19 @@ self.addEventListener('message', function(e) {
 
 // Weather notifications opened from the installed app or desktop browser
 // should return to the weather tool when the user taps them.
+// Notification click targets are constrained to same-origin app routes so a
+// push payload can never redirect a client to an arbitrary external URL.
+function safeNotificationTarget(raw) {
+  try {
+    var resolved = new URL(raw || './pages/weather.html', self.location.origin);
+    if (resolved.origin !== self.location.origin) return './pages/weather.html';
+    return resolved.pathname + resolved.search + resolved.hash;
+  } catch (_) {
+    return './pages/weather.html';
+  }
+}
 self.addEventListener('notificationclick', function(e) {
-  var target = (e.notification && e.notification.data && e.notification.data.url) || './pages/weather.html';
+  var target = safeNotificationTarget(e.notification && e.notification.data && e.notification.data.url);
   e.notification.close();
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clients) {
@@ -173,7 +198,7 @@ self.addEventListener('fetch', function(e) {
           return resp;
         }).catch(function() {
           return caches.match(e.request).then(function(cached) {
-            return cached || caches.match('./index.html');
+            return cached || caches.match('./offline.html');
           });
         })
       );

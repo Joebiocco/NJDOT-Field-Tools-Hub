@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Offline — Field Tools Hub</title>
+  <meta name="theme-color" content="#E5B33B">
+  <script>if(localStorage.getItem("field_dark_mode")==="1")document.documentElement.setAttribute("data-dark","");</script>
+  <style>
+    :root{
+      --bg:#edf1f7; --surface:#ffffff; --text:#0b1a2e; --muted:#5a6b85; --line:#dae2ee; --gold:#c9971a;
+    }
+    html[data-dark]{
+      --bg:#06111f; --surface:#0e2440; --text:#f1f5f9; --muted:#93a7c4; --line:rgba(120,170,230,0.18); --gold:#e5b33b;
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;height:100%;}
+    body{
+      min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px;
+      background:var(--bg); color:var(--text);
+      font-family:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    }
+    .card{
+      max-width:440px; width:100%; background:var(--surface); border:1px solid var(--line); border-radius:16px;
+      padding:28px 26px; text-align:center; box-shadow:0 12px 28px -14px rgba(12,32,64,.24);
+    }
+    h1{font-size:20px; margin:0 0 10px;}
+    p{color:var(--muted); font-size:14px; line-height:1.6; margin:0 0 20px;}
+    a.button{
+      display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:0 20px;
+      border-radius:12px; background:var(--gold); color:#0b1a2e; font-weight:700; text-decoration:none; font-size:14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" role="alert">
+    <h1>This page isn't available offline</h1>
+    <p>You're offline and this exact page hasn't been saved on this device yet. Tools you've already opened while online will keep working offline — head back to the Hub to pick one, or reconnect and try this link again.</p>
+    <a class="button" href="./index.html">Back to Field Tools Hub</a>
+  </div>
+</body>
+</html>

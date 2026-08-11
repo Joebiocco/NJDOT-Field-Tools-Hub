@@ -1,11 +1,11 @@
 {
   "name": "NJDOT Field Tools",
   "short_name": "Field Tools",
-  "description": "NJ DOT field worker tools — bridge navigator, work orders, fuel finder",
+  "description": "Field Tools Hub — bridge navigator, fuel finder, milepost lookup, emergency assistance, weather and radar, timesheet tracker, DC-144 field forms, and work order closeout.",
   "start_url": "/NJDOT-Field-Tools-Hub/",
   "scope": "/NJDOT-Field-Tools-Hub/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "background_color": "#001e4d",
   "theme_color": "#E5B33B",
   "icons": [
