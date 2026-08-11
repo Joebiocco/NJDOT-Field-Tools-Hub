@@ -874,162 +874,6 @@
       flex: 1;
     }
 
-    .guide-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 1200;
-      background: rgba(0,0,0,0.55);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 220ms ease;
-    }
-    .guide-overlay.open { opacity: 1; pointer-events: auto; }
-    .guide-modal {
-      background: var(--surface);
-      font-family: var(--sans);
-      border-radius: 18px;
-      width: min(520px, 100%);
-      max-height: min(680px, calc(100dvh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.3);
-      transform: translateY(14px) scale(0.98);
-      transition: transform 280ms cubic-bezier(0.22,1,0.36,1);
-      overflow: hidden;
-    }
-    .guide-overlay.open .guide-modal { transform: none; }
-    .guide-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 20px 14px;
-      border-bottom: 1.5px solid var(--border-lo);
-      flex-shrink: 0;
-    }
-    .guide-header-title { font-family: var(--sans); font-size: 16px; font-weight: 700; line-height: 1.25; }
-    .guide-close {
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-size: 22px;
-      line-height: 1;
-      cursor: pointer;
-      padding: 0 4px;
-      font-family: var(--sans);
-      transition: color var(--transition);
-    }
-    .guide-close:hover { color: var(--text); }
-    .guide-slides { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
-    .guide-slide {
-      padding: 20px 22px;
-      border-bottom: 1px solid var(--border-lo);
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
-    }
-    .guide-slide:last-child { border-bottom: none; }
-    .guide-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0;
-      font-weight: 800;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-    .guide-icon svg { width: 20px; height: 20px; display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    .gi-blue { background: var(--accent-lo); color: var(--accent); }
-    .gi-green { background: rgba(16,185,129,0.12); color: #059669; }
-    .gi-orange { background: rgba(245,158,11,0.12); color: #b45309; }
-    .gi-red { background: rgba(220,38,38,0.10); color: #dc2626; }
-    .gi-navy { background: rgba(30,41,57,0.08); color: var(--muted2); }
-    html[data-dark] .gi-green { background: rgba(52,211,153,0.16); color: #6ee7b7; }
-    html[data-dark] .gi-orange { background: rgba(251,191,36,0.16); color: #fcd34d; }
-    html[data-dark] .gi-red { background: rgba(244,63,94,0.16); color: #fb7185; }
-    html[data-dark] .gi-navy { background: rgba(255,255,255,0.06); color: var(--muted); }
-    .guide-slide-body { flex: 1; min-width: 0; }
-    .guide-slide-title { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
-    .guide-slide-text { font-size: 13px; color: var(--muted2); line-height: 1.55; }
-    .guide-slide-text strong { color: var(--text); }
-    .guide-pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .guide-pill {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: 20px;
-      letter-spacing: 0.03em;
-    }
-    .gp-blue { background: var(--accent-lo); color: var(--accent); }
-    .gp-green { background: rgba(16,185,129,0.12); color: #059669; }
-    .gp-orange { background: rgba(245,158,11,0.12); color: #b45309; }
-    .gp-red { background: rgba(220,38,38,0.10); color: #dc2626; }
-    .guide-footer {
-      padding: 14px 20px;
-      border-top: 1.5px solid var(--border-lo);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-      gap: 10px;
-    }
-    .guide-footer-note { font-size: 11px; color: var(--muted); }
-    .guide-done {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      padding: 10px 22px;
-      font-family: var(--sans);
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background var(--transition);
-    }
-    .guide-done:hover { background: #1647b8; }
-    .guide-done:active { transform: scale(0.97); }
-
-    @media (max-width: 520px) {
-      .guide-modal {
-        width: 100%;
-        max-height: calc(100dvh - 26px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-        border-radius: 14px;
-      }
-      .guide-header { padding: 15px 16px 12px; }
-      .guide-header-title { font-size: 15px; line-height: 1.25; }
-      .guide-slide { padding: 16px; gap: 11px; }
-      .guide-icon { width: 34px; height: 34px; border-radius: 10px; }
-      .guide-icon svg { width: 18px; height: 18px; }
-      .guide-slide-title { font-size: 13px; }
-      .guide-slide-text { font-size: 12px; line-height: 1.5; }
-      .guide-footer { padding: 12px 16px; }
-    }
-    @media (max-width: 380px) {
-      .guide-modal {
-        width: 100%;
-        max-height: calc(100dvh - 18px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-      }
-      .guide-slide { padding: 14px; gap: 9px; }
-      .guide-icon { width: 30px; height: 30px; }
-      .guide-icon svg { width: 16px; height: 16px; }
-      .guide-pill { font-size: 10px; padding: 3px 8px; }
-      .guide-footer { align-items: stretch; flex-direction: column; }
-      .guide-done { width: 100%; }
-    }
-    @media (max-width: 330px) {
-      .guide-slide { display: block; }
-      .guide-icon { margin-bottom: 8px; }
-      .guide-header-title { font-size: 14px; }
-    }
-
   </style>
   <script>if(localStorage.getItem("field_dark_mode")==="1")document.documentElement.setAttribute("data-dark","");</script>
   <style>html{background:#eef0f4}html[data-dark]{background:#0f1117}</style>
@@ -1184,7 +1028,7 @@
 </div> <!-- /main-layout -->
 <div class="fuel-toast" id="fuel-toast" role="status" aria-live="polite"></div>
 
-<div class="guide-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="Fuel Station Finder Guide" aria-hidden="true">
+<div class="guide-overlay" id="guide-overlay" role="dialog" aria-modal="true" aria-label="Fuel Station Finder Guide" aria-hidden="true" tabindex="-1">
   <div class="guide-modal">
     <div class="guide-header">
       <div class="guide-header-title">How to Use Fuel Station Finder</div>
@@ -1239,6 +1083,7 @@
   </div>
 </div>
 
+<script src="../js/guide-overlay.js"></script>
 <script>
   // ── Data (embedded inline) ──
   var FUEL_STATIONS = {"value":[{"county":"Warren","location":"Columbia DOT","address":"Simpson Street Columbia, NJ","phone Number":"908-496-4088","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.935311,"longitude":-75.101895},{"county":"Warren","location":"Port Colden DOT","address":"619 Rt. 57 behind State Police Bldg Port Colden, NJ","phone Number":"908-689-0570","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.76586,"longitude":-74.93224},{"county":"Warren","location":"Yellow Frame DOT","address":"Rt. 94 between Mott Rd \u0026 Kerr Rd Marksboro, NJ","phone Number":"908-362-6896","hours":"7:45 am to 3:45 pm M-F","fuel":"Unleaded/Diesel","latitude":40.98829409,"longitude":-74.88516556},{"county":"Union","location":"Summit DOT","address":"46 Springfield Avenue Summit, NJ","phone Number":"973-376-1302","hours":"7:30 am to 3:45 pm M-F","fuel":"Unleaded/Diesel","latitude":40.716273,"longitude":-74.329762},{"county":"Union","location":"Elizabeth DOT","address":"906 North Ave East Elizabeth","phone Number":"908-282-7633","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.935311,"longitude":-75.101895},{"county":"Sussex","location":"Branchville DOT","address":"349 Rt. 206 Branchville","phone Number":"973-948-3590","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":41.15154413,"longitude":-74.76831456},{"county":"Sussex","location":"Lafayette DOT","address":"38 Rt. 94 (1/4 mile  North of Rt. 15 ) Lafayette","phone Number":"973-383-3003","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":41.09273552,"longitude":-74.67791503},{"county":"Sussex","location":"Sussex DOT","address":"Rt. 23 North  At County Rd 565 Sussex","phone Number":"973-875-4719","hours":"7:30 am to 3:45 pm M-F","fuel":"Unleaded/Diesel","latitude":41.199888,"longitude":-74.597297},{"county":"Somerset","location":"Bedminster DOT","address":"455 Rt. 202/206 South Pluckemin","phone Number":"908-234-2130","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.65123677,"longitude":-74.64499021},{"county":"Somerset","location":"Bridgewater DOT","address":"150 Commons Way Bridgewater","phone Number":"908-704-3096","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.58997095,"longitude":-74.62639744},{"county":"Salem","location":"Deepwater DOT","address":"County Rd 551 ( Hook Rd ) Exit  1c Rt. 295 southbound Deepwater","phone Number":"856-299-3407","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.677937,"longitude":-75.486985},{"county":"Salem","location":"Elmer DOT","address":"355 Rt. 40 At mile marker 21.5 Pittsgrove","phone Number":"856-358-8813","hours":"7:30 am to 3:45 pm M-F","fuel":"Unleaded/Diesel","latitude":39.598444,"longitude":-75.149157},{"county":"Passaic","location":"Clifton DOT","address":"Bloomfield Ave East \u0026 Isabella St. Clifton","phone Number":"201-866-7274","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.838978,"longitude":-74.16158},{"county":"Passaic","location":"Totowa DOT","address":"300 Minisink Rd. off Rt. 80 West Bound Totowa","phone Number":"973-785-9310","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.89776431,"longitude":-74.22975736},{"county":"Passaic","location":"Paterson DOT","address":"1 McClean Blvd Paterson","phone Number":"973-278-5541","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.93588669,"longitude":-74.14187188},{"county":"Ocean","location":"Lakewood DOT","address":"45 Honey Locust Drive   Behind 84 Lumber Lakewood","phone Number":"732-942-2700","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.0495718,"longitude":-74.22339715},{"county":"Ocean","location":"Manahawkin DOT","address":"Rt. 72 at Rt.9 South To 123 Grassy Hollow Rd Manahawkin","phone Number":"609-597-2166","hours":"7:45 am to 3:45 pm M-F","fuel":"Unleaded/Diesel","latitude":39.69451178,"longitude":-74.26486765},{"county":"Ocean","location":"Toms River DOT","address":"743 Rt. 37 West Toms River","phone Number":"732-341-2216","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.96805337,"longitude":-74.23567666},{"county":"Morris","location":"Hanover Twp. DOT","address":"Eden Lane \u0026 Rt. 287 East Hanover","phone Number":"973-887-5682","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.824882,"longitude":-74.441046},{"county":"Morris","location":"Netcong DOT","address":"90 Rt. 183 North Netcong","phone Number":"973-691-4917","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.89337617,"longitude":-74.69634695},{"county":"Morris","location":"Riverdale DOT","address":"1 Riverdale Rd behind National Guard Armory Riverdale","phone Number":"973-839-2077","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.9895698,"longitude":-74.3010524},{"county":"Morris","location":"Rockaway DOT","address":"200 Rt. 15 South At mile marker 3 Wharton","phone Number":"973-361-8701","hours":"7:30 am to 3:45 pm M-F","fuel":"Unleaded/Diesel","latitude":40.91857611,"longitude":-74.5865267},{"county":"Monmouth","location":"Freehold DOT","address":"200 Daniels Way Off Rt. 79 Freehold","phone Number":"732-625-4370","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.24369762,"longitude":-74.2713046},{"county":"Monmouth","location":"Hazlet DOT","address":"370 Clark street Hazlet","phone Number":"732-264-5387","hours":"7:45 am to 3:45 pm","fuel":"Diesel","latitude":40.422786,"longitude":-74.209831},{"county":"Monmouth","location":"Ocean Twp. DOT","address":"100 Bowne Rd. at Rt. 66 Ocean Twp","phone Number":"732-922-1310","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.23280082,"longitude":-74.06037254},{"county":"Monmouth","location":"Wall Twp. DOT","address":"2436 Paynters Rd.   Off  Rt. 34 Wall Twp.","phone Number":"732-528-7339","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.12265214,"longitude":-74.07707522},{"county":"Middlesex","location":"College Farm  DOT","address":"Rt. 1 (north bound)    At College Farm Rd North Brunswick","phone Number":"732-247-5775","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.46633234,"longitude":-74.43153684},{"county":"Middlesex","location":"East Brunswick Public Works","address":"4 Harts Lane East Brunswick","phone Number":"732-390-6886","hours":"8:00 am to 4:00 pm M-F","fuel":"Unleaded","latitude":40.444365,"longitude":-74.408521},{"county":"Middlesex","location":"Keasbey/Woodbridge DOT","address":"Smith St. off Rt. 440 To 90 Crows Mill Rd Keasbey","phone Number":"732-738-3206","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.51805278,"longitude":-74.30968803},{"county":"Middlesex","location":"Sand Hill DOT","address":"3919 Rt. 1 Monmouth Junction","phone Number":"732-297-0671","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.41112755,"longitude":-74.54426021},{"county":"Middlesex","location":"Sayreville DOT","address":"25 Melrose Avenue Sayreville","phone Number":"","hours":"7:30 am to 3:45 pm","fuel":"Diesel","latitude":40.49016916,"longitude":-74.30029538},{"county":"Middlesex","location":"Woodbridge Dev. Center","address":"1277 Rahway Ave. Woodbridge","phone Number":"732-499-5168","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.58335914,"longitude":-74.26800727},{"county":"Mercer","location":"Eggerts Crossing Garage","address":"161 Eggerts Crossing Rd. Lawrenceville","phone Number":"609-530-2073","hours":"7:15 am -3:15 pm","fuel":"Unleaded","latitude":40.27274199,"longitude":-74.74666088},{"county":"Mercer","location":"Fernwood DOT","address":"999 Parkway Ave. Trenton","phone Number":"609-530-2208","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.25685605,"longitude":-74.79821311},{"county":"Mercer","location":"Hamilton DOT","address":"2779 Kuser Rd. 1/4 mile from Rt.130 \u0026 Rt.195 Hamilton Twp.","phone Number":"609-584-4328","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.20476792,"longitude":-74.63589228},{"county":"Mercer","location":"Hamilton State Police","address":"Troop “C” Barracks Klockner Rd off Rt.130 Hamilton Twp.","phone Number":"609-584-5000","hours":"7:00 am to 7:00 pm","fuel":"Unleaded","latitude":40.201772,"longitude":-74.645781},{"county":"Mercer","location":"Lawrence Twp. DOT","address":"Rt. 1, 2798 Brunswick Ave. Lawrence Twp.","phone Number":"609-530-2650","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.26535133,"longitude":-74.71632132},{"county":"Mercer","location":"Washington Twp. DOT","address":"Rt. 130 \u0026 Voelbel Rd. Washington Twp.","phone Number":"609-448-4224","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.24521913,"longitude":-74.56851629},{"county":"Mercer","location":"West Trenton DOT","address":"780 Bear Tavern Rd  (Exit 2 off I-95) West Trenton","phone Number":"609-883-5049","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.27645795,"longitude":-74.82595939},{"county":"Hunterdon","location":"Bloomsbury DOT","address":"1000 Rt. 173 Bloomsbury","phone Number":"908-479-4851","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.660786,"longitude":-75.06664165},{"county":"Hunterdon","location":"Clinton Point DOT","address":"84 Beaver Ave Clinton","phone Number":"908-735-4002","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.64038353,"longitude":-74.88898107},{"county":"Hunterdon","location":"Flemington DOT","address":"Rt 31 at railroad crossing Flemington","phone Number":"908-782-3025","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.50922972,"longitude":-74.85131465},{"county":"Hunterdon","location":"West Amwell DOT","address":"1406 Rt. 179 West Amwell Twp.","phone Number":"609-397-2349","hours":"7:45 am to 3:45 pm M-F","fuel":"Unleaded/Diesel","latitude":40.38549512,"longitude":-74.91528086},{"county":"Hudson","location":"Jersey City DOT","address":"401 Rts. 1 \u0026 9, truck route (south bound ) Jersey City","phone Number":"201-451-0435","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.73686317,"longitude":-74.08018562},{"county":"Gloucester","location":"Bridgeport DOT","address":"Rts. 130 \u0026 322 Bridgeport","phone Number":"856-467-0737","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.8041148,"longitude":-75.34441319},{"county":"Gloucester","location":"Deptford DOT","address":"Superior Way off Rt. 41 at Rt. 42 Deptford","phone Number":"856-227-8080","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.8322532,"longitude":-75.09148157},{"county":"Gloucester","location":"Glassboro DOT","address":"126 Grove Street at Rt.47 Glassboro","phone Number":"856-881-1711","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.69656522,"longitude":-75.10849719},{"county":"Gloucester","location":"West Deptford DOT","address":"1140 Crown Point Rd at mile marker 24 \u0026 25 Westville","phone Number":"856-845-2850","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.86494376,"longitude":-75.14575114},{"county":"Essex","location":"Newark DOT","address":"Jct. Rts. 1,9,21,22 Newark","phone Number":"973-648-2725","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.7094199,"longitude":-74.17571162},{"county":"Essex","location":"West Orange DOT","address":"1255 Pleasant Valley Way at National Guard Armory West Orange","phone Number":"","hours":"7:30 am to 3:45 pm M-F","fuel":"Unleaded/Diesel","latitude":40.78366162,"longitude":-74.27598034},{"county":"Cumberland","location":"Bayside Facility","address":"4294 Rt. 47  Leesburg","phone Number":"856-785-0040x5429","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.23339997,"longitude":-74.96568202},{"county":"Cumberland","location":"Cumberland DOT","address":"Rt. 49 \u0026 Hesstown Rd. Cumberland","phone Number":"856-825-3320","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.36417407,"longitude":-74.93084981},{"county":"Cumberland","location":"Port Norris State Police","address":"8861 Highland Street Port Norris","phone Number":"609-785-0036","hours":"7:00 am to 7:00 pm","fuel":"Unleaded","latitude":39.288277,"longitude":-75.012286},{"county":"Cumberland","location":"Southwoods State Prison","address":"1 N.Industrial Blvd \u0026 215 S. Burlington Rd Bridgeton","phone Number":"856-459-7600","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.41498116,"longitude":-75.21248817},{"county":"Cumberland","location":"Vineland DOT","address":"1959 Delsea Dr    \u0026 West Elmer Rd Vineland","phone Number":"856-696-6805","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.45778852,"longitude":-75.04187987},{"county":"Cape May","location":"Middle Township DOT","address":"Rt. 9 \u0026 W.Edgewood Ave Rio Grande","phone Number":"609-465-4201","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.02916768,"longitude":-74.86327371},{"county":"Cape May","location":"North Wildwood State Police","address":"1ST \u0026 Central Ave. North Wildwood","phone Number":"609-522-6081","hours":"7:00 am to 7:00 pm","fuel":"Unleaded","latitude":39.00746,"longitude":-74.790895},{"county":"Cape May","location":"Petersburg DOT","address":"400 Old Tuckahoe Rd Petersburg","phone Number":"609-628-2533","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.25964713,"longitude":-74.73066206},{"county":"Cape May","location":"Woodbine Dev. Center","address":"1175 DeHirsch Ave. \u0026 Fantail  Woodbine","phone Number":"609-861-6021","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.23413958,"longitude":-74.80345129},{"county":"Camden","location":"Berlin DOT","address":"36 Walker Ave. Berlin","phone Number":"856-767-7717","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.80369329,"longitude":-74.93442722},{"county":"Camden","location":"Cherry Hill DOT","address":"Frontage Rd \u0026 Rt. 70      Near Rt. 295 Cherry Hill","phone Number":"856-795-4748","hours":"Open 24 Hrs.","fuel":"Unleaded/Diesel","latitude":39.90389152,"longitude":-74.98461145},{"county":"Camden","location":"Pennsauken DOT","address":"3750 Rt. 130 \u0026 Federal St. Ramp ( southbound ) Pennsauken","phone Number":"856-665-2995","hours":"7:30 am to 3:45 pm M-F","fuel":"Unleaded/Diesel","latitude":39.94934153,"longitude":-75.07126805},{"county":"Burlington","location":"Bordentown DOT","address":"Dunns Mill Rd. - off Rt. 130 Bordentown NJ","phone Number":"609-298-2980","hours":"Unleaded -Open 24 Hrs, Diesel – 7:30 am -3:45 pm M-F","fuel":"Unleaded/Diesel","latitude":40.13178135,"longitude":-74.71658907},{"county":"Burlington","location":"Edgewater Park DOT","address":"Rt. 130 \u0026 Mt.Holly Rd Behind State Police Barracks Edgewater Park, NJ","phone Number":"609-877-8245","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.04082858,"longitude":-74.91620151},{"county":"Burlington","location":"Mt. Laurel DOT","address":"Rt. 38, East 1/4 mile East of Rt. 295 Mt. Laurel NJ","phone Number":"856-235-3096","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":39.96744662,"longitude":-74.88930386},{"county":"Burlington","location":"Red Lion DOT","address":"Rt. 70 West of Rt. 206 at Red Lion Circle Southampton NJ","phone Number":"609-859-2335","hours":"Open 24 Hrs.","fuel":"Unleaded/Diesel","latitude":39.88907707,"longitude":-74.74474718},{"county":"Bergen","location":"Lodi DOT","address":"Gregg St. 1 block off Rt. 17 Lodi, NJ","phone Number":"201-845-6564","hours":"Open 24 Hrs","fuel":"Unleaded/Diesel","latitude":40.8884446,"longitude":-74.072029},{"county":"Bergen","location":"Ramsey DOT","address":"15 Arrow Road Ramsey, NJ","phone Number":"201-825-1076","hours":"Unleaded-7:45 am to 3:45 pm M-F, Diesel -Non-Automated","fuel":"Unleaded/Diesel","latitude":41.06565227,"longitude":-74.12047012},{"county":"Atlantic","location":"Buena DOT","address":"Rt. 40 near Catherine Avenue Buena, NJ","phone Number":"609-697-1136","hours":"7:45 am to 3:45 pm M-F","fuel":"Unleaded/Diesel","latitude":39.51554447,"longitude":-74.92849165},{"county":"Atlantic","location":"Buena Vista State Police","address":"1045 Rt. 54 South of Rt. 322 Buena Vista Twp., NJ","phone Number":"609-625-1105","hours":"7:00 am to 7:00 pm","fuel":"Unleaded","latitude":39.577596,"longitude":-74.867983},{"county":"Atlantic","location":"Hammonton Motor Pool","address":"253-D North White Horse Pike Hammonton, NJ","phone Number":"609-567-1100","hours":"Open 24Hrs","fuel":"Unleaded","latitude":39.65486598,"longitude":-74.79584455},{"county":"Atlantic","location":"Folsom DOT","address":"Rt. 54 SB \u0026 County Rt. 561 Milepost 7.5 Hammonton, NJ","phone Number":"","hours":"Unmanned site","fuel":"Diesel","latitude":39.60125314,"longitude":-74.8477761},{"county":"Atlantic","location":"Mays Landing DOT","address":"5837 Apple Street Mays Landing, NJ","phone Number":"609-625-8284","hours":"Open 24Hrs","fuel":"Unleaded/Diesel","latitude":39.47751148,"longitude":-74.70172997},{"county":"Atlantic","location":"Pomona DOT","address":"Rt. 30 \u0026 W.McKinley Ave Pomona, NJ","phone Number":"609-441-3196","hours":"7:45 am to 3:45 pm M-F","fuel":"Unleaded/Diesel","latitude":39.45960788,"longitude":-74.54338501}],"Count":74};
@@ -1983,41 +1828,9 @@
     });
   }
 
-  (function() {
-    var GUIDE_KEY = 'ft_fuel_guide_shown';
-    var guideOverlay = document.getElementById('guide-overlay');
-    var openBtn = document.getElementById('open-guide');
-    var closeBtn = document.getElementById('guide-close');
-    var doneBtn = document.getElementById('guide-done');
-    if (!guideOverlay || !openBtn) return;
-
-    function openGuide() {
-      guideOverlay.classList.add('open');
-      guideOverlay.setAttribute('aria-hidden', 'false');
-    }
-    function closeGuide() {
-      guideOverlay.classList.remove('open');
-      guideOverlay.setAttribute('aria-hidden', 'true');
-    }
-
-    openBtn.addEventListener('click', openGuide);
-    if (closeBtn) closeBtn.addEventListener('click', closeGuide);
-    if (doneBtn) doneBtn.addEventListener('click', closeGuide);
-    guideOverlay.addEventListener('click', function(e) {
-      if (e.target === guideOverlay) closeGuide();
-    });
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && guideOverlay.classList.contains('open')) closeGuide();
-    });
-
-    try {
-      var shown = parseInt(localStorage.getItem(GUIDE_KEY) || '0', 10);
-      if (shown < 2) {
-        localStorage.setItem(GUIDE_KEY, String(shown + 1));
-        setTimeout(openGuide, 650);
-      }
-    } catch(e) {}
-  })();
+  if (window.GuideOverlay) {
+    window.GuideOverlay.init({ storageKey: 'ft_fuel_guide_shown' });
+  }
 
   // Hub-back slide-left transition
   (function() {
