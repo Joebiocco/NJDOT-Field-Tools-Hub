@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>NJ Bridge Navigator</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1139,6 +1139,13 @@
   <h1>Bridge Navigator</h1>
   <span class="state-badge">NJ</span>
   <div class="topbar-spacer"></div>
+  <button type="button" class="topbar-help" id="bookmark-export-btn" aria-label="Export bookmarks" title="Export bookmarks">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  </button>
+  <button type="button" class="topbar-help" id="bookmark-import-btn" aria-label="Import bookmarks" title="Import bookmarks">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+  </button>
+  <input type="file" id="bookmark-import-file" accept="application/json,.json" hidden>
   <button class="topbar-help" id="open-guide" aria-label="Help & Guide">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
   </button>
@@ -1169,7 +1176,9 @@
             </button>
           </div>
         </div>
-        <div class="ft-local-note" style="margin:10px 0 0;">Saved on this device only. Export a backup for long-term storage.</div>
+        <div class="ft-local-note" style="margin:10px 0 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span>Saved on this device only. Export/import bookmarks from the header.</span>
+        </div>
       </div>
       <div class="mobile-results-controls">
         <span class="mobile-results-label" id="mobile-results-label">Search results</span>
@@ -2075,6 +2084,46 @@
     return i === -1;
   }
   var bookmarkFilterOn = false;
+
+  function exportBridgeBookmarks() {
+    var payload = { version: 1, exportedAt: new Date().toISOString(), tool: 'bridge', bookmarks: getBookmarks() };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'bridge-bookmarks-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function() { URL.revokeObjectURL(url); }, 0);
+    announceBridgeStatus('Bookmark backup downloaded.', 'status');
+  }
+  function importBridgeBookmarks(file) {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { announceBridgeStatus('Bookmark file is too large to import.', 'alert'); return; }
+    var reader = new FileReader();
+    reader.onload = function() {
+      try {
+        var payload = JSON.parse(reader.result);
+        var incoming = Array.isArray(payload) ? payload : payload.bookmarks;
+        if (!Array.isArray(incoming)) throw new Error('shape');
+        incoming = incoming.filter(function(v) { return typeof v === 'string' && v; });
+        var current = getBookmarks();
+        var merged = current.slice();
+        incoming.forEach(function(v) { if (merged.indexOf(v) === -1) merged.push(v); });
+        setBookmarks(merged);
+        announceBridgeStatus('Imported ' + incoming.length + ' bookmark(s); ' + merged.length + ' total saved.', 'status');
+      } catch (e) {
+        announceBridgeStatus('Bookmark backup could not be imported — invalid file.', 'alert');
+      }
+    };
+    reader.readAsText(file);
+  }
+  (function() {
+    var exportBtn = document.getElementById('bookmark-export-btn');
+    var importBtn = document.getElementById('bookmark-import-btn');
+    var importFile = document.getElementById('bookmark-import-file');
+    if (exportBtn) exportBtn.addEventListener('click', exportBridgeBookmarks);
+    if (importBtn && importFile) importBtn.addEventListener('click', function() { importFile.click(); });
+    if (importFile) importFile.addEventListener('change', function() { importBridgeBookmarks(importFile.files && importFile.files[0]); importFile.value = ''; });
+  })();
 
   function escHtml(s) {
     return String(s == null ? '' : s)

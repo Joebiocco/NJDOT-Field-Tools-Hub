@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>NJ Fuel Station Finder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1106,6 +1106,13 @@
   <h1>Fuel Station Finder</h1>
   <span class="state-badge">NJ</span>
   <div class="topbar-spacer"></div>
+  <button type="button" class="topbar-help" id="fuel-bookmark-export-btn" aria-label="Export bookmarks" title="Export bookmarks">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  </button>
+  <button type="button" class="topbar-help" id="fuel-bookmark-import-btn" aria-label="Import bookmarks" title="Import bookmarks">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+  </button>
+  <input type="file" id="fuel-bookmark-import-file" accept="application/json,.json" hidden>
   <button class="topbar-help" id="open-guide" aria-label="Help & Guide">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.2-3 4.1"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
   </button>
@@ -1143,7 +1150,7 @@
   <!-- Bookmarks card (own container, after hero card) -->
   <div class="bookmark-card">
     <div class="bookmark-card-title">My Bookmarks</div>
-    <div class="ft-local-note" style="margin-bottom:8px;">Saved on this device only. Export a backup for long-term storage.</div>
+    <div class="ft-local-note" style="margin-bottom:8px;">Bookmarks are saved on this device only. Station data works offline after first load, but the map background, directions, and live location require a connection.</div>
     <div class="bookmark-row">
       <span class="bookmark-count" id="fuel-bookmark-count">No saved items yet.</span>
       <button class="fuel-bookmark-filter" id="fuel-bookmark-filter-top" onclick="toggleFuelBookmarkFilter()" aria-label="Show Saved">
@@ -1151,7 +1158,11 @@
         <span id="fuel-bookmark-filter-label-top">Show Saved</span>
       </button>
     </div>
-    <div class="bookmark-count" style="margin-top:8px;">Saved on this device only. Export a backup for long-term storage.</div>
+    <div class="bookmark-count" style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <button type="button" class="btn-export" id="fuel-bookmark-export-btn">Export bookmarks</button>
+      <button type="button" class="btn-export" id="fuel-bookmark-import-btn">Import bookmarks</button>
+      <input type="file" id="fuel-bookmark-import-file" accept="application/json,.json" hidden>
+    </div>
   </div>
 
   <div id="results-section">
@@ -1258,6 +1269,46 @@
   function isFuelBookmarked(key) {
     return getFuelBookmarks().indexOf(key) !== -1;
   }
+  function exportFuelBookmarks() {
+    var payload = { version: 1, exportedAt: new Date().toISOString(), tool: 'fuel', bookmarks: getFuelBookmarks() };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'fuel-bookmarks-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function() { URL.revokeObjectURL(url); }, 0);
+    showFuelToast('Bookmark backup downloaded.');
+  }
+  function importFuelBookmarks(file) {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { showFuelToast('Bookmark file is too large to import.'); return; }
+    var reader = new FileReader();
+    reader.onload = function() {
+      try {
+        var payload = JSON.parse(reader.result);
+        var incoming = Array.isArray(payload) ? payload : payload.bookmarks;
+        if (!Array.isArray(incoming)) throw new Error('shape');
+        incoming = incoming.filter(function(v) { return typeof v === 'string' && v; });
+        var current = getFuelBookmarks();
+        var merged = current.slice();
+        incoming.forEach(function(v) { if (merged.indexOf(v) === -1) merged.push(v); });
+        setFuelBookmarks(merged);
+        updateFuelBookmarkCount();
+        showFuelToast('Imported ' + incoming.length + ' bookmark(s); ' + merged.length + ' total saved.');
+      } catch (e) {
+        showFuelToast('Bookmark backup could not be imported — invalid file.');
+      }
+    };
+    reader.readAsText(file);
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    var exportBtn = document.getElementById('fuel-bookmark-export-btn');
+    var importBtn = document.getElementById('fuel-bookmark-import-btn');
+    var importFile = document.getElementById('fuel-bookmark-import-file');
+    if (exportBtn) exportBtn.addEventListener('click', exportFuelBookmarks);
+    if (importBtn && importFile) importBtn.addEventListener('click', function() { importFile.click(); });
+    if (importFile) importFile.addEventListener('change', function() { importFuelBookmarks(importFile.files && importFile.files[0]); importFile.value = ''; });
+  });
   function toggleFuelBookmarkClick(btnEl) {
     var key = btnEl.getAttribute('data-key');
     if (!key) return;
