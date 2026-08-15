@@ -1000,6 +1000,12 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
   </button>
   <input type="file" id="bookmark-import-file" accept="application/json,.json" hidden>
+  <div class="topbar-info-wrap">
+    <button type="button" class="topbar-help" id="storage-info-btn" aria-label="Storage info" aria-expanded="false" aria-controls="storage-info-popover" title="Storage info">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    </button>
+    <div class="topbar-info-popover" id="storage-info-popover" hidden>Saved on this device only. Export/import bookmarks from the header.</div>
+  </div>
   <button class="topbar-help" id="open-guide" aria-label="Help & Guide">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
   </button>
@@ -1029,9 +1035,6 @@
               <span id="bookmark-filter-label">Show Saved</span>
             </button>
           </div>
-        </div>
-        <div class="ft-local-note" style="margin:10px 0 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <span>Saved on this device only. Export/import bookmarks from the header.</span>
         </div>
       </div>
       <div class="mobile-results-controls">
@@ -1170,6 +1173,7 @@
 <!-- Leaflet loaded async - search works even if this fails -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="../js/guide-overlay.js"></script>
+<script src="../js/storage-info-popover.js"></script>
 <script>
   // -- State --
   let map = null;
@@ -1989,6 +1993,7 @@
     if (importBtn && importFile) importBtn.addEventListener('click', function() { importFile.click(); });
     if (importFile) importFile.addEventListener('change', function() { importBridgeBookmarks(importFile.files && importFile.files[0]); importFile.value = ''; });
   })();
+  if (window.StorageInfoPopover) window.StorageInfoPopover.init();
 
   function escHtml(s) {
     return String(s == null ? '' : s)

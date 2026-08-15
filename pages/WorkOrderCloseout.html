@@ -1072,6 +1072,12 @@ html[data-dark] .recent-chip:hover { border-color: #93b4f5; }
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Export PDF
       </button>
+      <div class="topbar-info-wrap">
+        <button type="button" class="topbar-help" id="storage-info-btn" aria-label="Storage info" aria-expanded="false" aria-controls="storage-info-popover" title="Storage info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </button>
+        <div class="topbar-info-popover" id="storage-info-popover" hidden>Saved on this device only. Export a backup for long-term storage.</div>
+      </div>
       <button class="topbar-help" id="open-guide" aria-label="Help & Guide">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       </button>
@@ -1103,8 +1109,6 @@ html[data-dark] .recent-chip:hover { border-color: #93b4f5; }
   </div>
 
   <div class="layout">
-
-    <div class="ft-local-note">Saved on this device only. Export a backup for long-term storage.</div>
 
     <section class="header-card" aria-label="Work order details">
       <div class="header-card-top">
@@ -1265,6 +1269,7 @@ html[data-dark] .recent-chip:hover { border-color: #93b4f5; }
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="../js/guide-overlay.js"></script>
+  <script src="../js/storage-info-popover.js"></script>
   <script>
 'use strict';
 
@@ -1443,8 +1448,10 @@ function importWOBackup(file) {
     if (!confirm('Import this backup? Sessions with matching work order/structure numbers will be overwritten; this device already keeps only the latest 5 total.')) return;
     var current = loadRecent();
     var merged = current.slice();
+    var importedCount = 0;
     payload.recent.forEach(function(r) {
       if (!r || !r.photoKey) return;
+      importedCount++;
       var dupIndex = merged.findIndex(function(m) { return m.wo === r.wo && m.str === r.str; });
       if (dupIndex !== -1) merged.splice(dupIndex, 1);
       merged.unshift(r);
@@ -1456,7 +1463,7 @@ function importWOBackup(file) {
     Promise.all(writes).then(function() {
       evicted.forEach(function(r) { dbDeletePhotos(r.photoKey); });
       if (typeof renderRecent === 'function') renderRecent();
-      showToast('Backup imported', 'ok', 2400);
+      showToast('Imported ' + importedCount + ' session(s); ' + merged.length + ' total saved.', 'ok', 2400);
     });
   };
   reader.readAsText(file);
@@ -2372,6 +2379,7 @@ function scrollToLastPage() {
 // ── ADD / REMOVE PAGE ─────────────────────────
 addPageBtn.addEventListener('click', function() {
   if (!buildPage()) return;
+  try { localStorage.setItem('ft_wo_has_pages', '1'); } catch(e) {}
   scrollToLastPage();
   showToast('Page added', 'ok');
 });
@@ -2962,6 +2970,7 @@ exportPdfBtn.addEventListener('click', async function() {
 // ── TOPBAR ADD PAGE ──────────────────────────
 document.getElementById('addPageTop').addEventListener('click', function() {
   if (!buildPage()) return;
+  try { localStorage.setItem('ft_wo_has_pages', '1'); } catch(e) {}
   var btn = this;
   btn.classList.remove('btn-flash-green');
   void btn.offsetWidth; // reflow to restart animation
@@ -3013,6 +3022,7 @@ document.getElementById('clearForm').addEventListener('click', function() {
   updatePageNumbers();
   // Wipe localStorage so a page reload doesn't restore old data
   try { localStorage.removeItem('workorder_draft'); } catch(e) {}
+  try { localStorage.removeItem('ft_wo_has_pages'); } catch(e) {}
   updatePhotoBadge();
   showToast('Form cleared', 'ok');
 });
@@ -3027,6 +3037,7 @@ document.getElementById('clearForm').addEventListener('click', function() {
   var fabAdd = document.getElementById('fabAddPage');
   if (fabAdd) fabAdd.addEventListener('click', function() {
     if (!buildPage()) return;
+    try { localStorage.setItem('ft_wo_has_pages', '1'); } catch(e) {}
     updatePhotoBadge(); scrollToLastPage(); showToast('Page added', 'ok');
   });
 
@@ -3067,10 +3078,16 @@ if (window.GuideOverlay) {
     autoShowDelay: 600,
     // Only auto-show while the closeout is still empty — a real, page-
     // specific adaptation: don't interrupt a user who already has an
-    // in-progress or restored draft with pages built.
-    autoShowGate: function() { return !pagesContainer.querySelectorAll('.page-block').length; }
+    // in-progress or restored draft with pages built. ft_wo_has_pages is a
+    // sticky flag (set on Add Page, cleared on Clear Form) because the live
+    // page-block count alone can't tell "empty" apart from "was emptied by
+    // a reload" — nothing currently persists the actual page contents
+    // across a reload, only the fact that the user started building.
+    autoShowGate: function() { return !pagesContainer.querySelectorAll('.page-block').length && !localStorage.getItem('ft_wo_has_pages'); }
   });
 }
+
+if (window.StorageInfoPopover) window.StorageInfoPopover.init();
 
 // ── PWA ───────────────────────────────────────
 if ('serviceWorker' in navigator && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) {

@@ -117,7 +117,7 @@
 
   var ROUTE_DECISION_RULES = {
     maxGpsAccuracyM: 120,
-    centerlineBufferM: 12,
+    centerlineBufferM: 30,
     competingClearanceM: 5,
     minFamilySeparationM: 25
   };

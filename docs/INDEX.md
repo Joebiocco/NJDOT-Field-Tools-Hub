@@ -118,8 +118,9 @@ The redesign also stores an additive per-entry calculation snapshot for pay
 inputs that affect historical results. Later rate, threshold, lunch, or
 holiday-default changes apply to new entries without rewriting completed
 calculations. Its current-day leave countdown includes commute-in and unpaid
-lunch only for the active day, and the page grid is background-only with
-reduced-motion support.
+lunch only for the active day, and accounts for paid commute beyond the
+Settings unpaid-commute allowance shortening the on-site time needed; the
+page grid is background-only with reduced-motion support.
 
 ## Default workflow
 

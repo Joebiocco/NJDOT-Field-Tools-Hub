@@ -279,6 +279,31 @@ html[data-dark] .ft-local-note {
   color: #93a7c4;
 }
 
+/* ── topbar-info-popover: header "i" button + dropdown for local-storage
+   notices that used to sit inline as .ft-local-note. Reuses .topbar-help
+   for the button so it matches the guide/export/import icons.
+   position:fixed with top/left set by JS from the button's live
+   getBoundingClientRect() — some topbars (e.g. Work Order Closeout) scroll
+   horizontally when crowded, so anchoring via position:absolute + right:0
+   on a possibly off-screen ancestor pushed this past the viewport edge. ── */
+.topbar-info-wrap { position: relative; }
+.topbar-info-popover {
+  position: fixed;
+  width: 260px;
+  max-width: calc(100vw - 24px);
+  background: var(--surface);
+  border: 1px solid var(--border-lo);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+  padding: 10px 12px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--muted);
+  z-index: 900;
+}
+.topbar-info-popover[hidden] { display: none; }
+html[data-dark] .topbar-info-popover { box-shadow: 0 10px 28px rgba(0,0,0,0.45); }
+
 /* ── Section 6: Modal Frame ───────────────────────────────────────────── */
 /*
    dc144.html uses .dc-modal-backdrop/.dc-modal-box for its signature/drafts/

@@ -1319,6 +1319,12 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
       <span class="dc144-btn-text">Templates</span>
     </button>
+    <div class="topbar-info-wrap">
+      <button type="button" class="topbar-help" id="storage-info-btn" aria-label="Storage info" aria-expanded="false" aria-controls="storage-info-popover" title="Storage info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      </button>
+      <div class="topbar-info-popover" id="storage-info-popover" hidden>Saved on this device only. Exports contain project details, inspector names, signatures, and photos in plain text — handle accordingly.</div>
+    </div>
     <button class="topbar-help" id="open-guide" type="button" aria-label="Help & Guide">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     </button>
@@ -1430,8 +1436,7 @@
       <div id="tab-cards-grid" class="tab-cards-grid"></div>
 
       <p class="sec-label">Recent Drafts</p>
-      <div class="ft-local-note" style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span>Saved on this device only. Exports contain project details, inspector names, signatures, and photos in plain text — handle accordingly.</span>
+      <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <button type="button" class="btn-secondary" id="dc144-backup-export-btn">Export backup</button>
         <button type="button" class="btn-secondary" id="dc144-backup-import-btn">Import backup</button>
         <input type="file" id="dc144-backup-import-file" accept="application/json,.json" hidden>
@@ -1566,6 +1571,7 @@
   <!-- DC-144 application logic -->
   <script src="../js/dc144.js"></script>
   <script src="../js/guide-overlay.js"></script>
+  <script src="../js/storage-info-popover.js"></script>
   <script>
     if (window.GuideOverlay) {
       window.GuideOverlay.init({ storageKey: 'ft_dc144_guide_shown', autoShowDelay: 700 });

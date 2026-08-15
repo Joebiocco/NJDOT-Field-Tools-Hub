@@ -1021,6 +1021,7 @@ document.addEventListener('DOMContentLoaded', function() {
     importDC144Backup(importFile.files && importFile.files[0]);
     importFile.value = '';
   });
+  if (window.StorageInfoPopover) window.StorageInfoPopover.init();
 });
 
 function openTemplateModal() {

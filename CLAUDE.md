@@ -73,16 +73,23 @@ optional short-lived RSS proxy, not a core backend.
   ft_dc144_recent, ft_dc144_templates, ft_weather_last,
   ft_weather_alert_settings, ft_install_shown, ft_bookmark_shown,
   ft_bridge_guide_shown, ft_fuel_guide_shown, ft_dc144_guide_shown,
-  ft_pc_guide_shown, ft_wo_guide_shown; sessionStorage
+  ft_pc_guide_shown, ft_wo_guide_shown, ft_wo_has_pages; sessionStorage
   ft_opening_from_hub and ft_returning_to_hub; IndexedDB ft_photos v2 with
   session_photos and dc144_sessions.
 - index.html writes field_dark_mode. Tool pages should read it and should not
   create a competing theme preference.
 - Timesheet work uses the active pages/timesheet.html redesign runtime while
   preserving the shared ft_ts_entries, ft_ts_settings, and ft_ts_ppoffset
-  contract. It uses a 40-hour weekly regular threshold by default, 30-minute
-  lunch minimum, separate commute deductions, 10-minute new time inputs, and
-  exact OT blocks before commute home.
+  contract. It uses a 40-hour weekly regular threshold by default plus an
+  independently editable per-shift daily threshold (`scheduledDayHours`,
+  default 8h, e.g. raised to 10h for a four-10-hour-shift schedule),
+  whichever is reached first; each entry freezes the daily/weekly settings
+  active when it was saved so later changes never recalculate historical
+  entries. Commute is only unpaid up to the editable "Unpaid commute per
+  direction" allowance (`unpaidCommuteMinutes`, default 30 min each way) on
+  Normal entries; XP, Emergency, and paid-holiday-worked entries pay the
+  entire commute. Also: 30-minute lunch minimum, 10-minute new time inputs,
+  and exact OT blocks before commute home.
 - Keep map/roadway results conservative. NJDOT PARENT_SRI is the signed-route
   identity; route subtype/role filtering and ambiguity thresholds must not be
   weakened to make a card appear.

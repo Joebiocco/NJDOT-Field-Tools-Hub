@@ -20,7 +20,10 @@
   var SEARCH_RADIUS_M = 2000;
   var MATCH_RULES = {
     maxGpsAccuracyM: 120,
-    centerlineBufferM: 12,
+    // Fixed slop beyond the GPS accuracy circle: real pavement width (multi-
+    // lane divided highways can be 20m+ from centerline to shoulder) plus
+    // minor source-data digitization error.
+    centerlineBufferM: 30,
     competingClearanceM: 5,
     minFamilySeparationM: 25
   };

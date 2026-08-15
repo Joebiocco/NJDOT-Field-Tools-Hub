@@ -38,6 +38,7 @@ const CORE_ASSETS = [
   './pages/dc144.html',
   './js/dc144.js',
   './js/guide-overlay.js',
+  './js/storage-info-popover.js',
   './pages/emergency.html',
   './js/milepost-lookup.js',
   './js/roadway-lookup.js',

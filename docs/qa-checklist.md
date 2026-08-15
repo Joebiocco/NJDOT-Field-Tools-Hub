@@ -201,8 +201,27 @@ target.
 - [ ] New entry, edit, delete, cancel, reload, and period navigation work.
 - [ ] Overnight shifts and date boundaries are correct.
 - [ ] Lunch/break and commute treatment is correct.
+- [ ] Commute beyond the Settings "Unpaid commute per direction" allowance
+      (default 30 min each way) is paid work time and flows into the
+      regular/overtime split on Normal entries; commute at or under the
+      allowance is fully unpaid. XP, Emergency, Cash-category (All-OT
+      shift), and paid-holiday-worked entries pay their entire commute
+      regardless of the allowance. A Normal entry whose overflow
+      auto-converts to Cash overtime after 8 hours is NOT treated as
+      Cash-category — it must keep the standard allowance, not full-commute
+      pay. Changing the allowance later does not alter entries saved before
+      the change.
 - [ ] Weekly-40 overtime and representative former-legacy entries are tested
       against the active route separately.
+- [ ] Daily overtime threshold (Settings, default 8h) triggers correctly on
+      a single long shift even when the weekly total is still under
+      threshold, and does not double-count against the weekly cap.
+- [ ] Raising the daily threshold (e.g. to 10h for a four-10-hour-shift
+      schedule) stops normal-length shifts from being flagged as overtime,
+      the weekly 40-hour cap still applies on top, and changing this setting
+      does not alter the regular/overtime split of entries saved before the
+      change (verify by editing the setting after saving a few entries, then
+      confirming their totals are unchanged).
 - [ ] Biweekly summary and official summary sheet agree with detail.
 - [ ] Period view, 14-day period math, and exact OT blocks are correct.
 - [ ] Invalid times/minutes preserve the entry dialog/draft and explain the
@@ -216,8 +235,20 @@ target.
 - [ ] Desktop rail and mobile bottom navigation work.
 - [ ] Toasts/dialogs clear the mobile bottom-nav area and safe area.
 - [ ] 390px, 430px, and 1440px have no clipping or overflow.
-- [ ] The active route's seeded regression remains 44.50 payable / 40.00 regular /
-      4.50 overtime with Friday OT 5:00–9:30 AM before commute home.
+- [ ] The active route's seeded regression was 44.50 payable / 40.00 regular /
+      4.50 overtime with Friday OT 5:00–9:30 AM before commute home. This
+      baseline predates two changes this session and needs a fresh live
+      re-verification, not a hand trace: (1) the daily 8-hour cap — a hand
+      trace of the Friday-into-Saturday overnight entry (banked 32h regular
+      Mon-Thu, so the weekly 40h cap binds at the same minute the daily cap
+      would) suggested no change from this alone; (2) commute beyond the
+      30-minute default allowance is now paid — the seeded entry has a
+      60-minute commute-home, so 30 of those minutes are newly payable,
+      which a hand trace suggests adds roughly 0.5h to that entry's overtime
+      (all of it landing as OT, since both caps were already exhausted at
+      that point) — so the true new baseline is expected to be near 45.00
+      payable / 40.00 regular / 5.00 overtime, but this must be confirmed by
+      actually running the app, not assumed from this note.
 
 - [ ] Load tools/timesheet-half-year-seed.json through the backup path and
       verify all 132 entries, 14 covered periods, holiday-only credit, Cash,
@@ -230,9 +261,12 @@ Additional redesign payroll cases:
 - [ ] The 35-hour profile defaults to 7 holiday-credit hours, keeps lunch
       unpaid, and only uses an after-35 threshold when the agreement control is
       enabled; the default remains after 40.
-- [ ] Paid/on-duty lunch counts as payable and threshold time; unpaid lunch,
-      commute-in, and commute-home are exact deductions and cannot exhaust a
-      shift. Negative values are rejected in UI, import, and calculation paths.
+- [ ] Paid/on-duty lunch counts as payable and threshold time; unpaid lunch is
+      an exact deduction and cannot exhaust a shift. Commute-in and
+      commute-home are exact deductions only up to the unpaid-commute
+      allowance (0 for XP/Emergency/holiday-worked); beyond that they are
+      payable. Negative values are rejected in UI, import, and calculation
+      paths.
 - [ ] Cash OT pays exactly 1.5x base pay; XP credits exactly 1.5x worked OT.
       Normal OT, Cash, XP, and Emergency do not build the normal threshold.
 - [ ] Emergency entries are rejected before eight qualifying Normal payable
@@ -257,7 +291,9 @@ Additional redesign payroll cases:
       edits.
 - [ ] The current-day leave countdown includes commute-in and unpaid lunch,
       hides after the target or for overnight/history-only cases, and never rolls
-      into the next day.
+      into the next day. It also accounts for commute beyond the unpaid
+      allowance shortening the on-site time needed, matching what a real
+      entry with the same numbers would calculate.
 - [ ] The redesign grid is behind content only; animations use explicit
       transitions, have no `transition: all`, and honor reduced motion at 390px,
       430px, and 1440px.

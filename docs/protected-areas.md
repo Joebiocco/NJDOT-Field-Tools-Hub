@@ -257,7 +257,7 @@ ft_ts_settings, and ft_ts_ppoffset. `normalizeEntry()`/`serializeEntry()` and
 bidirectional compatibility shim: they read and write both the current
 in-memory field names (`category`, `commuteIn`/`commuteOut`,
 `overtimeMethod`, `holidayWork`, `snapshot`, `scheduleHours`, `otRule`,
-`defaultOtMethod`, `holidayCreditHours`, `useCommuteDefaults`,
+`scheduledDayHours`, `unpaidCommuteMinutes`, `defaultOtMethod`, `holidayCreditHours`, `useCommuteDefaults`,
 `defaultCommuteIn`/`defaultCommuteOut`) and the legacy wire-format field
 names still written for storage compatibility (`entryKind`, `rateType`,
 `otType`, `commuteToMin`/`commuteHomeMin`/`commuteMin`, `act`,
@@ -273,10 +273,17 @@ The active implementation uses these protected rules:
   (`step="600"`); existing quarter-hour records remain editable without
   silent rounding;
 - a shift requires distinct valid times; an earlier stop means overnight;
-- lunch/break is at least 30 minutes and commute to work/home are separate,
-  non-payable deductions;
-- Normal overtime starts after 40 regular worked hours in the workweek, with
-  lunch and commute excluded and exact overtime ending before commute home;
+- lunch/break is at least 30 minutes and commute to work/home are separate
+  deductions; commute is only non-payable up to the Settings "Unpaid commute
+  per direction" allowance (`unpaidCommuteMinutes`, default 30) each way —
+  minutes beyond that, each direction, are payable work time. XP, Emergency,
+  and paid-holiday-worked (`holidayWork`) entries have no allowance: their
+  entire commute is payable from the moment the employee leaves home;
+- Normal overtime starts after 40 regular worked hours in the workweek, OR
+  after the Settings daily overtime threshold (`scheduledDayHours`, default
+  8h, independently editable) in a single shift, whichever threshold is
+  reached first, with lunch and unpaid commute excluded and exact overtime
+  ending before commute home;
 - Cash pays all payable hours at 1.5x base rate; XP credits hours worked at
   1.5x; Emergency uses a required per-entry emergency rate;
 - the pay-period anchor is Saturday, May 30, 2026 with 14-day periods; 26
@@ -285,8 +292,11 @@ The active implementation uses these protected rules:
   settings views, a category-first entry dialog (not a multi-step wizard),
   create/edit/delete, employee name, local backup export/import, and safe
   negative-value guards;
-- the seeded night-shift regression is 44.50 payable, 40.00 regular, and
+- the seeded night-shift regression was 44.50 payable, 40.00 regular, and
   4.50 overtime, with Friday overtime 5:00–9:30 AM before commute home;
+  this baseline predates the daily-cap and paid-commute-beyond-allowance
+  changes below and needs a fresh live re-verification pass — see the QA
+  checklist;
 - verification covers all views/settings, 390px, 430px, and 1440px layout,
   pay-period table scrolling, timeline marker alignment, and zero browser
   errors/warnings.
@@ -296,11 +306,58 @@ The payroll contract also includes the following additive rules:
 - The workweek is fixed Monday-Sunday. A regular overnight entry is assigned
   to the week named by its start date, including time after midnight. The
   default threshold is 40 hours; a namespaced 35-hour profile is optional.
-- A separate union-agreement setting can move the threshold to the scheduled
-  profile hours. A 35-hour profile defaults to 7 holiday-credit hours, but
-  lunch remains unpaid unless paid/on-duty lunch is explicitly enabled. This
-  is an application policy choice, not a claim that New Jersey law
-  universally changes statutory overtime to 35 hours.
+- A separate union-agreement setting can move the weekly threshold to the
+  scheduled profile hours. A 35-hour profile defaults to 7 holiday-credit
+  hours, but lunch remains unpaid unless paid/on-duty lunch is explicitly
+  enabled. This is an application policy choice, not a claim that New Jersey
+  law universally changes statutory overtime to 35 hours.
+- Independent of the weekly threshold, a per-shift daily threshold always
+  applies for Regular-shift (Normal, non-holiday-work) entries: the
+  Settings "Daily overtime threshold (hours)" field (`scheduledDayHours`,
+  1-24 clamped, default 8), a standalone value not derived from the 35/40
+  weekly schedule dropdown. It is set independently so compressed schedules
+  (e.g. four 10-hour shifts) don't get flagged as overtime for a normal day;
+  raising it does not weaken the weekly cap. Like the rest of the payroll
+  snapshot, each entry freezes the threshold that was active when it was
+  saved (`snapshotFromSettings()`/`calculationSettings()`), so changing this
+  setting later — including switching between a compressed and a standard
+  schedule — never recalculates historical entries. Tracked via
+  `regularByDate` in `calculateEntries()`, keyed by the shift's own start
+  date (`entry.date`) —
+  not by the calendar date each minute-chunk happens to land on. An overnight
+  entry that crosses midnight is still one continuous daily allowance: the
+  cap does not reset at midnight, so a 10-hour overnight shift banks 8h
+  regular and 2h overtime as a whole, even though the code still splits it
+  into a pre-midnight and post-midnight allocation for date/period display.
+  A shift's paid minutes (lunch and unpaid commute already excluded, but
+  commute beyond the unpaid-commute allowance included — see below) convert
+  to overtime once either the daily cap or the weekly cap is reached,
+  whichever comes first; the two counters run independently and neither is
+  double-charged. This daily cap does not apply to XP entries (which keep
+  their own 480-minute/day cap), Emergency entries, or Normal entries flagged
+  `holidayWork` (which remain 100% overtime) — though the paid-commute rule
+  below still applies to those categories.
+- Commute is only fully non-payable for Regular-shift (Normal,
+  non-holiday-work) entries, and only up to the Settings "Unpaid commute per
+  direction" allowance (`unpaidCommuteMinutes`, 0-240 clamped, default 30
+  minutes, independently editable, same snapshot-per-entry protection as the
+  other thresholds). Minutes of commute-in or commute-out beyond that
+  allowance, in each direction separately, are payable work time and are
+  folded into the shift's payable segments before the daily/weekly
+  regular-vs-overtime split runs — so paid commute can itself push a shift
+  into overtime. XP entries, Emergency entries, Cash-category (All-OT shift)
+  entries, and Normal entries flagged `holidayWork` have no allowance at
+  all: their entire commute-in and commute-out is payable from the moment
+  the employee leaves home (`fullyPaidCommute` in `entryBase()`). This is
+  keyed off `entry.category`, never `entry.overtimeMethod` — a Normal-shift
+  entry whose overflow auto-converts to Cash overtime after crossing the
+  daily/weekly threshold is a `category:'Normal'` entry and keeps the
+  standard allowance; only an explicitly-logged Cash-category "All-OT
+  shift" entry gets the full-commute treatment. Implemented via
+  `unpaidCommuteIn`/
+  `unpaidCommuteOut` in `entryBase()`, which only trim the unpaid portion off
+  `clockStart`/`clockEnd` to produce `workStart`/`workEnd`, rather than the
+  full entered commute minutes.
 - The entry-category pills are Regular shift, All-OT shift (Cash), XP OT,
   Emergency, and Holiday credit. All-OT shift pays the entire shift as
   overtime; a Regular shift's overflow past the threshold is credited via a
@@ -341,8 +398,14 @@ The payroll contract also includes the following additive rules:
   dashboard re-renders (the dashboard does a full `innerHTML` replace on
   most state changes); it is seeded once, from the current time and the
   saved settings defaults, and defaults `detailsOpen` to `true`. Leave-by
-  time is Start + Commute-in + Lunch + scheduled day hours; Home-by time adds
-  the Commute-home minutes. The live countdown (`clockCountdownText()`,
+  time is Start + Commute-in (full, real elapsed travel time) + Lunch +
+  on-site time, where on-site time is the daily scheduled hours minus
+  whatever commute-in and commute-out minutes exceed the Settings unpaid-
+  commute allowance (paid commute shortens the on-site time needed, since it
+  already counts toward the scheduled hours); Home-by time adds the full
+  Commute-home minutes. This mirrors `entryBase()`'s paid-commute rule so a
+  real logged entry with the same numbers calculates the same payable total.
+  The live countdown (`clockCountdownText()`,
   ported from the prior calculator) is two-phase: it counts down to the
   leave time first, then automatically switches to counting down to the home
   time once the leave time has passed, showing "Done" and clearing its
@@ -378,6 +441,11 @@ Minimum payroll regression:
 - overnight shift, required lunch, commute defaults/overrides, and boundary
   dates;
 - weekly-40 and legacy rule-set overtime/summary totals separately;
+- a single shift past the daily scheduled-hours cap (7 or 35-hour schedule /
+  8 on 40-hour schedule) converts the overflow to overtime even when the
+  weekly total is still under threshold, and a shift that crosses midnight
+  keeps one continuous daily cap tied to its start date instead of getting a
+  fresh allowance for the post-midnight portion;
 - invalid/missing input with preserved draft;
 - settings persistence and pay-period navigation;
 - leave-calculator countdown ticks live, switches phase at leave time, shows
@@ -462,7 +530,7 @@ Never rename, clear, or silently migrate these:
 
 | Store | Names |
 | --- | --- |
-| localStorage | field_dark_mode, ft_last, ft_ts_entries, ft_ts_settings, ft_ts_ppoffset, ft_hub_whats_new_2026_08_v1, ft_bridge_bookmarks, ft_fuel_bookmarks, wo_recent, workorder_draft, ft_dc144_recent, ft_dc144_templates, ft_weather_last, ft_weather_alert_settings, ft_install_shown, ft_bookmark_shown, ft_bridge_guide_shown, ft_fuel_guide_shown, ft_dc144_guide_shown, ft_pc_guide_shown, ft_wo_guide_shown |
+| localStorage | field_dark_mode, ft_last, ft_ts_entries, ft_ts_settings, ft_ts_ppoffset, ft_hub_whats_new_2026_08_v1, ft_bridge_bookmarks, ft_fuel_bookmarks, wo_recent, workorder_draft, ft_dc144_recent, ft_dc144_templates, ft_weather_last, ft_weather_alert_settings, ft_install_shown, ft_bookmark_shown, ft_bridge_guide_shown, ft_fuel_guide_shown, ft_dc144_guide_shown, ft_pc_guide_shown, ft_wo_guide_shown, ft_wo_has_pages |
 | sessionStorage | ft_opening_from_hub, ft_returning_to_hub |
 | IndexedDB | ft_photos v2; session_photos; dc144_sessions |
 

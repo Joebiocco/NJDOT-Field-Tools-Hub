@@ -786,8 +786,8 @@
             <div class="form-grid">
               <div class="field"><label for="entry-break">Lunch / break minutes</label><input class="input" id="entry-break" type="number" min="30" max="240" step="1" required></div>
               <div class="field" id="break-start-field"><label for="entry-break-start">Break start</label><input class="input" id="entry-break-start" type="time" step="600" required><div class="field-help">Needed to calculate the exact overtime clock block.</div></div>
-              <div class="field"><label for="entry-commute-in">Commute to work (min)</label><input class="input" id="entry-commute-in" type="number" min="0" max="240" step="1"></div>
-              <div class="field"><label for="entry-commute-out">Commute home (min)</label><input class="input" id="entry-commute-out" type="number" min="0" max="240" step="1"></div>
+              <div class="field"><label for="entry-commute-in">Commute to work (min)</label><input class="input" id="entry-commute-in" type="number" min="0" max="240" step="1"><div class="field-help">Minutes beyond the Settings unpaid-commute allowance are paid work time (full commute is paid on XP, Emergency, and paid-holiday-worked entries).</div></div>
+              <div class="field"><label for="entry-commute-out">Commute home (min)</label><input class="input" id="entry-commute-out" type="number" min="0" max="240" step="1"><div class="field-help">Same allowance applies on the way home.</div></div>
             </div>
           </section>
 
@@ -834,9 +834,11 @@
       hourlyRate:30,
       scheduleHours:40,
       otRule:'after-40',
+      scheduledDayHours:8,
       otMultiplier:1.5,
       paidLunch:false,
       defaultOtMethod:'Cash',
+      unpaidCommuteMinutes:30,
       holidayCreditHours:8,
       defaultBreakMinutes:30,
       defaultBreakStart:'',
@@ -988,9 +990,11 @@
         hourlyRate:clamp(raw.hourlyRate,0,999,30),
         scheduleHours:schedule,
         otRule:rawOt==='after-schedule'||rawOt==='after-scheduled'?'after-schedule':'after-40',
+        scheduledDayHours:clamp(raw.scheduledDayHours,1,24,8),
         otMultiplier:clamp(raw.otMultiplier,1,4,1.5),
         paidLunch:raw.paidLunch===true||raw.redesignLunchMode==='paid-on-duty',
         defaultOtMethod:(raw.defaultOtMethod??raw.redesignDefaultOtMethod)==='XP'?'XP':'Cash',
+        unpaidCommuteMinutes:clamp(raw.unpaidCommuteMinutes,0,240,30),
         holidayCreditHours:clamp(raw.holidayCreditHours??raw.redesignHolidayCreditHours,0.01,24,schedule===35?7:8),
         defaultBreakMinutes:clamp(raw.defaultBreakMinutes??raw.breakDefault,30,240,30),
         defaultBreakStart:normalizeTime(raw.defaultBreakStart??raw.redesignDefaultBreakStart)||'',
@@ -1013,9 +1017,11 @@
         hourlyRate:settings.hourlyRate,
         scheduleHours:settings.scheduleHours,
         otRule:settings.otRule,
+        scheduledDayHours:settings.scheduledDayHours,
         otMultiplier:settings.otMultiplier,
         paidLunch:settings.paidLunch,
         defaultOtMethod:settings.defaultOtMethod,
+        unpaidCommuteMinutes:settings.unpaidCommuteMinutes,
         holidayCreditHours:settings.holidayCreditHours,
         defaultBreakMinutes:settings.defaultBreakMinutes,
         defaultBreakStart:settings.defaultBreakStart,
@@ -1046,10 +1052,11 @@
       return {
         hourlyRate:settings.hourlyRate,
         scheduleHours:settings.scheduleHours,
-        scheduledDayHours:settings.scheduleHours/5,
+        scheduledDayHours:settings.scheduledDayHours,
         otThresholdHours:settings.otRule==='after-schedule'?settings.scheduleHours:40,
         otMultiplier:settings.otMultiplier,
         paidLunch:settings.paidLunch,
+        unpaidCommuteMinutes:settings.unpaidCommuteMinutes,
         holidayCreditHours:settings.holidayCreditHours,
         emergencyRequireFullDay:settings.emergencyRequireFullDay
       };
@@ -1063,6 +1070,7 @@
         otThresholdHours:clamp(snap.otThresholdHours,1,168,base.otThresholdHours),
         otMultiplier:clamp(snap.otMultiplier,1,4,base.otMultiplier),
         paidLunch:typeof snap.paidLunch==='boolean'?snap.paidLunch:base.paidLunch,
+        unpaidCommuteMinutes:clamp(snap.unpaidCommuteMinutes,0,240,base.unpaidCommuteMinutes),
         holidayCreditHours:clamp(snap.holidayCreditHours,0.01,24,base.holidayCreditHours),
         emergencyRequireFullDay:typeof snap.emergencyRequireFullDay==='boolean'?snap.emergencyRequireFullDay:base.emergencyRequireFullDay,
         timeFormat:settings.timeFormat
@@ -1107,6 +1115,7 @@
           otThresholdHours:raw.redesignSnapshot.otThresholdHrs ?? (raw.redesignSnapshot.otThresholdM!=null?Number(raw.redesignSnapshot.otThresholdM)/60:undefined),
           otMultiplier:raw.redesignSnapshot.otMultiplier,
           paidLunch:raw.redesignSnapshot.paidLunch,
+          unpaidCommuteMinutes:raw.redesignSnapshot.unpaidCommuteMinutes,
           holidayCreditHours:raw.redesignSnapshot.holidayCreditHours
         }:null)
       };
@@ -1125,6 +1134,7 @@
         otThresholdHours:snapshot.otThresholdHours,
         otMultiplier:snapshot.otMultiplier,
         paidLunch:snapshot.paidLunch,
+        unpaidCommuteMinutes:snapshot.unpaidCommuteMinutes,
         holidayCreditHours:snapshot.holidayCreditHours,
         emergencyRequireFullDay:snapshot.emergencyRequireFullDay
       };
@@ -1166,7 +1176,12 @@
       if(start==null||stop==null||duration==null){base.valid=false;base.error='Start and stop times must be valid and different.';return base;}
       if(duration>1440){base.valid=false;base.error='A shift cannot exceed 24 hours.';return base;}
       const day=dayNumber(entry.date),clockStart=day*1440+start,clockEnd=clockStart+duration;
-      const commuteIn=clamp(entry.commuteIn,0,240,0),commuteOut=clamp(entry.commuteOut,0,240,0),workStart=clockStart+commuteIn,workEnd=clockEnd-commuteOut;
+      const commuteIn=clamp(entry.commuteIn,0,240,0),commuteOut=clamp(entry.commuteOut,0,240,0);
+      const fullyPaidCommute=entry.category==='XP'||entry.category==='Emergency'||entry.category==='Cash'||entry.holidayWork;
+      const commuteAllowance=fullyPaidCommute?0:calc.unpaidCommuteMinutes;
+      const unpaidCommuteIn=Math.min(commuteIn,commuteAllowance),unpaidCommuteOut=Math.min(commuteOut,commuteAllowance);
+      const workStart=clockStart+unpaidCommuteIn,workEnd=clockEnd-unpaidCommuteOut;
+      base.unpaidCommuteIn=unpaidCommuteIn;base.unpaidCommuteOut=unpaidCommuteOut;
       if(workEnd<=workStart){base.valid=false;base.error='Commute deductions leave no work interval.';return base;}
       const breakMin=clamp(entry.breakMin,0,240,0);
       if(breakMin<30){base.valid=false;base.error='Lunch / break must be at least 30 minutes.';return base;}
@@ -1231,6 +1246,7 @@
       });
       events.sort((a,b)=>a.start-b.start||a.priority-b.priority||a.index-b.index);
       const regularByWeek={};
+      const regularByDate={};
       const holidayCreditByDate={};
       const xpRegularUsed={};
       const XP_DAILY_REGULAR_MINUTES=480;
@@ -1252,8 +1268,11 @@
           const next=Math.min(event.end,nextDayBoundary(cursor),nextWeekBoundary(cursor),nextPeriodBoundary(cursor));
           const date=dateFromDayNumber(Math.floor(cursor/1440)),week=weekKeyForDate(date),minutes=next-cursor;
           if(entry.category==='Normal'&&!entry.holidayWork){
-            const threshold=calc.otThresholdHours*60,before=regularByWeek[week]||0,regular=Math.min(minutes,Math.max(0,threshold-before));
-            if(regular>0){addAllocation(r,{kind:'regular',start:cursor,end:cursor+regular,method:'Cash'});regularByWeek[week]=before+regular;}
+            const weeklyThreshold=calc.otThresholdHours*60,dailyThreshold=calc.scheduledDayHours*60;
+            const dailyKey=entry.date;
+            const weekBefore=regularByWeek[week]||0,dayBefore=regularByDate[dailyKey]||0;
+            const regular=Math.min(minutes,Math.max(0,weeklyThreshold-weekBefore),Math.max(0,dailyThreshold-dayBefore));
+            if(regular>0){addAllocation(r,{kind:'regular',start:cursor,end:cursor+regular,method:'Cash'});regularByWeek[week]=weekBefore+regular;regularByDate[dailyKey]=dayBefore+regular;}
             if(regular<minutes)addAllocation(r,{kind:'ot',start:cursor+regular,end:next,method:entry.overtimeMethod});
           } else if(entry.category==='XP'){
             const used=xpRegularUsed[event.index]||0,regular=Math.min(minutes,Math.max(0,XP_DAILY_REGULAR_MINUTES-used));
@@ -1312,7 +1331,7 @@
       const holidayM=allocations.filter(a=>a.kind==='holiday').reduce((n,a)=>n+a.minutes,0);
       const otM=allocations.filter(a=>a.kind==='ot').reduce((n,a)=>n+a.minutes,0);
       const payableM=regularM+otM,earnings=allocations.reduce((n,a)=>n+a.earnings,0),xpCredit=allocations.reduce((n,a)=>n+a.xpCredit,0);
-      const deductions=sourceResults.reduce((out,r)=>{if(r.entry.category!=='Holiday'&&r.base.valid){out.breakM+=r.base.calc.paidLunch?0:r.entry.breakMin;out.commuteM+=r.entry.commuteIn+r.entry.commuteOut;}return out;},{breakM:0,commuteM:0});
+      const deductions=sourceResults.reduce((out,r)=>{if(r.entry.category!=='Holiday'&&r.base.valid){out.breakM+=r.base.calc.paidLunch?0:r.entry.breakMin;out.commuteM+=r.base.unpaidCommuteIn+r.base.unpaidCommuteOut;}return out;},{breakM:0,commuteM:0});
       const errors=sourceResults.filter(r=>!r.valid);
       const otBlocks=[];
       represented.forEach(r=>groupOtBlocks(r.allocations.filter(a=>a.kind==='ot'&&a.period===target),r).forEach(block=>otBlocks.push(block)));
@@ -1407,7 +1426,7 @@
           <h3 class="kpi-group-label">Time worked</h3>
           <div class="kpi-grid kpi-grid-time">
             <div class="surface kpi"><span class="kpi-label">Payable</span><strong>${hours(summary.payableM)}</strong><p>${hours(Math.max(0,summary.expectedM-summary.payableM))} remaining to scheduled period hours</p></div>
-            <div class="surface kpi"><span class="kpi-label">Regular + holiday</span><strong>${hours(summary.regularM)}</strong><p>${summary.holidayM?`${hours(summary.holidayM)} holiday credit included`:`Threshold ${state.settings.otRule==='after-schedule'?state.settings.scheduleHours:40} hours per workweek`}</p></div>
+            <div class="surface kpi"><span class="kpi-label">Regular + holiday</span><strong>${hours(summary.regularM)}</strong><p>${summary.holidayM?`${hours(summary.holidayM)} holiday credit included`:`Threshold ${state.settings.scheduledDayHours} hours per shift, ${state.settings.otRule==='after-schedule'?state.settings.scheduleHours:40} hours per workweek`}</p></div>
             <div class="surface kpi ot"><span class="kpi-label">Overtime</span><strong>${hours(summary.otM)}</strong><p>${summary.otBlocks.length} exact clock block${summary.otBlocks.length===1?'':'s'}</p></div>
           </div>
         </div>
@@ -1424,10 +1443,10 @@
     function timelineSegments(result) {
       if(result.entry.category==='Holiday')return[];
       const items=[];
-      if(result.entry.commuteIn>0)items.push({type:'commute',start:result.base.clockStart,end:result.base.workStart,label:`Commute in ${formatRange(result.base.clockStart,result.base.workStart,result.base.calc,false)}`});
+      if(result.base.unpaidCommuteIn>0)items.push({type:'commute',start:result.base.clockStart,end:result.base.workStart,label:`Unpaid commute in ${formatRange(result.base.clockStart,result.base.workStart,result.base.calc,false)}`});
       result.allocations.forEach(a=>{if(a.start!=null)items.push({type:a.kind==='ot'?'ot':'regular',start:a.start,end:a.end,label:`${a.kind==='ot'?methodLabel(a.method):'Regular work'} ${formatRange(a.start,a.end,result.base.calc,false)}`});});
       if(!result.base.calc.paidLunch&&result.base.breakStartAbs!=null)items.push({type:'break',start:result.base.breakStartAbs,end:result.base.breakEndAbs,label:`Unpaid break ${formatRange(result.base.breakStartAbs,result.base.breakEndAbs,result.base.calc,false)}`});
-      if(result.entry.commuteOut>0)items.push({type:'commute',start:result.base.workEnd,end:result.base.clockEnd,label:`Commute home ${formatRange(result.base.workEnd,result.base.clockEnd,result.base.calc,false)}`});
+      if(result.base.unpaidCommuteOut>0)items.push({type:'commute',start:result.base.workEnd,end:result.base.clockEnd,label:`Unpaid commute home ${formatRange(result.base.workEnd,result.base.clockEnd,result.base.calc,false)}`});
       items.sort((a,b)=>a.start-b.start);
       const merged=[];
       items.forEach(item=>{const last=merged[merged.length-1];if(last&&last.type===item.type&&last.end===item.start){last.end=item.end;last.label+=`; ${item.label}`;}else merged.push({...item});});
@@ -1448,7 +1467,9 @@
         const blocks=result.otBlocks.map(b=>`${dateLabel(b.date,'short')} ${formatRange(b.start,b.end,result.base.calc,false)}`).join('; ');
         return `<strong>${result.otBlocks.every(b=>b.exact)?'Exact overtime block':'Estimated overtime block'}:</strong> ${esc(blocks)}. ${esc(breakText)}${result.base.breakAssumed?' Edit the entry and add a break start for an exact block.':''}`;
       }
-      return `<strong>No overtime on this entry.</strong> ${esc(breakText)} Commute is excluded from payable time.`;
+      const unpaidCommuteM=(result.base.unpaidCommuteIn||0)+(result.base.unpaidCommuteOut||0),paidCommuteM=Math.max(0,result.entry.commuteIn+result.entry.commuteOut-unpaidCommuteM);
+      const commuteText=unpaidCommuteM>0?`${durationText(unpaidCommuteM)} of commute is excluded from payable time${paidCommuteM>0?`; ${durationText(paidCommuteM)} beyond the allowance is paid.`:'.'}`:paidCommuteM>0?'Commute is fully paid on this entry.':'';
+      return `<strong>No overtime on this entry.</strong> ${esc(breakText)} ${esc(commuteText)}`;
     }
     function shiftCard(result,options={}) {
       const e=result.entry,assigned=options.assigned||null,view=assigned||result,calc=result.base.calc;
@@ -1493,7 +1514,7 @@
     }
     function leaveUtility() {
       seedLeaveDraft(state.settings);
-      return `<details class="surface utility"${leaveDraft.detailsOpen?' open':''}><summary>When can I leave?</summary><div class="utility-body"><p style="color:var(--p-muted);font-size:10px;margin-top:13px">A quick estimate only. It does not change or save a work entry.</p><div class="leave-fields"><div class="field"><label for="leave-start">Clock start / depart</label><input class="input" id="leave-start" data-leave-input type="time" value="${esc(leaveDraft.start)}"></div><div class="field"><label for="leave-break">Lunch (min)</label><input class="input" id="leave-break" data-leave-input type="number" min="0" value="${leaveDraft.lunch}"></div><div class="field"><label for="leave-in">Commute in (min)</label><input class="input" id="leave-in" data-leave-input type="number" min="0" value="${leaveDraft.commuteIn}"></div><div class="field"><label for="leave-out">Commute home (min)</label><input class="input" id="leave-out" data-leave-input type="number" min="0" value="${leaveDraft.commuteOut}"></div></div><div class="leave-output"><div><span>Leave work</span><strong id="leave-time">—</strong></div><div><span>Arrive home</span><strong id="home-time">—</strong></div></div><div class="leave-countdown"><strong id="leave-remaining">--:--:--</strong><span id="leave-phase">&nbsp;</span></div></div></details>`;
+      return `<details class="surface utility"${leaveDraft.detailsOpen?' open':''}><summary>When can I leave?</summary><div class="utility-body"><p style="color:var(--p-muted);font-size:10px;margin-top:13px">A quick estimate only. It does not change or save a work entry. Commute beyond ${state.settings.unpaidCommuteMinutes} min per direction is paid and shortens the on-site time needed.</p><div class="leave-fields"><div class="field"><label for="leave-start">Clock start / depart</label><input class="input" id="leave-start" data-leave-input type="time" value="${esc(leaveDraft.start)}"></div><div class="field"><label for="leave-break">Lunch (min)</label><input class="input" id="leave-break" data-leave-input type="number" min="0" value="${leaveDraft.lunch}"></div><div class="field"><label for="leave-in">Commute in (min)</label><input class="input" id="leave-in" data-leave-input type="number" min="0" value="${leaveDraft.commuteIn}"></div><div class="field"><label for="leave-out">Commute home (min)</label><input class="input" id="leave-out" data-leave-input type="number" min="0" value="${leaveDraft.commuteOut}"></div></div><div class="leave-output"><div><span>Leave work</span><strong id="leave-time">—</strong></div><div><span>Arrive home</span><strong id="home-time">—</strong></div></div><div class="leave-countdown"><strong id="leave-remaining">--:--:--</strong><span id="leave-phase">&nbsp;</span></div></div></details>`;
     }
 
     function renderDashboard(summary) {
@@ -1591,9 +1612,11 @@
           ${settingsField('set-rate','Base hourly rate','Used for regular pay and cash overtime.',`<input class="input" id="set-rate" name="hourlyRate" type="number" min="0" max="999" step="0.01" value="${s.hourlyRate}">`)}
           ${settingsField('set-format','Time format','Used across cards, calendars, and print output.',`<select class="select" id="set-format" name="timeFormat"><option value="12" ${s.timeFormat==='12'?'selected':''}>12 hour</option><option value="24" ${s.timeFormat==='24'?'selected':''}>24 hour</option></select>`)}
         </section>
-        <section class="surface settings-card"><h3>Schedule and overtime</h3><p>Controls the weekly threshold and overtime credit.</p>
-          ${settingsField('set-schedule','Employee schedule','35 hours uses a 7-hour scheduled day; 40 hours uses 8.',`<select class="select" id="set-schedule" name="scheduleHours"><option value="40" ${s.scheduleHours===40?'selected':''}>40-hour schedule</option><option value="35" ${s.scheduleHours===35?'selected':''}>35-hour schedule</option></select>`)}
-          ${settingsField('set-ot-rule','Overtime threshold','Choose the 40-hour rule or the scheduled weekly threshold.',`<select class="select" id="set-ot-rule" name="otRule"><option value="after-40" ${s.otRule==='after-40'?'selected':''}>After 40 regular hours</option><option value="after-schedule" ${s.otRule==='after-schedule'?'selected':''}>After scheduled weekly hours</option></select>`)}
+        <section class="surface settings-card"><h3>Schedule and overtime</h3><p>Controls the daily and weekly thresholds and overtime credit.</p>
+          ${settingsField('set-schedule','Employee schedule','Used for the weekly threshold and the default holiday credit.',`<select class="select" id="set-schedule" name="scheduleHours"><option value="40" ${s.scheduleHours===40?'selected':''}>40-hour schedule</option><option value="35" ${s.scheduleHours===35?'selected':''}>35-hour schedule</option></select>`)}
+          ${settingsField('set-ot-rule','Weekly overtime threshold','Choose the 40-hour rule or the scheduled weekly threshold. Overtime triggers on whichever of this or the daily threshold below is reached first.',`<select class="select" id="set-ot-rule" name="otRule"><option value="after-40" ${s.otRule==='after-40'?'selected':''}>After 40 regular hours</option><option value="after-schedule" ${s.otRule==='after-schedule'?'selected':''}>After scheduled weekly hours</option></select>`)}
+          ${settingsField('set-daily-threshold','Daily overtime threshold (hours)','Paid hours (lunch and unpaid commute already excluded) allowed in a single shift before overtime starts. Default 8. Raise this for compressed schedules like four 10-hour shifts so a normal day is not flagged as overtime; it still catches a shift that runs long. Existing entries keep the threshold that was active when they were saved.',`<input class="input" id="set-daily-threshold" name="scheduledDayHours" type="number" min="1" max="24" step="0.5" value="${s.scheduledDayHours}">`)}
+          ${settingsField('set-commute-allowance','Unpaid commute per direction (minutes)','Commute time beyond this, each way, is paid regular work time and counts toward the daily/weekly overtime thresholds. Default 30. XP, Emergency, and paid-holiday-worked entries always pay the full commute from the moment the employee leaves home, regardless of this setting. Existing entries keep the allowance that was active when they were saved.',`<input class="input" id="set-commute-allowance" name="unpaidCommuteMinutes" type="number" min="0" max="240" step="5" value="${s.unpaidCommuteMinutes}">`)}
           ${settingsField('set-ot-method','Default overtime credit','Prefills new regular entries.',`<select class="select" id="set-ot-method" name="defaultOtMethod"><option value="Cash" ${s.defaultOtMethod==='Cash'?'selected':''}>Cash OT</option><option value="XP" ${s.defaultOtMethod==='XP'?'selected':''}>XP credit</option></select>`)}
           ${settingsField('set-multiplier','Cash OT multiplier','Applied to cash overtime and Cash OT entries.',`<input class="input" id="set-multiplier" name="otMultiplier" type="number" min="1" max="4" step="0.1" value="${s.otMultiplier}">`)}
         </section>
@@ -1649,11 +1672,21 @@
       leaveDraft.start=start.value;leaveDraft.lunch=clamp(lunch.value,0,600,0);leaveDraft.commuteIn=clamp(cin.value,0,600,0);leaveDraft.commuteOut=clamp(cout.value,0,600,0);
       const startM=timeMinutes(start.value);
       if(startM==null){leave.textContent='—';home.textContent='—';if(remaining)remaining.textContent='--:--:--';if(phase)phase.textContent='Enter a valid start time';return;}
-      const lunchM=state.settings.paidLunch?0:leaveDraft.lunch,inM=leaveDraft.commuteIn,outM=leaveDraft.commuteOut,scheduled=state.settings.scheduleHours/5*60;
-      const leaveM=startM+inM+lunchM+scheduled,homeM=leaveM+outM;
+      const lunchM=state.settings.paidLunch?0:leaveDraft.lunch,inM=leaveDraft.commuteIn,outM=leaveDraft.commuteOut,scheduled=state.settings.scheduledDayHours*60;
+      const allowance=state.settings.unpaidCommuteMinutes,paidCommuteM=Math.max(0,inM-allowance)+Math.max(0,outM-allowance);
+      const onSiteM=Math.max(0,scheduled-paidCommuteM);
+      const leaveM=startM+inM+lunchM+onSiteM,homeM=leaveM+outM;
       leave.textContent=formatClockFromMinute(leaveM,state.settings);home.textContent=formatClockFromMinute(homeM,state.settings);
       if(!remaining||!phase)return;
-      const now0=new Date(),startOfDay=new Date(now0.getFullYear(),now0.getMonth(),now0.getDate(),0,0,0,0),leaveAt=startOfDay.getTime()+leaveM*60000,homeAt=startOfDay.getTime()+homeM*60000;
+      // The entered start time could mean "today" (an upcoming or in-progress
+      // shift) or "yesterday" (an overnight shift already underway, checked
+      // after midnight). Prefer whichever anchor day currently has "now"
+      // inside the [depart, home] window, so a real overnight shift shows an
+      // accurate near-zero countdown instead of assuming it hasn't started.
+      const now0=new Date(),startOfToday=new Date(now0.getFullYear(),now0.getMonth(),now0.getDate(),0,0,0,0).getTime(),startOfYesterday=startOfToday-86400000,now=now0.getTime();
+      const anchors=[startOfYesterday,startOfToday],windows=anchors.map(a=>({start:a+startM*60000,leave:a+leaveM*60000,home:a+homeM*60000}));
+      const active=windows.find(w=>now>=w.start&&now<w.home)||windows[1];
+      const leaveAt=active.leave,homeAt=active.home;
       function tick() {
         const now=Date.now();
         if(now<leaveAt){remaining.textContent=clockCountdownText(leaveAt-now);phase.textContent='until you can leave';return;}
@@ -1779,9 +1812,11 @@
         hourlyRate:clamp(data.get('hourlyRate'),0,999,30),
         scheduleHours:schedule,
         otRule:data.get('otRule')==='after-schedule'?'after-schedule':'after-40',
+        scheduledDayHours:clamp(data.get('scheduledDayHours'),1,24,8),
         otMultiplier:clamp(data.get('otMultiplier'),1,4,1.5),
         paidLunch:data.get('paidLunch')==='on',
         defaultOtMethod:data.get('defaultOtMethod')==='XP'?'XP':'Cash',
+        unpaidCommuteMinutes:clamp(data.get('unpaidCommuteMinutes'),0,240,30),
         holidayCreditHours:clamp(data.get('holidayCreditHours'),0.01,24,schedule===35?7:8),
         defaultBreakMinutes:clamp(data.get('defaultBreakMinutes'),30,240,30),
         defaultBreakStart:normalizeTime(data.get('defaultBreakStart'))||'',
