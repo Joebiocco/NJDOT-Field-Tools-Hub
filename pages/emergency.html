@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Emergency Assistance — Field Tools</title>
   <meta name="theme-color" content="#E5B33B">
   <link rel="manifest" href="../manifest.json">
@@ -524,11 +524,12 @@
     .em-checklist li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text); line-height: 1.4; padding: 4px 0; }
     .em-checklist li svg { flex-shrink: 0; margin-top: 2px; color: #d97706; }
     .card-note { font-size: 11.5px; color: var(--muted); font-weight: 400; margin-top: 10px; }
+    .card-note a { color: var(--accent); font-weight: 700; }
 
     /* ── Guideline links ── */
     .em-links { display: flex; flex-direction: column; gap: 8px; }
     .em-link {
-      display: flex; align-items: center; gap: 9px; padding: 10px 12px;
+      display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 10px 12px;
       border: 1px solid var(--border); border-radius: var(--radius-sm);
       color: var(--text); text-decoration: none; font-size: 13px; font-weight: 600;
       background: var(--surface-2);
@@ -536,6 +537,8 @@
     .em-link:hover { background: var(--accent-lo); border-color: var(--accent); }
     .em-link svg { flex-shrink: 0; color: var(--accent); }
     .em-link-ext { margin-left: auto; color: var(--muted); flex-shrink: 0; }
+    .em-cdu-intro { margin: 0 0 12px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .em-cdu-intro strong { color: var(--text); font-weight: 700; }
 
     /* ── Disclaimer ── */
     .em-disclaimer {
@@ -733,12 +736,12 @@
 <body>
 
 <div id="topbar">
-  <a class="topbar-back" href="../index.html" id="back-link">
+  <a class="topbar-back" href="../index.html" id="back-link" aria-label="Back to Field Tools Hub">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="15 18 9 12 15 6"/>
     </svg>
-    Home
+    <span class="topbar-back-label">Home</span>
   </a>
   <div class="topbar-div"></div>
   <h1>Emergency Assistance</h1>
@@ -965,6 +968,50 @@
       <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Stay alert for oncoming traffic at all times</li>
     </ul>
     <div class="card-note">General roadside safety practice — not a substitute for official protocol. See the guidelines below for full detail.</div>
+  </article>
+
+  <article class="card">
+    <div class="card-title">NJDOT Central Dispatch Unit</div>
+    <p class="em-cdu-intro">Non-911 line for NJDOT service requests — a downed traffic signal, road debris hazard, or a request for Fire Department assistance. For an incident on a state or interstate highway, call <strong>911</strong> first.</p>
+    <div class="em-links">
+      <a class="em-link" href="tel:6095886211">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z"/></svg>
+        Northern New Jersey — 609-588-6211
+      </a>
+      <a class="em-link" href="tel:6095886212">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z"/></svg>
+        Central New Jersey — 609-588-6212
+      </a>
+      <a class="em-link" href="tel:6095886213">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z"/></svg>
+        Southern New Jersey — 609-588-6213
+      </a>
+    </div>
+    <div class="card-note">CDU is NJDOT's 24/7 communications hub, staffed alongside NJ State Police at the Hamilton Township Communications Center, and it dispatches Safety Service Patrols statewide. <a href="https://dot.nj.gov/transportation/commuter/motoristassistance/cdu.shtm" target="_blank" rel="noopener">Full CDU details</a></div>
+  </article>
+
+  <article class="card">
+    <div class="card-title">Toll Road Roadside Assistance</div>
+    <p class="em-cdu-intro">The New Jersey Turnpike, Garden State Parkway, and Atlantic City Expressway use separate roadside dispatch services. If there is an immediate danger or crash, call <strong>911</strong> first.</p>
+    <div class="em-links">
+      <a class="em-link" href="tel:8338754243">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z"/></svg>
+        New Jersey Turnpike — 833-TPK-4AID (833-875-4243)
+      </a>
+      <a class="em-link" href="tel:8334774243">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z"/></svg>
+        Garden State Parkway — 833-GSP-4AID (833-477-4243)
+      </a>
+      <a class="em-link" href="tel:8002139419">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z"/></svg>
+        NJTA backup line — 1-800-213-9419
+      </a>
+      <a class="em-link" href="tel:6099657200">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z"/></svg>
+        Atlantic City Expressway — #ACE (#223) or 609-965-7200
+      </a>
+    </div>
+    <div class="card-note">These services are operated by the New Jersey Turnpike Authority or South Jersey Transportation Authority, separate from NJDOT CDU. <a href="https://www.njta.gov/roadside-assistance/" target="_blank" rel="noopener">NJTA roadside assistance</a> · <a href="https://www.sjta.com/acexpressway" target="_blank" rel="noopener">SJTA ACE details</a></div>
   </article>
 
   <article class="card">

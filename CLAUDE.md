@@ -100,6 +100,13 @@ optional short-lived RSS proxy, not a core backend.
 - Use accessible names, focus states, aria-hidden synchronization, 44px touch
   targets, pre-paint backgrounds, and reduced-motion fallbacks. Test 390px
   and 1440px at minimum; use docs/qa-checklist.md for the full matrix.
+- The topbar must never force the page wider than the viewport at any
+  breakpoint. pages/WorkOrderCloseout.html is the gold-standard topbar
+  action-row implementation (icon-only back-button collapse, fixed-size
+  never-shrinking action buttons, right-aligned action row, an overflow
+  "More" menu for actions beyond what comfortably fits); see
+  docs/ui-style-guide.md's "Topbar action row" section before touching any
+  page's topbar.
 - Homepage groups stay Field Ops teal/green-blue, Documentation
   purple/indigo, Time & Admin gold, Coming Soon muted. Tool-specific
   severity/map accents are allowed within the shared visual language.

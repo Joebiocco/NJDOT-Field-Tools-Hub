@@ -125,6 +125,16 @@ Search first with rg; inspect large files by line range. Avoid dumping
 pages/WorkOrderCloseout.html. Run the relevant checks in docs/qa-checklist.md
 and finish with a delta-only report following docs/reporting-rules.md.
 
+For every user-authorized commit and push, provide GitHub-visible commit notes:
+- Use a concise, outcome-focused subject line.
+- Include a commit body with `Changes`, `Compatibility`, and `Validation`
+  sections. State the user-facing behavior changed, the affected pages or
+  contracts, whether storage/data/PWA behavior is unchanged or intentionally
+  changed, and the checks that actually passed.
+- Keep the notes factual and specific to the committed diff; do not claim
+  deployment, testing, migration, or external coordination that did not
+  occur.
+
 Do not git commit or git push unless the latest user message explicitly
 contains commit, push, or commit and push. “Approved” or “approved to code” is
 not permission. Do not merge, deploy, or bump version unless explicitly asked.

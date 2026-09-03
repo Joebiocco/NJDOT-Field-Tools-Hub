@@ -40,10 +40,12 @@ The command center provides:
 - Continue state using ft_last;
 - search/filter and section navigation;
 - install/bookmark helper surfaces;
-- a one-time, index-only release summary covering the current site update;
 - light/dark mode, with the preference in field_dark_mode;
 - full-width 511NJ traffic and NWS active-alert feeds with refresh and
-  expand/collapse behavior.
+  expand/collapse behavior; the 511NJ feed shows all active statewide items
+  (no arbitrary display cap), sorted incident/delay/traffic-event/work-zone
+  then newest-first, with category filter chips and group-label dividers so
+  the (frequently 500+ item, work-zone-heavy) list stays navigable.
 
 The hub is a distinct visual family. Do not treat it as a generic tool page.
 
@@ -92,6 +94,10 @@ Emergency provides:
 - Leaflet location map, user marker, accuracy circle, recenter, and map key;
 - shared roadway/milepost matching and conservative Route Type Check/report
   language;
+- an NJDOT Central Dispatch Unit (CDU) card with regional click-to-call
+  numbers for non-911 Department service requests;
+- a toll-road roadside assistance card with NJTA Turnpike/Parkway and SJTA
+  Atlantic City Expressway dispatch contacts;
 - safety guidance and a no-guess fallback when the source/map fails.
 
 The page depends on the route identity and classification rules in the

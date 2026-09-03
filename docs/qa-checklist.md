@@ -83,9 +83,6 @@ For each relevant width:
 - [ ] Header hide/reveal does not leave a blank strip.
 - [ ] Hub active section tracks the destination even when adjacent panels
       share a row.
-- [ ] On a fresh index origin, the update summary opens automatically once,
-      covers lower install/update banners, closes by button/backdrop/Escape,
-      and stays closed after reload without adding a visible trigger bar.
 - [ ] Resources remains before Alerts & Updates.
 - [ ] Reduced-motion mode skips nonessential scrolling/pulses.
 - [ ] A refresh or small feed update does not reflash the full page.

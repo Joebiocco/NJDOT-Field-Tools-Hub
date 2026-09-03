@@ -84,7 +84,8 @@ and this router to select sections.
 - pages/njsearch.html — Bridge Navigator.
 - pages/njfuel.html — Fuel Finder.
 - pages/milemarker.html — Milepost Finder.
-- pages/emergency.html — Emergency Assistance.
+- pages/emergency.html — Emergency Assistance, roadway/milepost matching, and
+  emergency-service contacts.
 - pages/weather.html — Weather/radar/alerts.
 - pages/timesheet.html — active Timesheet Tracker payroll runtime.
 - pages/dc144.html and js/dc144.js — DC-144.
@@ -109,10 +110,6 @@ entry fields for Monday-Sunday allocation, optional 35-hour agreements,
 lunch/commute deductions, holiday credit, Cash/XP overtime, Emergency rates,
 and carry-over segments. Read protected-areas.md and qa-checklist.md before
 changing either calculator.
-
-The hub shows a one-time, index-only release summary for the current update;
-it has no persistent visible trigger and records dismissal with the additive
-localStorage key ft_hub_whats_new_2026_08_v1.
 
 The redesign also stores an additive per-entry calculation snapshot for pay
 inputs that affect historical results. Later rate, threshold, lunch, or

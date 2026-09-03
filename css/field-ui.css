@@ -40,6 +40,7 @@
 html {
   background: #eef0f4;
   transition: background-color 380ms ease-in-out;
+  overflow-x: hidden;
 }
 
 html[data-dark] {
@@ -70,6 +71,7 @@ body {
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 /* ── Section 3: Topbar Shell ──────────────────────────────────────────── */
@@ -121,6 +123,22 @@ body {
   background: #C9971A;
   border-color: #C9971A;
   color: #fff;
+}
+
+/* Icon-only collapse on narrow screens — the "Home" text label hides,
+   leaving a comfortable fixed-size icon square, so the back control never
+   contributes to topbar overflow. Opt in per page by wrapping the label
+   text in <span class="topbar-back-label">Home</span>; pages that don't
+   use that span are unaffected. Timesheet keeps its own page-local version
+   of this (see docs/protected-areas.md) which wins by source order. */
+@media (max-width: 720px) {
+  .topbar-back, .hub-back, .ft-back-link, .ft-home-link {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+  .topbar-back-label { display: none; }
 }
 
 /* Vertical divider */

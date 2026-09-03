@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>NJ Fuel Station Finder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -106,7 +106,6 @@
       #topbar { padding: 0 12px; gap: 10px; }
       #topbar h1 { font-size: 14px; }
       .state-badge { display: none; }
-      .topbar-back { padding: 4px 10px 4px 7px; font-size: 11px; }
       .topbar-help { width: 30px; height: 30px; }
       .public-notice { padding: 5px 12px; font-size: 10px; }
       .left-panel { padding: 14px; }
@@ -952,9 +951,9 @@
 <div class="header-hover-zone" aria-hidden="true"></div>
 
 <div id="topbar">
-  <a href="../index.html" class="topbar-back">
+  <a href="../index.html" class="topbar-back" aria-label="Back to Field Tools Hub">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    Home
+    <span class="topbar-back-label">Home</span>
   </a>
   <div class="topbar-div"></div>
   <h1>Fuel Station Finder</h1>

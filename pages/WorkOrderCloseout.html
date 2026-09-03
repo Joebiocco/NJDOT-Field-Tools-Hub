@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Work Order Closeout</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -103,9 +103,11 @@ html[data-dark] body {
   border-bottom: 1.5px solid rgba(229,179,59,0.45);
   box-shadow: 0 3px 12px rgba(0,0,0,0.25);
   gap: 0;
+  overflow: hidden;
 }
 
-.brand { display: flex; align-items: center; gap: 12px; justify-content: flex-start; flex: 1; }
+.brand { display: flex; align-items: center; gap: 12px; justify-content: flex-start; flex: 1 1 auto; min-width: 0; }
+.brand > div { min-width: 0; }
 .hub-back {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 5px 12px 5px 9px;
@@ -131,10 +133,21 @@ html[data-dark] body {
   flex-shrink: 0;
 }
 
-.brand-title { font-size: 16px; font-weight: 700; color: #f9fafb; white-space: nowrap; }
-.brand-sub   { font-size: 10px; color: #9ca3af; margin-top: 1px; }
+.brand-title { font-size: 16px; font-weight: 700; color: #f9fafb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand-sub   { font-size: 10px; color: #9ca3af; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.topbar-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.topbar-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.topbar-actions::-webkit-scrollbar { display: none; }
 .topbar-help {
   background: none;
   border: 1.5px solid rgba(229,179,59,0.28);
@@ -151,6 +164,97 @@ html[data-dark] body {
 }
 .topbar-help:hover { background: rgba(229,179,59,0.10); border-color: #E5B33B; }
 .topbar-help svg { width: 16px; height: 16px; }
+
+/* "More" overflow menu (Recent Sessions + Storage info) — inline on desktop
+   (display:contents removes the wrapper from layout so it looks identical
+   to the old flat button row), a real dropdown once the mobile media query
+   below takes over. */
+.topbar-more-wrap { display: contents; order: 10; }
+.topbar-more-menu { display: contents; }
+.topbar-more-btn { display: none; }
+.more-menu-label { display: none; }
+
+/* display:contents promotes the More menu's buttons to be direct flex items
+   of .topbar-actions on desktop, so DOM position (grouped for the mobile
+   dropdown) would otherwise dictate desktop visual order too. Explicit
+   `order` restores the original desktop sequence; the same relative order
+   (2,3,6,8,9) also happens to match the intended dropdown order, so this
+   doubles as the mobile menu's item order with no conflict. */
+#photo-badge     { order: 1; }
+#clearForm       { order: 2; }
+#removePage      { order: 3; }
+#addPageTop      { order: 4; }
+#saveDraft       { order: 5; }
+#recentBtn       { order: 6; }
+#exportPdf       { order: 7; }
+.topbar-info-wrap { order: 8; }
+#open-guide      { order: 9; }
+
+/* Narrow topbar: the action row is fixed-size and never shrinks — the
+   back-button label and the brand title are the only things that give up
+   space (ellipsis, then fully hidden on the smallest phones), so the
+   toolbar itself always renders at full, comfortable, tappable size and
+   the internal scroller below is a fallback that real phone widths should
+   never actually hit. */
+@media (max-width: 1050px) {
+  .topbar { padding: 0 12px; gap: 8px; }
+  .brand { gap: 8px; flex: 0 1 auto; }
+  .brand > div { min-width: 60px; }
+  .brand-sub { display: none; }
+
+  .hub-back { width: 36px; height: 36px; padding: 0; justify-content: center; }
+  .topbar-back-label { display: none; }
+
+  .topbar-actions .btn { flex-shrink: 0; width: 36px; height: 36px; padding: 0; justify-content: center; }
+  .topbar-actions .btn-label { display: none; }
+  .topbar-actions .photo-badge { flex-shrink: 0; font-size: 11px; padding: 4px 8px; }
+
+  .topbar-more-wrap { display: block; position: relative; flex-shrink: 0; }
+  .topbar-more-btn { display: flex; }
+  .topbar-more-menu { display: none; }
+  .topbar-more-menu:not([hidden]) {
+    /* position:fixed (not absolute) + JS-computed top/left — .topbar has
+       overflow:hidden to contain the action row, which would clip an
+       absolutely-positioned dropdown anchored inside it. Same fix already
+       used for .topbar-info-popover on this page. */
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: fixed;
+    min-width: 190px;
+    max-width: calc(100vw - 24px);
+    background: var(--surface);
+    border: 1px solid var(--border-lo);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+    padding: 6px;
+    z-index: 950;
+  }
+  .topbar-more-menu .btn,
+  .topbar-more-menu .topbar-help {
+    width: 100%;
+    height: auto;
+    justify-content: flex-start;
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 10px;
+  }
+  .topbar-more-menu .btn:hover,
+  .topbar-more-menu .topbar-help:hover { background: var(--accent-lo); }
+  .topbar-more-menu .btn svg,
+  .topbar-more-menu .topbar-help svg { color: var(--muted2); flex-shrink: 0; }
+  .topbar-more-menu .btn-label { display: inline-flex; }
+  .topbar-more-menu .more-menu-label { display: inline-flex; margin-left: 8px; font-size: 13px; font-weight: 500; }
+  .topbar-more-menu .topbar-info-wrap { width: 100%; }
+}
+
+/* Smallest phones: drop the title text entirely so the back pill and every
+   action button still fit without any scrolling. */
+@media (max-width: 400px) {
+  .brand > div { display: none; }
+}
 
 /* ── BUTTONS ────────────────────────────────── */
 .btn {
@@ -1036,9 +1140,9 @@ html[data-dark] .recent-chip:hover { border-color: #93b4f5; }
 
   <header class="topbar">
     <div class="brand">
-      <a href="../index.html" class="hub-back">
+      <a href="../index.html" class="hub-back" aria-label="Back to Field Tools Hub">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Home
+        <span class="topbar-back-label">Home</span>
       </a>
       <div>
         <div class="brand-title">Work Order Closeout</div>
@@ -1048,14 +1152,6 @@ html[data-dark] .recent-chip:hover { border-color: #93b4f5; }
     </div>
     <nav class="topbar-actions">
       <span id="photo-badge" class="photo-badge">&#128247; 0 / 0</span>
-      <button class="btn btn-ghost" id="clearForm" aria-label="Clear form">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/></svg>
-        <span class="btn-label">Clear Form</span>
-      </button>
-      <button class="btn btn-ghost btn-danger" id="removePage" aria-label="Remove page">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-        <span class="btn-label">Remove Page</span>
-      </button>
       <button class="btn btn-ghost btn-success" id="addPageTop" aria-label="Add page">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
         <span class="btn-label">Add Page</span>
@@ -1064,23 +1160,40 @@ html[data-dark] .recent-chip:hover { border-color: #93b4f5; }
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         <span class="btn-label">Save Session</span>
       </button>
-      <button class="btn" id="recentBtn" title="Recent Sessions" aria-label="Recent sessions">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span class="btn-label">Recent</span>
-      </button>
       <button class="btn btn-primary" id="exportPdf" aria-label="Export PDF">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Export PDF
+        <span class="btn-label">Export PDF</span>
       </button>
-      <div class="topbar-info-wrap">
-        <button type="button" class="topbar-help" id="storage-info-btn" aria-label="Storage info" aria-expanded="false" aria-controls="storage-info-popover" title="Storage info">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <div class="topbar-more-wrap">
+        <button type="button" class="topbar-help topbar-more-btn" id="topbar-more-btn" aria-haspopup="true" aria-expanded="false" aria-controls="topbar-more-menu" aria-label="More actions" title="More">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
         </button>
-        <div class="topbar-info-popover" id="storage-info-popover" hidden>Saved on this device only. Export a backup for long-term storage.</div>
+        <div class="topbar-more-menu" id="topbar-more-menu" hidden>
+          <button class="btn" id="clearForm" aria-label="Clear form">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/></svg>
+            <span class="btn-label">Clear Form</span>
+          </button>
+          <button class="btn btn-danger" id="removePage" aria-label="Remove page">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            <span class="btn-label">Remove Page</span>
+          </button>
+          <button class="btn" id="recentBtn" title="Recent Sessions" aria-label="Recent sessions">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span class="btn-label">Recent Sessions</span>
+          </button>
+          <div class="topbar-info-wrap">
+            <button type="button" class="topbar-help" id="storage-info-btn" aria-label="Storage info" aria-expanded="false" aria-controls="storage-info-popover" title="Storage info">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span class="more-menu-label">Storage info</span>
+            </button>
+            <div class="topbar-info-popover" id="storage-info-popover" hidden>Saved on this device only. Export a backup for long-term storage.</div>
+          </div>
+          <button class="topbar-help" id="open-guide" aria-label="Help & Guide">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span class="more-menu-label">Tutorial</span>
+          </button>
+        </div>
       </div>
-      <button class="topbar-help" id="open-guide" aria-label="Help & Guide">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      </button>
     </nav>
   </header>
 
@@ -3069,6 +3182,39 @@ document.getElementById('clearForm').addEventListener('click', function() {
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && overlay && overlay.classList.contains('open')) closeRecent();
   });
+})();
+
+// Mobile "More" menu (Recent Sessions + Storage info + Tutorial overflow)
+(function() {
+  var moreBtn  = document.getElementById('topbar-more-btn');
+  var moreMenu = document.getElementById('topbar-more-menu');
+  if (!moreBtn || !moreMenu) return;
+  function position() {
+    var r = moreBtn.getBoundingClientRect();
+    var menuW = moreMenu.offsetWidth || 190;
+    var left = Math.min(Math.max(8, r.right - menuW), document.documentElement.clientWidth - menuW - 8);
+    moreMenu.style.left = left + 'px';
+    moreMenu.style.top = (r.bottom + 8) + 'px';
+  }
+  function openMore()  { moreMenu.hidden = false; moreBtn.setAttribute('aria-expanded', 'true'); position(); }
+  function closeMore() { moreMenu.hidden = true;  moreBtn.setAttribute('aria-expanded', 'false'); }
+  moreBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    moreMenu.hidden ? openMore() : closeMore();
+  });
+  document.addEventListener('click', function(e) {
+    if (!moreMenu.hidden && !moreMenu.contains(e.target) && e.target !== moreBtn) closeMore();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !moreMenu.hidden) { closeMore(); moreBtn.focus(); }
+  });
+  window.addEventListener('resize', function() { if (!moreMenu.hidden) position(); });
+  var recentTrigger = document.getElementById('recentBtn');
+  if (recentTrigger) recentTrigger.addEventListener('click', closeMore);
+  var storageTrigger = document.getElementById('storage-info-btn');
+  if (storageTrigger) storageTrigger.addEventListener('click', closeMore);
+  var guideTrigger = document.getElementById('open-guide');
+  if (guideTrigger) guideTrigger.addEventListener('click', closeMore);
 })();
 
 // ── Guide / Tutorial ─────────────────────────

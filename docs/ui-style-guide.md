@@ -176,6 +176,70 @@ not a second calculator. New times use 10-minute steps.
 - Standard content is a centered, readable column or a deliberate split
   layout. Do not let a card become an arbitrary full-bleed desktop slab.
 
+### Topbar action row (gold standard: pages/WorkOrderCloseout.html)
+
+The topbar must never force the page wider than the viewport. This is a hard
+rule, not a style preference — check `document.documentElement.scrollWidth`
+against `window.innerWidth` at every breakpoint below, not just 390/1440.
+
+- **Back control collapses to icon-only on narrow screens.** Wrap the visible
+  "Home" text in `<span class="topbar-back-label">Home</span>` inside the
+  `.topbar-back`/`.hub-back` link or button, and add an explicit
+  `aria-label` (e.g. `Back to Field Tools Hub`) on the control itself —
+  once the text is visually hidden it can no longer supply the accessible
+  name. field-ui.css collapses this to a fixed 36×36 icon square at
+  `max-width: 720px` by default; a page with a wider action row (like Work
+  Order Closeout) may repeat the same page-local pattern at a wider
+  breakpoint so the back button and the action row collapse together. Do not
+  hide the label without also adding `aria-label` — Timesheet is the one page
+  with its own page-local version of this (see docs/protected-areas.md) and
+  is exempt from re-adding it.
+- **Action buttons are fixed-size and never shrink** (`flex-shrink: 0`,
+  explicit width/height around the icon, no padding-based sizing that
+  changes across breakpoints). The brand/title area is the only thing
+  allowed to give up space — ellipsis first, then hide the title text
+  entirely below a page-appropriate width (400px on Work Order Closeout) —
+  so action buttons stay comfortable and tappable instead of getting
+  squeezed pixel-by-pixel to fit. Do not "fix" overflow by shaving button
+  padding down further; that degrades touch targets without addressing the
+  actual cause (too many things trying to occupy the row).
+- **Right-align the action row** with `margin-left: auto` on
+  `.topbar-actions` (or an explicit `.topbar-spacer { flex: 1 }` between the
+  brand and the actions, the pattern already used by njsearch/njfuel/
+  milemarker/emergency/weather) so it sits flush against the trailing edge
+  instead of trailing the title with dead space in between.
+- **When a page has more actions than comfortably fit** even at a
+  fixed/compact size, move the least-frequent ones (destructive/reset
+  actions, "Recent"-style history, storage-info, tutorial/help) into an
+  overflow "More" (⋯) menu rather than continuing to shrink everything:
+  - Group the overflow buttons inside a wrapper (`.topbar-more-wrap` >
+    `.topbar-more-btn` + `.topbar-more-menu`) that is `display: contents` by
+    default, so on desktop — where there's room to show every action inline
+    with its label — the buttons render exactly as if they were direct
+    children of `.topbar-actions`, no visual change at all.
+  - Only at the narrow breakpoint does `.topbar-more-wrap` become a real,
+    positioned box and `.topbar-more-btn` become visible, turning the group
+    into an actual dropdown.
+  - Grouping items into one DOM block for the mobile dropdown will also
+    change their promoted position in the desktop flex row (since
+    `display: contents` promotes children to be direct flex items of
+    `.topbar-actions`). If that reorders the desktop sequence away from its
+    original logical order, restore it with explicit CSS `order` on every
+    topbar-actions child — this doubles as the dropdown's own item order
+    when chosen to match, so there is no conflict between the two.
+  - **Anchor the dropdown with `position: fixed` and JS-computed
+    `top`/`left`, not `position: absolute`.** `.topbar` has `overflow:
+    hidden` to contain the action row itself, and that clips any
+    absolutely-positioned descendant that needs to render below the
+    topbar's own height — the dropdown will compute a correct rect and
+    still be invisible. Compute placement from the trigger button's
+    `getBoundingClientRect()` on open and on resize, matching the existing
+    `.topbar-info-popover` pattern (see `js/storage-info-popover.js`) —
+    don't invent a second mechanism for the same problem.
+  - Close the menu on outside click, Escape, and when any item inside it is
+    activated (each item's own click handler should also call the menu's
+    `close()`), same as the existing storage-info popover.
+
 ### Hub shell
 
 The hub topbar is a command center, not a copy of the tool topbar. Its

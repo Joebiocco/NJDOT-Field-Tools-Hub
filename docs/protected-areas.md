@@ -524,6 +524,19 @@ handles GET/OPTIONS and health/RSS paths, and caches upstream responses
 briefly. It is not a database or a core app backend. Feed failure must leave
 the hub usable.
 
+The hub's 511NJ panel (index.html) parses and renders the full statewide
+active-events list (defensive parse ceiling only, not a UX cap — see the
+Bridge "Show 50" precedent above); do not reintroduce a small display cap
+that hides real active events. Items carry a `category` (incident/delay/
+general/work, from `classify()`) used to sort the default view and to drive
+the category filter chips (`#nj-live-filters`) and in-list group-label
+dividers. Filtering toggles the `hidden` attribute on non-matching
+`.util-event` nodes rather than removing them from the DOM, so the hero
+console's "511NJ events" count (which counts DOM nodes via MutationObserver)
+keeps reflecting the true total regardless of the active filter. The
+Expand/Collapse-all toggle intentionally only affects
+`details.util-event:not([hidden])`.
+
 ## Storage contracts
 
 Never rename, clear, or silently migrate these:
@@ -537,8 +550,8 @@ Never rename, clear, or silently migrate these:
 Work Order photo records also rely on their existing photoKey links. An
 additional key requires a docs update and a compatibility decision.
 
-The hub release summary uses ft_hub_whats_new_2026_08_v1 only to prevent the
-current update notice from reopening after it has been shown on a device. It
+ft_hub_whats_new_2026_08_v1 is a legacy, inactive dismissal key from the
+retired Hub release-summary dialog. Do not clear or migrate it as cleanup; it
 does not alter payroll, work-order, or other saved data.
 
 ## Animation and overlay safety
